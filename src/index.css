@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Colores principales policiales */
+  --color-pnp-green: #1a4d2e;        /* Verde oscuro */
+  --color-pnp-green-light: #2d7d4a;  /* Verde medio */
+  --color-pnp-green-lighter: #4a9c6b; /* Verde claro */
+  --color-pnp-gold: #FFD700;         /* Dorado */
+  --color-pnp-gold-light: #e6c547;   /* Dorado claro */
+  
+  /* Colores de estado */
+  --color-success: #28a745;           /* Verde éxito */
+  --color-warning: #ffc107;           /* Amarillo - advertencia */
+  --color-danger: #dc3545;            /* Rojo - peligro */
+  --color-info: #17a2b8;              /* Azul - información */
+  
+  /* Colores neutros */
+  --color-white: #ffffff;
+  --color-light-gray: #f8f9fa;
+  --color-gray: #6c757d;
+  --color-dark-gray: #343a40;
+  --color-black: #000000;
+}
