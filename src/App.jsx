@@ -1,28 +1,74 @@
-import { useEffect, useState } from 'react'
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext.jsx';
+import { ThemeProvider } from './context/ThemeContext.jsx';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+
+// Auth Components
+import AdminLogin from './components/auth/AdminLogin';
+import AdminRegister from './components/auth/AdminRegister';
+import PeritoLogin from './components/auth/PeritoLogin';
+
+// Dashboard Components
+import AdminDashboard from './components/admin/AdminDashboard';
+import DashboardStats from './components/admin/DashboardStats';
+import UserManagement from './components/admin/UserManagement';
+import DocumentManagement from './components/admin/DocumentManagement';
+import SystemConfiguration from './components/admin/SystemConfiguration';
+import PeritoForm from './components/admin/PeritoForm';
+
+// Perito Components
+import PeritoDashboard from './components/perito/PeritoDashboard';
+import PeritoResumen from './components/perito/PeritoResumen';
+import PeritoDocumentos from './components/perito/PeritoDocumentos';
+import PeritoCasos from './components/perito/PeritoCasos';
+import PeritoPerfil from './components/perito/PeritoPerfil';
 
 function App() {
-  
-  const [count, setCount] = useState(0)
-  const handleAdd = () =>{
-    setCount(prev => prev+1)
-  }
-  useEffect(()=>{
-    // Este es el prefijo para consumir algun enpoint - mirenlo por la consola.
-    const urlbackend = import.meta.env?.VITE_API_BASE_URL
-    console.log(urlbackend)
-  },[])
-
   return (
-    <>
-      <div className='min-h-screen flex items-center justify-center flex-col gap-6 bg-pnp-green text-white'>
-        <div className='text-4xl font-bold '>MESA DE PARTES PNP</div>
-        <div className='flex items-center justify-center gap-8'>
-          <button className='px-4 py-1 rounded-3xl bg-pnp-gold text-gray text-2xl' onClick={handleAdd}>Agregar</button>
-          <p>{count}</p>
-        </div>
-      </div>
-    </>
-  )
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Auth Routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/register" element={<AdminRegister />} />
+            <Route path="/login" element={<PeritoLogin />} />
+
+            {/* Dashboard Routes with nested navigation - Protected */}
+            <Route path="/admin/dashboard" element={
+              <ProtectedRoute requireAdmin={true}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }>
+              <Route index element={<DashboardStats />} />
+              <Route path="usuarios" element={<UserManagement />} />
+              <Route path="usuarios/crear" element={<PeritoForm />} />
+              <Route path="usuarios/editar/:cip" element={<PeritoForm />} />
+              <Route path="documentos" element={<DocumentManagement />} />
+              <Route path="configuracion" element={<SystemConfiguration />} />
+            </Route>
+
+            {/* Perito Dashboard Routes */}
+            <Route path="/perito/dashboard" element={
+              <ProtectedRoute requirePerito={true}>
+                <PeritoDashboard />
+              </ProtectedRoute>
+            }>
+              <Route index element={<PeritoResumen />} />
+              <Route path="documentos" element={<PeritoDocumentos />} />
+              <Route path="casos" element={<PeritoCasos />} />
+              <Route path="perfil" element={<PeritoPerfil />} />
+            </Route>
+
+            {/* Redirects */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
+  );
 }
 
-export default App
+export default App;
