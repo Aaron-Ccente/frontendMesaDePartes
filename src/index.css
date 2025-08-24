@@ -21,4 +21,20 @@
   --color-gray: #6c757d;
   --color-dark-gray: #343a40;
   --color-black: #000000;
+  
+  /* Colores para modo oscuro */
+  --color-dark-bg-primary: #0f172a;    /* Fondo principal oscuro */
+  --color-dark-bg-secondary: #1e293b;  /* Fondo secundario oscuro */
+  --color-dark-bg-tertiary: #334155;   /* Fondo terciario oscuro */
+  --color-dark-surface: #1e293b;       /* Superficies oscuras */
+  --color-dark-border: #475569;        /* Bordes oscuros */
+  --color-dark-text-primary: #f1f5f9;  /* Texto principal oscuro */
+  --color-dark-text-secondary: #cbd5e1; /* Texto secundario oscuro */
+  --color-dark-text-muted: #94a3b8;    /* Texto atenuado oscuro */
+  
+  /* Colores específicos para modo oscuro con verde PNP */
+  --color-dark-pnp-green: #22c55e;     /* Verde PNP para modo oscuro */
+  --color-dark-pnp-green-light: #4ade80; /* Verde PNP claro para modo oscuro */
+  --color-dark-pnp-green-dark: #16a34a;  /* Verde PNP oscuro para modo oscuro */
+  --color-dark-accent: #3b82f6;         /* Azul acento para modo oscuro */
 }
