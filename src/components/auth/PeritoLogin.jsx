@@ -54,28 +54,17 @@ const PeritoLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a4d2e] to-[#1a4d2e] flex items-center justify-center p-4 relative">
+    <div className="min-h-screen bg-gradient-to-br from-[#1a4d2e] to-[#2D7D55] flex items-center justify-center p-4 relative">
       {/* Botón de cambio de tema en la esquina superior derecha */}
       <div className="absolute top-4 right-4">
         <ThemeToggle size="lg" />
       </div>
       
-      <div className="max-w-md w-full space-y-8">
-        {/* Header */}
-        <div className="text-center">
-          <div className="mx-auto h-20 w-20 bg-white dark:bg-dark-surface rounded-full flex items-center justify-center mb-4">
-            <span className="text-4xl text-[#1a4d2e] dark:text-dark-pnp-green">👮‍♂️</span>
-          </div>
-          <h2 className="text-3xl font-bold text-white mb-2">
-            Acceso Peritos
-          </h2>
-          <p className="text-white/80 dark:text-white/90">
-            Sistema de Gestión de documentos
-          </p>
-        </div>
-
+      <div className="w-full flex justify-center ">
+        
         {/* Formulario */}
-        <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-2xl dark:shadow-gray-900/50 p-8 border border-gray-200 dark:border-dark-border">
+        <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-2xl dark:shadow-gray-900/50 p-8 border border-gray-200 dark:border-dark-border w-96">
+          <p className='text-3xl font-bold dark:text-dark-text-primary pb-8'>Iniciar Sesión</p>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Error Message */}
             {error && (
@@ -145,6 +134,9 @@ const PeritoLogin = () => {
               Sistema de Mesa de Partes OFICRI
             </div>
           </div>
+        </div>
+        <div className='w-96 bg-[#1a4d2e]'>
+              
         </div>
       </div>
     </div>
