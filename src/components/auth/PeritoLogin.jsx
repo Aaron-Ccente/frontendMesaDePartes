@@ -54,23 +54,21 @@ const PeritoLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a4d2e] to-[#2D7D55] flex items-center justify-center p-4 relative">
+    <div className="min-h-screen bg-gradient-to-br from-[#1a4d2e] to-[#2d7d4a] flex items-center justify-center p-4 relative">
       {/* Botón de cambio de tema en la esquina superior derecha */}
       <div className="absolute top-4 right-4">
         <ThemeToggle size="lg" />
       </div>
       
-      <div className="w-full flex justify-center ">
-        
+      <div className="w-fit flex justify-center bg-gradient-to-t from-[#1a4d2e] to-[#2e8822]  rounded-2xl">
         {/* Formulario */}
-        <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-2xl dark:shadow-gray-900/50 p-8 border border-gray-200 dark:border-dark-border w-96">
-          <p className='text-3xl font-bold dark:text-dark-text-primary pb-8'>Iniciar Sesión</p>
+        <div className="bg-white dark:bg-dark-surface rounded-2xl p-8 w-96">
+          <p className='text-3xl font-bold dark:text-dark-text-primary pb-8 text-center'>Iniciar Sesión</p>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Error Message */}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
                 <div className="flex items-center space-x-2">
-                  <span className="text-xl">⚠️</span>
                   <span>{error}</span>
                 </div>
               </div>
@@ -135,8 +133,13 @@ const PeritoLogin = () => {
             </div>
           </div>
         </div>
-        <div className='w-96 bg-[#1a4d2e]'>
-              
+        <div className='w-96 flex flex-col justify-center gap-8 items-center'>
+              <div className='flex justify-center gap-6'>
+                <img src='/src/assets/images/fondo_oficri.webp' width={140} height={140}/>
+                <img src='/src/assets/images/fondo_pnp.webp' width={140} height={140}/>
+              </div>
+              <h2 className='text-3xl text-light-gray font-bold'>Mesa De Partes PNP</h2>
+              <p className='text-sm text-light-gray'>Sistema de Gestión de requisitos Forenses</p>
         </div>
       </div>
     </div>
