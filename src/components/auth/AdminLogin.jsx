@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useForm } from '../../hooks/useForm';
@@ -11,7 +11,7 @@ const AdminLogin = () => {
 
   const initialValues = {
     CIP: '',
-    Contrasena: ''
+    password_hash: ''
   };
 
   const { values, errors, isSubmitting, handleChange, handleSubmit, setFieldError } = useForm({
@@ -41,8 +41,8 @@ const AdminLogin = () => {
         errors.CIP = 'CIP es requerido';
       }
       
-      if (!values.Contrasena) {
-        errors.Contrasena = 'Contraseña es requerida';
+      if (!values.password_hash) {
+        errors.password_hash = 'Contraseña es requerida';
       }
       
       return errors;
@@ -54,21 +54,18 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1a4d2e] to-[#1a4d2e] p-5">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1a4d2e] to-[#2d7d4a] p-5">
       {/* Botón de cambio de tema en la esquina superior derecha */}
       <div className="absolute top-4 right-4">
         <ThemeToggle size="lg" />
       </div>
+      <div className="w-fit flex justify-center bg-gradient-to-t from-[#1a4d2e] to-[#2e8822]  rounded-2xl">
 
-      <div className="bg-white rounded-3xl dark:bg-dark-surface shadow-2xl p-10 w-full max-w-md relative overflow-hidden">
-        {/* Línea dorada superior */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FFD700] to-[#e6c547]"></div>
-        
+      <div className="bg-white rounded-3xl dark:bg-dark-surface shadow-2xl p-6 max-w-md relative overflow-hidden w-96">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="mb-5">
-            <div className="text-5xl mb-4">👮</div>
-            <h1 className="text-3xl font-bold text-[#1a4d2e] dark:text-dark-text-primary mb-2">Mesa de Partes PNP</h1>
+            <h1 className="text-3xl font-bold text-[#1a4d2e] dark:text-dark-text-primary mb-2">Iniciar Sesión</h1>
             <h2 className="text-lg text-gray-600 dark:text-dark-text-secondary">Acceso Administrativo</h2>
           </div>
         </div>
@@ -100,20 +97,20 @@ const AdminLogin = () => {
           </div>
 
           <div className="mb-6">
-            <label htmlFor="Contrasena" className="block text-sm font-semibold text-gray-700 mb-2 dark:text-dark-text-secondary">
+            <label htmlFor="password_hash" className="block text-sm font-semibold text-gray-700 mb-2 dark:text-dark-text-secondary">
               Contraseña
             </label>
             <input
               type="password"
-              id="Contrasena"
-              name="Contrasena"
-              value={values.Contrasena}
-              onChange={(e) => handleChange('Contrasena', e.target.value)}
+              id="password_hash"
+              name="password_hash"
+              value={values.password_hash}
+              onChange={(e) => handleChange('password_hash', e.target.value)}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent dark:text-dark-text-secondary`}
               placeholder="Ingrese su contraseña"
             />
-            {errors.Contrasena && (
-              <span className="text-red-500 text-xs mt-2 block">{errors.Contrasena}</span>
+            {errors.password_hash && (
+              <span className="text-red-500 text-xs mt-2 block">{errors.password_hash}</span>
             )}
           </div>
 
@@ -138,6 +135,15 @@ const AdminLogin = () => {
               Regístrate aquí
             </button>
           </p>
+        </div>
+      </div>
+            <div className='w-96 flex flex-col justify-center gap-8 items-center'>
+              <div className='flex justify-center gap-6'>
+                <img src='/src/assets/images/fondo_oficri.webp' width={140} height={140}/>
+                <img src='/src/assets/images/fondo_pnp.webp' width={140} height={140}/>
+              </div>
+              <h2 className='text-3xl text-light-gray font-bold'>Mesa De Partes PNP</h2>
+              <p className='text-sm text-light-gray'>Sistema de Gestión de requisitos Forenses</p>
         </div>
       </div>
     </div>

@@ -10,10 +10,10 @@ const AdminRegister = () => {
 
   const initialValues = {
     CIP: '',
-    NombreUsuario: '',
-    Contrasena: '',
+    nombre_usuario: '',
+    password_hash: '',
     ConfirmarContrasena: '',
-    Nombre: ''
+    nombres: ''
   };
 
   const validate = (values) => {
@@ -25,28 +25,28 @@ const AdminRegister = () => {
       errors.CIP = 'El CIP debe tener al menos 3 caracteres';
     }
     
-    if (!values.NombreUsuario.trim()) {
-      errors.NombreUsuario = 'El nombre de usuario es requerido';
-    } else if (values.NombreUsuario.length < 3) {
-      errors.NombreUsuario = 'El nombre de usuario debe tener al menos 3 caracteres';
+    if (!values.nombre_usuario.trim()) {
+      errors.nombre_usuario = 'El nombre de usuario es requerido';
+    } else if (values.nombre_usuario.length < 3) {
+      errors.nombre_usuario = 'El nombre de usuario debe tener al menos 3 caracteres';
     }
     
-    if (!values.Contrasena) {
-      errors.Contrasena = 'La contraseña es requerida';
-    } else if (values.Contrasena.length < 6) {
-      errors.Contrasena = 'La contraseña debe tener al menos 6 caracteres';
+    if (!values.password_hash) {
+      errors.password_hash = 'La contraseña es requerida';
+    } else if (values.password_hash.length < 6) {
+      errors.password_hash = 'La contraseña debe tener al menos 6 caracteres';
     }
     
     if (!values.ConfirmarContrasena) {
       errors.ConfirmarContrasena = 'Confirme su contraseña';
-    } else if (values.Contrasena !== values.ConfirmarContrasena) {
+    } else if (values.password_hash !== values.ConfirmarContrasena) {
       errors.ConfirmarContrasena = 'Las contraseñas no coinciden';
     }
     
-    if (!values.Nombre.trim()) {
-      errors.Nombre = 'El nombre es requerido';
-    } else if (values.Nombre.length < 2) {
-      errors.Nombre = 'El nombre debe tener al menos 2 caracteres';
+    if (!values.nombres.trim()) {
+      errors.nombres = 'El nombre es requerido';
+    } else if (values.nombres.length < 2) {
+      errors.nombres = 'El nombre debe tener al menos 2 caracteres';
     }
     
     return errors;
@@ -142,68 +142,68 @@ const AdminRegister = () => {
           </div>
 
           <div className="mb-5">
-            <label htmlFor="NombreUsuario" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="nombre_usuario" className="block text-sm font-semibold text-gray-700 mb-2">
               Nombre de Usuario
             </label>
             <input
               type="text"
-              id="NombreUsuario"
-              name="NombreUsuario"
-              value={values.NombreUsuario}
-              onChange={(e) => handleChange('NombreUsuario', e.target.value)}
+              id="nombre_usuario"
+              name="nombre_usuario"
+              value={values.nombre_usuario}
+              onChange={(e) => handleChange('nombre_usuario', e.target.value)}
               className={`w-full px-4 py-3 border-2 rounded-xl text-base transition-all duration-300 focus:outline-none focus:ring-4 ${
-                errors.NombreUsuario 
+                errors.nombre_usuario 
                   ? 'border-red-500 focus:ring-red-100' 
                   : 'border-gray-200 focus:border-[#1a4d2e] focus:ring-[#1a4d2e]/10'
               }`}
               placeholder="Ingrese su nombre de usuario"
             />
-            {errors.NombreUsuario && (
-              <span className="text-red-500 text-xs mt-2 block">{errors.NombreUsuario}</span>
+            {errors.nombre_usuario && (
+              <span className="text-red-500 text-xs mt-2 block">{errors.nombre_usuario}</span>
             )}
           </div>
 
           <div className="mb-5">
-            <label htmlFor="Nombre" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="nombres" className="block text-sm font-semibold text-gray-700 mb-2">
               Nombre Completo
             </label>
             <input
               type="text"
-              id="Nombre"
-              name="Nombre"
+              id="nombres"
+              name="nombres"
               value={values.Nombre}
-              onChange={(e) => handleChange('Nombre', e.target.value)}
+              onChange={(e) => handleChange('nombres', e.target.value)}
               className={`w-full px-4 py-3 border-2 rounded-xl text-base transition-all duration-300 focus:outline-none focus:ring-4 ${
-                errors.Nombre 
+                errors.nombres 
                   ? 'border-red-500 focus:ring-red-100' 
                   : 'border-gray-200 focus:border-[#1a4d2e] focus:ring-[#1a4d2e]/10'
               }`}
               placeholder="Ingrese su nombre completo"
             />
-            {errors.Nombre && (
-              <span className="text-red-500 text-xs mt-2 block">{errors.Nombre}</span>
+            {errors.nombres && (
+              <span className="text-red-500 text-xs mt-2 block">{errors.nombres}</span>
             )}
           </div>
 
           <div className="mb-5">
-            <label htmlFor="Contrasena" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="password_hash" className="block text-sm font-semibold text-gray-700 mb-2">
               Contraseña
             </label>
             <input
               type="password"
-              id="Contrasena"
-              name="Contrasena"
-              value={values.Contrasena}
-              onChange={(e) => handleChange('Contrasena', e.target.value)}
+              id="password_hash"
+              name="password_hash"
+              value={values.password_hash}
+              onChange={(e) => handleChange('password_hash', e.target.value)}
               className={`w-full px-4 py-3 border-2 rounded-xl text-base transition-all duration-300 focus:outline-none focus:ring-4 ${
-                errors.Contrasena 
+                errors.password_hash 
                   ? 'border-red-500 focus:ring-red-100' 
                   : 'border-gray-200 focus:border-[#1a4d2e] focus:ring-[#1a4d2e]/10'
               }`}
               placeholder="Ingrese su contraseña"
             />
-            {errors.Contrasena && (
-              <span className="text-red-500 text-xs mt-2 block">{errors.Contrasena}</span>
+            {errors.password_hash && (
+              <span className="text-red-500 text-xs mt-2 block">{errors.password_hash}</span>
             )}
           </div>
 
