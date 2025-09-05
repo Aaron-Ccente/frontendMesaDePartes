@@ -1,7 +1,10 @@
-import React from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import ThemeToggle from '../ui/ThemeToggle';
+import Estadistica from '../../assets/icons/Estadistica';
+import Usuarios from '../../assets/icons/Usuarios';
+import Documentos from '../../assets/icons/Documentos';
+import Configuracion from '../../assets/icons/Configuracion';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -52,16 +55,16 @@ const AdminDashboard = () => {
               <h2 className="text-lg font-semibold text-gray-800 dark:text-dark-text-primary mb-6">Navegación</h2>
               <div className="space-y-3">
                 <button onClick={() => handleNavigation('')} className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${isActiveRoute('/admin/dashboard') && !isActiveRoute('/usuarios') && !isActiveRoute('/documentos') && !isActiveRoute('/configuracion') ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'}`}>
-                  <div className="flex items-center space-x-3"><span className="text-xl">📊</span><span>Estadísticas</span></div>
+                  <div className="flex items-center space-x-3"><span><Estadistica/></span><span>Estadísticas</span></div>
                 </button>
                 <button onClick={() => handleNavigation('/usuarios')} className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${isActiveRoute('/usuarios') ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'}`}>
-                  <div className="flex items-center space-x-3"><span className="text-xl">👥</span><span>Usuarios</span></div>
+                  <div className="flex items-center space-x-3"><span><Usuarios/></span><span>Usuarios</span></div>
                 </button>
                 <button onClick={() => handleNavigation('/documentos')} className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${isActiveRoute('/documentos') ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'}`}>
-                  <div className="flex items-center space-x-3"><span className="text-xl">📝</span><span>Documentos</span></div>
+                  <div className="flex items-center space-x-3"><span><Documentos size={6}/></span><span>Documentos</span></div>
                 </button>
                 <button onClick={() => handleNavigation('/configuracion')} className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${isActiveRoute('/configuracion') ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'}`}>
-                  <div className="flex items-center space-x-3"><span className="text-xl">⚙️</span><span>Configuración</span></div>
+                  <div className="flex items-center space-x-3"><span><Configuracion size={6}/></span><span>Configuración</span></div>
                 </button>
               </div>
             </nav>

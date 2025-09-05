@@ -59,11 +59,22 @@ const PeritoLogin = () => {
       <div className="absolute top-4 right-4">
         <ThemeToggle size="lg" />
       </div>
-      
+      {/* Fondo con elementos decorativos en verde */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-50">
+        <div className="absolute top-20 left-20 w-72 h-72 bg-[#2e8822] rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-96 h-96 bg-[#2e8822] rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse delay-1000"></div>
+        <div className="absolute -bottom-32 left-1/2 transform -translate-x-1/2 w-80 h-80 bg-[#2e8822] rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse delay-500"></div>
+      </div>
       <div className="w-fit flex justify-center bg-gradient-to-t from-[#1a4d2e] to-[#2e8822]  rounded-2xl">
         {/* Formulario */}
-        <div className="bg-white dark:bg-dark-surface rounded-2xl p-8 w-96">
-          <p className='text-3xl font-bold dark:text-dark-text-primary pb-8 text-center'>Iniciar Sesión</p>
+        <div className="bg-white dark:bg-dark-surface transition-colors rounded-2xl p-8 w-96">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="mb-5">
+              <h1 className="text-3xl font-bold text-[#1a4d2e] dark:text-dark-text-primary mb-2">Iniciar Sesión</h1>
+              <h2 className="text-lg text-gray-600 dark:text-dark-text-secondary">Acceso de Peritos</h2>
+            </div>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Error Message */}
             {error && (

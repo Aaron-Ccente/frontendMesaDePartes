@@ -1,3 +1,5 @@
+import Documentos from "../../assets/icons/Documentos";
+
 const DocumentManagement = () => {
   return (
     <div className="space-y-6">
@@ -10,8 +12,8 @@ const DocumentManagement = () => {
         </p>
       </div>
       
-      <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-        <div className="text-6xl mb-4">📝</div>
+      <div className="bg-white rounded-xl shadow-lg p-12 text-center flex justify-center flex-col items-center">
+        <Documentos size={12}/>
         <h2 className="text-2xl font-semibold text-gray-700 mb-2">
           Funcionalidad en Desarrollo
         </h2>
