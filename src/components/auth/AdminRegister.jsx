@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from '../../hooks/useForm';
 import { authService } from '../../services/authService';
@@ -13,7 +13,7 @@ const AdminRegister = () => {
     nombre_usuario: '',
     password_hash: '',
     ConfirmarContrasena: '',
-    nombres: ''
+    nombre_completo: ''
   };
 
   const validate = (values) => {
@@ -43,11 +43,11 @@ const AdminRegister = () => {
       errors.ConfirmarContrasena = 'Las contraseñas no coinciden';
     }
     
-    if (!values.nombres.trim()) {
-      errors.nombres = 'El nombre es requerido';
-    } else if (values.nombres.length < 2) {
-      errors.nombres = 'El nombre debe tener al menos 2 caracteres';
-    }
+    if (!values.nombre_completo || !values.nombre_completo.trim()) {
+        errors.nombre_completo = 'El nombre es requerido';
+      } else if (values.nombre_completo.length < 2) {
+        errors.nombre_completo = 'El nombre debe tener al menos 2 caracteres';
+      }
     
     return errors;
   };
@@ -57,7 +57,7 @@ const AdminRegister = () => {
       setRegisterError('');
       setRegisterSuccess('');
       
-      // Remover el campo de confirmación antes de enviar
+      // Remueve el campo de confirmación de contraseña antes de enviar.
       const { ConfirmarContrasena, ...adminData } = values;
       
       await authService.registerAdmin(adminData);
@@ -93,13 +93,9 @@ const AdminRegister = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1a4d2e] to-[#2d7d4a] p-5">
       <div className="bg-white rounded-3xl shadow-2xl p-10 w-full max-w-lg relative overflow-hidden">
-        {/* Línea dorada superior */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FFD700] to-[#e6c547]"></div>
-        
         {/* Header */}
         <div className="text-center mb-8">
           <div className="mb-5">
-            <div className="text-5xl mb-4">👮</div>
             <h1 className="text-3xl font-bold text-[#1a4d2e] mb-2">Mesa de Partes PNP</h1>
             <h2 className="text-lg text-gray-600">Registro Administrativo</h2>
           </div>
@@ -164,24 +160,24 @@ const AdminRegister = () => {
           </div>
 
           <div className="mb-5">
-            <label htmlFor="nombres" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="nombre_completo" className="block text-sm font-semibold text-gray-700 mb-2">
               Nombre Completo
             </label>
             <input
               type="text"
-              id="nombres"
-              name="nombres"
-              value={values.Nombre}
-              onChange={(e) => handleChange('nombres', e.target.value)}
+              id="nombre_completo"
+              name="nombre_completo"
+              value={values.nombre_completo}
+              onChange={(e) => handleChange('nombre_completo', e.target.value)}
               className={`w-full px-4 py-3 border-2 rounded-xl text-base transition-all duration-300 focus:outline-none focus:ring-4 ${
-                errors.nombres 
+                errors.nombre_completo 
                   ? 'border-red-500 focus:ring-red-100' 
                   : 'border-gray-200 focus:border-[#1a4d2e] focus:ring-[#1a4d2e]/10'
               }`}
               placeholder="Ingrese su nombre completo"
             />
-            {errors.nombres && (
-              <span className="text-red-500 text-xs mt-2 block">{errors.nombres}</span>
+            {errors.nombre_completo && (
+              <span className="text-red-500 text-xs mt-2 block">{errors.nombre_completo}</span>
             )}
           </div>
 
