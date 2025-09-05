@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { peritoService } from '../../services/peritoService';
+import Usuarios from '../../assets/icons/Usuarios';
+import Documentos from '../../assets/icons/Documentos';
+import Configuracion from '../../assets/icons/Configuracion';
 
 const DashboardStats = () => {
   const navigate = useNavigate();
@@ -75,7 +78,7 @@ const DashboardStats = () => {
               <p className="text-sm font-medium text-gray-600">Total Peritos</p>
               <p className="text-2xl font-bold text-[#1a4d2e]">{stats.totalPeritos}</p>
             </div>
-            <div className="text-3xl">👥</div>
+            <Usuarios size={8}/>
           </div>
         </div>
 
@@ -85,7 +88,7 @@ const DashboardStats = () => {
               <p className="text-sm font-medium text-gray-600">Secciones Activas</p>
               <p className="text-2xl font-bold text-[#2d7d4a]">{stats.peritosPorSeccion.length}</p>
             </div>
-            <div className="text-3xl">📝</div>
+            <div className="text-3xl">a</div>
           </div>
         </div>
 
@@ -95,17 +98,17 @@ const DashboardStats = () => {
               <p className="text-sm font-medium text-gray-600">Grados</p>
               <p className="text-2xl font-bold text-[#FFD700]">{stats.peritosPorGrado.length}</p>
             </div>
-            <div className="text-3xl">✅</div>
+            <div className="text-3xl">a</div>
           </div>
         </div>
 
         <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-[#4a9c6b] hover:shadow-xl transition-all duration-300">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Sistema</p>
-              <p className="text-2xl font-bold text-[#4a9c6b]">Activo</p>
+              <p className="text-sm font-medium text-gray-600">algo</p>
+              <p className="text-2xl font-bold text-[#4a9c6b]">algo</p>
             </div>
-            <div className="text-3xl">🆕</div>
+            <div className="text-3xl">a</div>
           </div>
         </div>
       </div>
@@ -118,21 +121,21 @@ const DashboardStats = () => {
             onClick={() => handleNavigation('/usuarios')}
             className="bg-[#1a4d2e] hover:bg-[#2d7d4a] text-white p-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
           >
-            <span className="text-xl">👥</span>
+            <Usuarios size={6}/>
             <span>Gestionar Usuarios</span>
           </button>
           <button 
             onClick={() => handleNavigation('/documentos')}
             className="bg-[#2d7d4a] hover:bg-[#4a9c6b] text-white p-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
           >
-            <span className="text-xl">📝</span>
+            <Documentos size={6}/>
             <span>Administrar Documentos</span>
           </button>
           <button 
             onClick={() => handleNavigation('/configuracion')}
             className="bg-[#FFD700] hover:bg-[#e6c547] text-[#1a4d2e] p-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
           >
-            <span className="text-xl">⚙️</span>
+            <Configuracion size={6}/>
             <span>Configuración</span>
           </button>
         </div>
