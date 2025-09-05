@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { peritoService } from '../../services/peritoService';
+import Usuarios from '../../assets/icons/Usuarios';
 
 const UserManagement = () => {
   const navigate = useNavigate();
@@ -211,7 +212,7 @@ const UserManagement = () => {
               {peritos.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
-                    <div className="text-6xl mb-4">👥</div>
+                    <span className='w-full flex justify-center'><Usuarios size={12}/></span>
                     <p className="text-lg font-medium">No se encontraron peritos</p>
                     <p className="text-sm">
                       {searchTerm ? 'Intenta ajustar los filtros de búsqueda' : 'No hay peritos registrados en el sistema'}
