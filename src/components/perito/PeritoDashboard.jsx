@@ -143,7 +143,7 @@ const PeritoDashboard = () => {
                   }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <span className="text-xl">📊</span>
+                    
                     <span>Resumen</span>
                   </div>
                 </button>
