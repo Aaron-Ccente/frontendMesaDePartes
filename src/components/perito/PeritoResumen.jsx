@@ -40,7 +40,7 @@ const PeritoResumen = () => {
         <div className="bg-white dark:bg-dark-surface rounded-xl shadow-lg dark:shadow-gray-900/20 p-6 border border-gray-200 dark:border-dark-border">
           <div className="flex items-center space-x-3">
             <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-              <span className="text-2xl text-purple-600 dark:text-purple-400">📊</span>
+              <span className="text-2xl text-purple-600 dark:text-purple-400"></span>
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-dark-text-secondary">Completados</p>
