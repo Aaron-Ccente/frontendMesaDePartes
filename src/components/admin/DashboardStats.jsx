@@ -5,6 +5,7 @@ import { peritoService } from '../../services/peritoService';
 import Usuarios from '../../assets/icons/Usuarios';
 import Documentos from '../../assets/icons/Documentos';
 import Configuracion from '../../assets/icons/Configuracion';
+import Error from '../../assets/icons/Error';
 
 const DashboardStats = () => {
   const navigate = useNavigate();
@@ -64,7 +65,7 @@ const DashboardStats = () => {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
           <div className="flex items-center space-x-2">
-            <span className="text-xl">⚠️</span>
+            <Error size={6}/>
             <span>{error}</span>
           </div>
         </div>
@@ -183,7 +184,7 @@ const DashboardStats = () => {
         <h2 className="text-xl font-semibold text-[#1a4d2e] mb-4">Actividad Reciente</h2>
         <div className="space-y-3">
           <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <div className="text-[#1a4d2e]">📊</div>
+            
             <div className="flex-1">
               <p className="text-sm text-gray-600">
                 {stats.totalPeritos > 0 

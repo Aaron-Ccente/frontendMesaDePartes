@@ -1,5 +1,8 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
 
+const tokenKey = 'adminToken';
+const userDataKey = 'adminData';
+
 export const authService = {
   // Login de administrador
   async loginAdmin(credentials) {
@@ -102,35 +105,39 @@ export const authService = {
 
   // Verificar si el usuario está autenticado
   isAuthenticated() {
-    const token = localStorage.getItem('adminToken');
+    const token = localStorage.getItem(tokenKey);
     return !!token;
   },
 
   // Obtener token del localStorage
   getToken() {
-    return localStorage.getItem('adminToken');
+    return localStorage.getItem(tokenKey);
   },
 
   // Guardar token en localStorage
   setToken(token) {
-    localStorage.setItem('adminToken', token);
+    localStorage.setItem(tokenKey, token);
   },
 
   // Cerrar sesión
   logout() {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminData');
+    localStorage.removeItem(tokenKey);
+    localStorage.removeItem(userDataKey);
   },
 
   // Guardar datos del administrador
   setAdminData(adminData) {
-    localStorage.setItem('adminData', JSON.stringify(adminData));
+    localStorage.setItem(userDataKey, JSON.stringify(adminData));
   },
 
   // Obtener datos del administrador
   getAdminData() {
-    const data = localStorage.getItem('adminData');
-    return data ? JSON.parse(data) : null;
+    const data = localStorage.getItem(userDataKey);
+    try {
+      return data ? JSON.parse(data) : null;
+    } catch {
+      return null;
+    }
   },
 
   // Verifica si el token es válido

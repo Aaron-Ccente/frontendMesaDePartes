@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { peritoService } from '../../services/peritoService';
 import Usuarios from '../../assets/icons/Usuarios';
+import Error from '../../assets/icons/Error';
 
 const UserManagement = () => {
   const navigate = useNavigate();
@@ -146,7 +147,7 @@ const UserManagement = () => {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
           <div className="flex items-center space-x-2">
-            <span className="text-xl">⚠️</span>
+            <Error size={6}/>
             <span>{error}</span>
           </div>
         </div>
