@@ -5,11 +5,33 @@ import Estadistica from '../../assets/icons/Estadistica';
 import Usuarios from '../../assets/icons/Usuarios';
 import Documentos from '../../assets/icons/Documentos';
 import Configuracion from '../../assets/icons/Configuracion';
+import Politics from '../ui/Politics';
+import { useEffect } from 'react';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, loading, logout, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      navigate('/admin/login');
+    }
+  }, [loading, isAuthenticated, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1a4d2e] mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-dark-text-primary">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+  if (!isAuthenticated || !user) {
+    return null;
+  }
 
   const handleNavigation = (path) => {
     navigate(`/admin/dashboard${path}`);
@@ -26,7 +48,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-300">
-      
+      <Politics/>
       <header className="bg-gradient-to-r from-[#1a4d2e] to-[#2d7d4a] dark:from-dark-pnp-green-dark dark:to-dark-pnp-green text-white shadow-lg dark:shadow-gray-900/50">
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Panel de Administración</h1>
