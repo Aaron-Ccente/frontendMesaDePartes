@@ -193,6 +193,27 @@ class PeritoService {
       throw error;
     }
   }
-}
+  // Para obtener todas las relaciones con sus especialidades, grados, secciones y departamento
+  async getEspecialidades(){
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/peritos/especialidades`, {
+        method: 'GET',
+        headers: this.getHeaders()
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al obtener especialidades');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error al obtener especialidades:', error);
+      throw error;
+    }
+  }
+
+}   
 
 export const peritoService = new PeritoService();
