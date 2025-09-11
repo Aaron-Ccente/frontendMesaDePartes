@@ -20,7 +20,7 @@ const PeritoForm = () => {
   const [options, setOptions] = useState({
     especialidades: [],
     grados: [],
-    secciones: [],
+    turnos: [],
     tiposDepartamento: []
   });
 
@@ -45,8 +45,7 @@ const PeritoForm = () => {
     cursos_extranjero: '',
     ultimo_ascenso_pnp: '',
     fotografia_url: null,
-    firma: null,
-    
+
     // Campos de relación
     id_especialidad: '',
     id_grado: '',
@@ -61,7 +60,7 @@ const PeritoForm = () => {
         setLoading(true);
         setError('');
         setSuccess('');
-
+        console.log(formData);
         let result;
         if (isEditing) {
           // Actualizar perito existente
@@ -116,7 +115,6 @@ const PeritoForm = () => {
   useEffect(() => {
     const loadOptions = async () => {
       try {
-        // En una implementación real, estos vendrían de tu API
         const especialidades = await peritoService.getEspecialidades();
         const grados = await peritoService.getGrados();
         const secciones = await peritoService.getSecciones();
@@ -241,7 +239,7 @@ const PeritoForm = () => {
       const webpBase64 = await convertImageToWebPBase64(file);
       setPhotoPreview(webpBase64);
       setFieldValue('fotografia_url', webpBase64);
-      setError(''); // Limpiar errores previos
+      setError('');
     } catch (error) {
       console.error('Error procesando foto:', error);
       setError('Error al procesar la foto');
@@ -630,20 +628,20 @@ const PeritoForm = () => {
           </div>
 
           <div>
-            <label htmlFor="id_seccion" className="block text-sm font-medium text-gray-700 mb-2">
-              Sección
+            <label htmlFor="id_turno" className="block text-sm font-medium text-gray-700 mb-2">
+              Turno
             </label>
             <select
-              id="id_seccion"
-              name="id_seccion"
-              value={values.id_seccion}
-              onChange={(e) => handleChange('id_seccion', e.target.value)}
+              id="id_turno"
+              name="id_turno"
+              value={values.id_turno}
+              onChange={(e) => handleChange('id_turno', e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
             >
-              <option value="">Seleccione una sección</option>
-              {options.secciones.map(seccion => (
-                <option key={seccion.id_seccion} value={seccion.id_seccion}>
-                  {seccion.nombre}
+              <option value="">Seleccione un turno</option>
+              {options.turnos.map(turno => (
+                <option key={turno.id_seccion} value={turno.id_seccion}>
+                  {turno.nombre}
                 </option>
               ))}
             </select>
@@ -669,7 +667,7 @@ const PeritoForm = () => {
             </select>
           </div>
 
-          {/* Foto y Firma */}
+          {/* Foto */}
           <div className="lg:col-span-2">
             <h3 className="text-lg font-semibold text-[#1a4d2e] mb-4 border-b pb-2">
               Foto
