@@ -129,7 +129,6 @@ const UserManagement = () => {
               onClick={handleRefresh}
               className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2"
             >
-              <span className="text-xl">🔄</span>
               <span>Actualizar</span>
             </button>
             <button
@@ -171,7 +170,7 @@ const UserManagement = () => {
           </div>
           <div className="flex items-end">
             <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors duration-200">
-              🔍 Filtros
+              Filtros
             </button>
           </div>
         </div>
