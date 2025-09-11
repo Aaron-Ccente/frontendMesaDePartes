@@ -167,6 +167,7 @@ const AdminRegister = () => {
               type="text"
               id="nombre_completo"
               name="nombre_completo"
+              autoComplete="username"
               value={values.nombre_completo}
               onChange={(e) => handleChange('nombre_completo', e.target.value)}
               className={`w-full px-4 py-3 border-2 rounded-xl text-base transition-all duration-300 focus:outline-none focus:ring-4 ${
@@ -189,6 +190,7 @@ const AdminRegister = () => {
               type="password"
               id="password_hash"
               name="password_hash"
+              autoComplete="new-password"
               value={values.password_hash}
               onChange={(e) => handleChange('password_hash', e.target.value)}
               className={`w-full px-4 py-3 border-2 rounded-xl text-base transition-all duration-300 focus:outline-none focus:ring-4 ${
@@ -219,6 +221,7 @@ const AdminRegister = () => {
                   : 'border-gray-200 focus:border-[#1a4d2e] focus:ring-[#1a4d2e]/10'
               }`}
               placeholder="Confirme su contraseña"
+              autoComplete="new-password"
             />
             {errors.ConfirmarContrasena && (
               <span className="text-red-500 text-xs mt-2 block">{errors.ConfirmarContrasena}</span>
