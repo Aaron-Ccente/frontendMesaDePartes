@@ -119,7 +119,9 @@ const AdminLogin = () => {
               <span className="text-red-500 text-xs mt-2 block">{errors.password_hash}</span>
             )}
           </div>
-
+          {errors.general && (
+            <div className="text-red-500 text-sm mt-2 block text-center pb-6">{errors.general}</div>
+          )}
           <button
             type="submit"
             className="w-full bg-gradient-to-r from-[#1a4d2e] to-[#2d7d4a] text-white py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
