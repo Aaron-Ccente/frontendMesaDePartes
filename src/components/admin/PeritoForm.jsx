@@ -7,6 +7,7 @@ import {
 } from '../../utils/fileUtils';
 import { convertImageToWebPBase64 } from '../../utils/convertir64';
 import Error from '../../assets/icons/Error';
+import { ComplementServices } from '../../services/complementService';
 
 const PeritoForm = () => {
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ const PeritoForm = () => {
     // Campos de relación
     id_especialidad: '',
     id_grado: '',
-    id_seccion: '',
+    id_turno: '',
     id_tipo_departamento: ''
   };
 
@@ -65,10 +66,12 @@ const PeritoForm = () => {
         if (isEditing) {
           // Actualizar perito existente
           const { password_hash: _ph, confirmar_password: _cp, ...updateData } = formData;
+          console.log(updateData)
           result = await peritoService.updatePerito(cip, updateData);
         } else {
           // Crear nuevo perito
           const { confirmar_password: _cp, ...createData } = formData;
+          console.log(createData)
           result = await peritoService.createPerito(createData);
         }
         
@@ -113,6 +116,7 @@ const PeritoForm = () => {
 
   // Cargar opciones para los select
   useEffect(() => {
+    if (isEditing && cip) {
     const loadOptions = async () => {
       try {
         const especialidades = await peritoService.getEspecialidades();
@@ -131,9 +135,28 @@ const PeritoForm = () => {
         setError('Error cargando opciones del formulario');
       }
     };
-    
-    loadOptions();
-  }, []);
+    loadOptions();}
+    else{
+      const loadDataNotEditing = async () =>{
+         try {
+        const especialidadesRes = await ComplementServices.getEspecialidades();
+        const gradosRes = await ComplementServices.getGrados();
+        const turnosRes = await ComplementServices.getTurnos();
+        const tiposDepartamentoRes = await ComplementServices.getTiposDepartamento();
+         setOptions({
+          especialidades: especialidadesRes.data,
+          grados: gradosRes.data,
+          turnos: turnosRes.data,
+          tiposDepartamento: tiposDepartamentoRes.data
+        });
+      } catch (error) {
+        console.error('Error cargando opciones:', error);
+        setError('Error cargando opciones del formulario');
+      }
+      }
+      loadDataNotEditing()
+    }
+  }, [isEditing, cip]);
 
   // Cargar datos del perito para edición
   useEffect(() => {
@@ -194,7 +217,7 @@ const PeritoForm = () => {
           // Cargar relaciones
           if (perito.id_especialidad) setFieldValue('id_especialidad', perito.id_especialidad);
           if (perito.id_grado) setFieldValue('id_grado', perito.id_grado);
-          if (perito.id_seccion) setFieldValue('id_seccion', perito.id_seccion);
+          if (perito.id_turno) setFieldValue('id_turno', perito.id_turno);
           if (perito.id_tipo_departamento) setFieldValue('id_tipo_departamento', perito.id_tipo_departamento);
 
           // Mostrar foto si existe
@@ -333,6 +356,7 @@ const PeritoForm = () => {
               type="text"
               id="nombre_usuario"
               name="nombre_usuario"
+              autoComplete='username'
               value={values.nombre_usuario}
               onChange={(e) => handleChange('nombre_usuario', e.target.value)}
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent ${
@@ -353,6 +377,7 @@ const PeritoForm = () => {
                   type="password"
                   id="password_hash"
                   name="password_hash"
+                  autoComplete='new-password'
                   value={values.password_hash}
                   onChange={(e) => handleChange('password_hash', e.target.value)}
                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent ${
@@ -370,6 +395,7 @@ const PeritoForm = () => {
                 <input
                   type="password"
                   id="confirmar_password"
+                  autoComplete='new-password'
                   name="confirmar_password"
                   value={values.confirmar_password}
                   onChange={(e) => handleChange('confirmar_password', e.target.value)}
@@ -390,6 +416,7 @@ const PeritoForm = () => {
             <input
               type="text"
               id="nombre_completo"
+              autoComplete='username'
               name="nombre_completo"
               value={values.nombre_completo}
               onChange={(e) => handleChange('nombre_completo', e.target.value)}
@@ -434,6 +461,7 @@ const PeritoForm = () => {
             <input
               type="email"
               id="email"
+              autoComplete='username'
               name="email"
               value={values.email}
               onChange={(e) => handleChange('email', e.target.value)}
@@ -586,6 +614,26 @@ const PeritoForm = () => {
               Información de Relación
             </h3>
           </div>
+          
+          <div>
+            <label htmlFor="id_tipo_departamento" className="block text-sm font-medium text-gray-700 mb-2">
+              Tipo de Departamento
+            </label>
+            <select
+              id="id_tipo_departamento"
+              name="id_tipo_departamento"
+              value={values.id_tipo_departamento}
+              onChange={(e) => handleChange('id_tipo_departamento', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+            >
+              <option value="">Seleccione un tipo de departamento</option>
+              {options.tiposDepartamento.map((tipo, index) => (
+                <option key={index} value={tipo.id_tipo_departamento}>
+                  {tipo.nombre_departamento}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div>
             <label htmlFor="id_especialidad" className="block text-sm font-medium text-gray-700 mb-2">
@@ -599,8 +647,8 @@ const PeritoForm = () => {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
             >
               <option value="">Seleccione una especialidad</option>
-              {options.especialidades.map(especialidad => (
-                <option key={especialidad.id_especialidad} value={especialidad.id_especialidad}>
+              {options.especialidades.map((especialidad, index) => (
+                <option key={index} value={especialidad.id_especialidad}>
                   {especialidad.nombre}
                 </option>
               ))}
@@ -619,8 +667,8 @@ const PeritoForm = () => {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
             >
               <option value="">Seleccione un grado</option>
-              {options.grados.map(grado => (
-                <option key={grado.id_grado} value={grado.id_grado}>
+              {options.grados.map((grado, index) => (
+                <option key={index} value={grado.id_grado}>
                   {grado.nombre}
                 </option>
               ))}
@@ -639,29 +687,9 @@ const PeritoForm = () => {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
             >
               <option value="">Seleccione un turno</option>
-              {options.turnos.map(turno => (
-                <option key={turno.id_seccion} value={turno.id_seccion}>
+              {options.turnos.map((turno, index) => (
+                <option key={index} value={turno.id_turno}>
                   {turno.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="id_tipo_departamento" className="block text-sm font-medium text-gray-700 mb-2">
-              Tipo de Departamento
-            </label>
-            <select
-              id="id_tipo_departamento"
-              name="id_tipo_departamento"
-              value={values.id_tipo_departamento}
-              onChange={(e) => handleChange('id_tipo_departamento', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
-            >
-              <option value="">Seleccione un tipo de departamento</option>
-              {options.tiposDepartamento.map(tipo => (
-                <option key={tipo.id_tipo_departamento} value={tipo.id_tipo_departamento}>
-                  {tipo.nombre_departamento}
                 </option>
               ))}
             </select>
