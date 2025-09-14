@@ -1,4 +1,3 @@
-import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -19,7 +18,7 @@ const ProtectedRoute = ({ children, requireAdmin = false, requirePerito = false 
     );
   }
 
-  // Si no está autenticado, redirigir al login correspondiente
+  // Si no está autenticado, redirigir al login
   if (!isAuthenticated) {
     console.log('Usuario no autenticado, redirigiendo al login');
     
@@ -48,9 +47,6 @@ const ProtectedRoute = ({ children, requireAdmin = false, requirePerito = false 
     console.log('Usuario no tiene rol de perito, redirigiendo al dashboard de administradores');
     return <Navigate to="/admin/dashboard" replace />;
   }
-
-  // Usuario autenticado y autorizado, mostrar el contenido
-  console.log('Usuario autenticado y autorizado, mostrando contenido');
   return children;
 };
 
