@@ -6,8 +6,8 @@ import {
   validateImageFile, 
 } from '../../utils/fileUtils';
 import { convertImageToWebPBase64 } from '../../utils/convertir64';
-import Error from '../../assets/icons/Error';
 import { ComplementServices } from '../../services/complementService';
+import ShowToast from '../ui/ShowToast';
 
 const PeritoForm = () => {
   const navigate = useNavigate();
@@ -22,7 +22,8 @@ const PeritoForm = () => {
     especialidades: [],
     grados: [],
     turnos: [],
-    tiposDepartamento: []
+    tiposDepartamento: [],
+    secciones: []
   });
 
   const initialValues = {
@@ -51,6 +52,7 @@ const PeritoForm = () => {
     id_especialidad: '',
     id_grado: '',
     id_turno: '',
+    id_seccion: '',
     id_tipo_departamento: ''
   };
 
@@ -64,27 +66,29 @@ const PeritoForm = () => {
         console.log(formData);
         let result;
         if (isEditing) {
-          // Actualizar perito existente
           const { password_hash: _ph, confirmar_password: _cp, ...updateData } = formData;
           console.log(updateData)
           result = await peritoService.updatePerito(cip, updateData);
         } else {
-          // Crear nuevo perito
           const { confirmar_password: _cp, ...createData } = formData;
           console.log(createData)
           result = await peritoService.createPerito(createData);
         }
+
+        if (result && result.error) {
+          setError(result.error);
+          setLoading(false);
+          return;
+        }
         
-        // Mostrar mensaje de éxito
         setSuccess(result.message || (isEditing ? 'Perito actualizado exitosamente' : 'Perito creado exitosamente'));
         
-        // Redirigir después de 2 segundos para que el usuario vea el mensaje
         setTimeout(() => {
           navigate('/admin/dashboard/usuarios');
         }, 2000);
       } catch (error) {
         console.error('Error:', error);
-        setError(error.message || 'Error procesando la solicitud');
+        setError(error.error || 'Error procesando la solicitud');
       } finally {
         setLoading(false);
       }
@@ -123,7 +127,7 @@ const PeritoForm = () => {
         const grados = await peritoService.getGrados();
         const secciones = await peritoService.getSecciones();
         const tiposDepartamento = await peritoService.getTiposDepartamento();
-        
+
         setOptions({
           especialidades,
           grados,
@@ -269,6 +273,13 @@ const PeritoForm = () => {
     }
   };
 
+  const chargeSections = async (id) => {
+    console.log(id)
+    const seccionesRes = await ComplementServices.getSecciones(id);
+    setOptions({...options, secciones: seccionesRes.data});
+    console.log(seccionesRes)
+  }
+
   const removePhoto = () => {
     setPhotoPreview(null);
     setFieldValue('fotografia_url', null);
@@ -301,22 +312,12 @@ const PeritoForm = () => {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
-          <div className="flex items-center space-x-2">
-            <Error size={6}/>
-            <span>{error}</span>
-          </div>
-        </div>
+         <ShowToast type={'error'} message={error}/>
       )}
 
       {/* Success Message */}
       {success && (
-        <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg">
-          <div className="flex items-center space-x-2">
-            <span className="text-xl">✅</span>
-            <span>{success}</span>
-          </div>
-        </div>
+          <ShowToast type={'success'} message={success}/>
       )}
 
       {/* Form */}
@@ -623,12 +624,14 @@ const PeritoForm = () => {
               id="id_tipo_departamento"
               name="id_tipo_departamento"
               value={values.id_tipo_departamento}
-              onChange={(e) => handleChange('id_tipo_departamento', e.target.value)}
+              onChange={(e) => {handleChange('id_tipo_departamento', e.target.value)
+                                chargeSections(e.target.value);}}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
             >
               <option value="">Seleccione un tipo de departamento</option>
               {options.tiposDepartamento.map((tipo, index) => (
-                <option key={index} value={tipo.id_tipo_departamento}>
+                <option key={index} value={tipo.id_tipo_departamento}
+                >
                   {tipo.nombre_departamento}
                 </option>
               ))}
@@ -654,6 +657,26 @@ const PeritoForm = () => {
               ))}
             </select>
           </div>
+
+         <div>
+            <label htmlFor="id_seccion" className="block text-sm font-medium text-gray-700 mb-2">
+              Secciones
+            </label>
+            <select
+              id="id_seccion"
+              name="id_seccion"
+              value={values.id_seccion}
+              onChange={(e) => handleChange('id_seccion', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+            >
+              <option value="">Seleccione una especialidad</option>
+              {options.secciones && options.secciones.map((seccion, index) => (
+                <option key={index} value={seccion.id_seccion}>
+                  {seccion.nombre}
+                </option>
+              ))}
+            </select>
+          </div>  
 
           <div>
             <label htmlFor="id_grado" className="block text-sm font-medium text-gray-700 mb-2">
@@ -700,18 +723,6 @@ const PeritoForm = () => {
             <h3 className="text-lg font-semibold text-[#1a4d2e] mb-4 border-b pb-2">
               Foto
             </h3>
-            {isEditing && (
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <span className="text-xl">ℹ️</span>
-                  <span className="text-sm">
-                    <strong>Imágenes existentes:</strong> Se cargan automáticamente desde la base de datos en formato WebP. 
-                    <br />
-                    <strong>Para reemplazar:</strong> Sube un nuevo archivo y se convertirá automáticamente a WebP.
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Foto */}
@@ -768,10 +779,6 @@ const PeritoForm = () => {
                   >
                     ×
                   </button>
-                  {/* Indicador de tipo de imagen */}
-                  <div className="absolute -bottom-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
-                    WebP
-                  </div>
                 </div>
               )}
             </div>

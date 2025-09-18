@@ -10,10 +10,10 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Mantener loading true hasta que termine toda la validación
+        //loading
         setLoading(true);
 
-        // Primero verificar token de administrador ya que es más prioritario
+        // Verificar token de administrador
         if (authService.getToken()) {
           try {
             const isValid = await authService.validateAndRefreshToken();
@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }) => {
                 return; // Terminar aquí si es admin válido
               }
             }
-            // Si no es válido, limpiar
+            // Si no es válido
             authService.logout();
           } catch (error) {
             console.error('Error validando token:', error);
@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
           }
         }
 
-        // Verificar sesión de perito si no hay admin
+        // Verificar sesión de perito
         const peritoData = localStorage.getItem('peritoData');
         if (peritoData) {
           try {
@@ -78,10 +78,9 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.loginAdmin(credentials);
       
       if (response.success) {
-        // Agregar campo role para compatibilidad
         const adminData = {
           ...response.admin,
-          role: 'admin' // Agregar role para compatibilidad con el sistema
+          role: 'admin'
         };
         
         authService.setToken(response.token);
@@ -104,13 +103,10 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setUser(null);
       setIsAuthenticated(false);
-      // Agregar campo role para compatibilidad
       const peritoWithRole = {
         ...peritoData,
-        role: 'perito' // Agregar role para compatibilidad con el sistema
+        role: 'perito'
       };
-      
-      // Guardar en localStorage (temporal hasta implementar JWT)
       localStorage.setItem('peritoToken', 'temp-token');
       localStorage.setItem('peritoData', JSON.stringify(peritoWithRole));
       
@@ -148,11 +144,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logoutPerito = () => {
-    // Limpiar localStorage
     localStorage.removeItem('peritoToken');
     localStorage.removeItem('peritoData');
-    
-    // Limpiar estado del contexto
     setUser(null);
     setIsAuthenticated(false);
   };

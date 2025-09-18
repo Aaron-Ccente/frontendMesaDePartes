@@ -72,6 +72,24 @@ class ComplementService{
         throw error;
         }
     }
+
+    async getSecciones(id){
+      console.log(id);
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/secciones?id=${id}`, {
+            method: 'GET'
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Error al obtener los turnos');
+        }
+
+        return data;
+        } catch (error) {
+        console.error('Error al obtener los turnos:', error);
+        throw error;
+        }
+    }
 }
 
 

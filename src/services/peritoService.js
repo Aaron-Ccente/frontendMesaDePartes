@@ -24,13 +24,13 @@ class PeritoService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error creando perito');
+        return { error: data.error || data.message || 'Error creando perito' };
       }
 
       return data;
     } catch (error) {
       console.error('Error en createPerito:', error);
-      throw error;
+      return { error: error.message || 'Error de red' };
     }
   }
 
@@ -54,13 +54,13 @@ class PeritoService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error obteniendo peritos');
+        return { error: data.error || data.message || 'Error obteniendo peritos' };
       }
 
       return data;
     } catch (error) {
       console.error('Error en getAllPeritos:', error);
-      throw error;
+      return { error: error.message || 'Error de red' };
     }
   }
 
@@ -74,13 +74,13 @@ class PeritoService {
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.message || 'Error obteniendo perito');
+        return { error: data.error || data.message || 'Error obteniendo perito' };
       }
 
       return data;
     } catch (error) {
       console.error('Error en getPeritoByCIP:', error);
-      throw error;
+      return { error: error.message || 'Error de red' };
     }
   }
 
@@ -96,13 +96,13 @@ class PeritoService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error actualizando perito');
+        return { error: data.error || data.message || 'Error actualizando perito' };
       }
 
       return data;
     } catch (error) {
       console.error('Error en updatePerito:', error);
-      throw error;
+      return { error: error.message || 'Error de red' };
     }
   }
 
@@ -117,13 +117,13 @@ class PeritoService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error eliminando perito');
+        return { error: data.error || data.message || 'Error eliminando perito' };
       }
 
       return data;
     } catch (error) {
       console.error('Error en deletePerito:', error);
-      throw error;
+      return { error: error.message || 'Error de red' };
     }
   }
 
@@ -139,13 +139,13 @@ class PeritoService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error cambiando contraseña');
+        return { error: data.error || data.message || 'Error cambiando contraseña' };
       }
 
       return data;
     } catch (error) {
       console.error('Error en changePeritoPassword:', error);
-      throw error;
+      return { error: error.message || 'Error de red' };
     }
   }
 
@@ -160,13 +160,13 @@ class PeritoService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error obteniendo estadísticas');
+        return { error: data.error || data.message || 'Error obteniendo estadísticas' };
       }
 
       return data;
     } catch (error) {
       console.error('Error en getPeritosStats:', error);
-      throw error;
+      return { error: error.message || 'Error de red' };
     }
   }
 
@@ -184,15 +184,16 @@ class PeritoService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error en login de perito');
+        return { error: data.error || data.message || 'Error en login de perito' };
       }
 
       return data;
     } catch (error) {
       console.error('Error en loginPerito:', error);
-      throw error;
+      return { error: error.message || 'Error de red' };
     }
   }
+
   // Para obtener todas las relaciones con sus especialidades, grados, secciones y departamento
   async getEspecialidades(){
     try {
@@ -204,13 +205,13 @@ class PeritoService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error al obtener especialidades');
+        return { error: data.error || data.message || 'Error al obtener especialidades' };
       }
 
       return data;
     } catch (error) {
       console.error('Error al obtener especialidades:', error);
-      throw error;
+      return { error: error.message || 'Error de red' };
     }
   }
 

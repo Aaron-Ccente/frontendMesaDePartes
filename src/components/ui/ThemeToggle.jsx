@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTheme } from '../../hooks/useTheme';
 import SunIcon from '../../assets/icons/SunIcon';
 import MoonIcon from '../../assets/icons/MoonIcon';
