@@ -723,18 +723,6 @@ const PeritoForm = () => {
             <h3 className="text-lg font-semibold text-[#1a4d2e] mb-4 border-b pb-2">
               Foto
             </h3>
-            {isEditing && (
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <span className="text-xl">ℹ️</span>
-                  <span className="text-sm">
-                    <strong>Imágenes existentes:</strong> Se cargan automáticamente desde la base de datos en formato WebP. 
-                    <br />
-                    <strong>Para reemplazar:</strong> Sube un nuevo archivo y se convertirá automáticamente a WebP.
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Foto */}
@@ -791,10 +779,6 @@ const PeritoForm = () => {
                   >
                     ×
                   </button>
-                  {/* Indicador de tipo de imagen */}
-                  <div className="absolute -bottom-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
-                    WebP
-                  </div>
                 </div>
               )}
             </div>
