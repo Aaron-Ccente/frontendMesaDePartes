@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 import { AuthContext } from './AuthContext.js';
 
@@ -10,68 +10,53 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        //loading
         setLoading(true);
-        // Primero verificar si hay una sesión de perito activa
-        const peritoToken = localStorage.getItem('peritoToken');
-        const peritoData = localStorage.getItem('peritoData');
-        
-        if (peritoToken && peritoData) {
-          try {
-            const parsedPeritoData = JSON.parse(peritoData);
-            // Verificar que los datos del perito sean válidos
-            if (parsedPeritoData.CIP && parsedPeritoData.role === 'perito') {
-              setUser(parsedPeritoData);
-              setIsAuthenticated(true);
-              setLoading(false);
-              return;
-            } else {
-              localStorage.removeItem('peritoToken');
-              localStorage.removeItem('peritoData');
-            }
-          } catch (error) {
-            console.log(error)
-            localStorage.removeItem('peritoToken');
-            localStorage.removeItem('peritoData');
-          }
-        }
-        
-        // Si no hay sesión de perito, verificar autenticación de administrador
-        if (authService.isAuthenticated()) {
-          //validar el token
+
+        // Verificar token de administrador
+        if (authService.getToken()) {
           try {
             const isValid = await authService.validateAndRefreshToken();
             if (isValid) {
               const userData = authService.getAdminData();
               if (userData) {
-                setUser(userData);
+                setUser({...userData, role: 'admin'});
                 setIsAuthenticated(true);
-              } else {
-                // Token válido pero no hay datos de usuario, limpiar
-                authService.logout();
-                setUser(null);
-                setIsAuthenticated(false);
+                return; // Terminar aquí si es admin válido
               }
-            } else {
-              // Token inválido, limpiar estado
-              authService.logout();
-              setUser(null);
-              setIsAuthenticated(false);
+            }
+            // Si no es válido
+            authService.logout();
+          } catch (error) {
+            console.error('Error validando token:', error);
+            authService.logout();
+          }
+        }
+
+        // Verificar sesión de perito
+        const peritoData = localStorage.getItem('peritoData');
+        if (peritoData) {
+          try {
+            const parsedData = JSON.parse(peritoData);
+            if (parsedData.CIP && parsedData.role === 'perito') {
+              setUser(parsedData);
+              setIsAuthenticated(true);
+              return;
             }
           } catch (error) {
-            console.log(error)
-            // Si hay error en la validación, limpiar todo
-            authService.logout();
-            setUser(null);
-            setIsAuthenticated(false);
+            console.error('Error parsing perito data:', error);
+            localStorage.removeItem('peritoToken');
+            localStorage.removeItem('peritoData');
           }
-        } else {
-          // No hay token ni sesión de perito, usuario no autenticado
-          setUser(null);
-          setIsAuthenticated(false);
         }
+
+        // Si no hay ninguna sesión válida
+        setUser(null);
+        setIsAuthenticated(false);
+
       } catch (error) {
-        console.log(error)
-        // En caso de error, limpiar todo
+        console.error('Error en initializeAuth:', error);
+        // Limpiar todo en caso de error
         authService.logout();
         localStorage.removeItem('peritoToken');
         localStorage.removeItem('peritoData');
@@ -93,10 +78,9 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.loginAdmin(credentials);
       
       if (response.success) {
-        // Agregar campo role para compatibilidad
         const adminData = {
           ...response.admin,
-          role: 'admin' // Agregar role para compatibilidad con el sistema
+          role: 'admin'
         };
         
         authService.setToken(response.token);
@@ -119,13 +103,10 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setUser(null);
       setIsAuthenticated(false);
-      // Agregar campo role para compatibilidad
       const peritoWithRole = {
         ...peritoData,
-        role: 'perito' // Agregar role para compatibilidad con el sistema
+        role: 'perito'
       };
-      
-      // Guardar en localStorage (temporal hasta implementar JWT)
       localStorage.setItem('peritoToken', 'temp-token');
       localStorage.setItem('peritoData', JSON.stringify(peritoWithRole));
       
@@ -163,11 +144,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logoutPerito = () => {
-    // Limpiar localStorage
     localStorage.removeItem('peritoToken');
     localStorage.removeItem('peritoData');
-    
-    // Limpiar estado del contexto
     setUser(null);
     setIsAuthenticated(false);
   };

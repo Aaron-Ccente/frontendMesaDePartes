@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { peritoAuthService } from '../../services/peritoAuthService';
@@ -54,34 +54,32 @@ const PeritoLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a4d2e] to-[#1a4d2e] flex items-center justify-center p-4 relative">
+    <div className="min-h-screen bg-gradient-to-br from-[#1a4d2e] to-[#2d7d4a] flex items-center justify-center p-4 relative">
       {/* Botón de cambio de tema en la esquina superior derecha */}
       <div className="absolute top-4 right-4">
         <ThemeToggle size="lg" />
       </div>
-      
-      <div className="max-w-md w-full space-y-8">
-        {/* Header */}
-        <div className="text-center">
-          <div className="mx-auto h-20 w-20 bg-white dark:bg-dark-surface rounded-full flex items-center justify-center mb-4">
-            <span className="text-4xl text-[#1a4d2e] dark:text-dark-pnp-green">👮‍♂️</span>
-          </div>
-          <h2 className="text-3xl font-bold text-white mb-2">
-            Acceso Peritos
-          </h2>
-          <p className="text-white/80 dark:text-white/90">
-            Sistema de Gestión de documentos
-          </p>
-        </div>
-
+      {/* Fondo con elementos decorativos en verde */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-50">
+        <div className="absolute top-20 left-20 w-72 h-72 bg-[#2e8822] rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-96 h-96 bg-[#2e8822] rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse delay-1000"></div>
+        <div className="absolute -bottom-32 left-1/2 transform -translate-x-1/2 w-80 h-80 bg-[#2e8822] rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse delay-500"></div>
+      </div>
+      <div className="w-fit flex justify-center bg-gradient-to-t from-[#1a4d2e] to-[#2e8822]  rounded-2xl">
         {/* Formulario */}
-        <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-2xl dark:shadow-gray-900/50 p-8 border border-gray-200 dark:border-dark-border">
+        <div className="bg-white dark:bg-dark-surface transition-colors rounded-2xl p-8 w-96">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="mb-5">
+              <h1 className="text-3xl font-bold text-[#1a4d2e] dark:text-dark-text-primary mb-2">Iniciar Sesión</h1>
+              <h2 className="text-lg text-gray-600 dark:text-dark-text-secondary">Acceso de Peritos</h2>
+            </div>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Error Message */}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
                 <div className="flex items-center space-x-2">
-                  <span className="text-xl">⚠️</span>
                   <span>{error}</span>
                 </div>
               </div>
@@ -145,6 +143,14 @@ const PeritoLogin = () => {
               Sistema de Mesa de Partes OFICRI
             </div>
           </div>
+        </div>
+        <div className='w-96 flex flex-col justify-center gap-8 items-center'>
+              <div className='flex justify-center gap-6'>
+                <img src='/src/assets/images/fondo_oficri.webp' width={140} height={140}/>
+                <img src='/src/assets/images/fondo_pnp.webp' width={140} height={140}/>
+              </div>
+              <h2 className='text-3xl text-light-gray font-bold'>Mesa De Partes PNP</h2>
+              <p className='text-sm text-light-gray'>Sistema de Gestión de requisitos Forenses</p>
         </div>
       </div>
     </div>

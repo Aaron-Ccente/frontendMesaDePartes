@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { peritoService } from '../../services/peritoService';
+import Usuarios from '../../assets/icons/Usuarios';
+import Error from '../../assets/icons/Error';
 
 const UserManagement = () => {
   const navigate = useNavigate();
@@ -127,7 +129,6 @@ const UserManagement = () => {
               onClick={handleRefresh}
               className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2"
             >
-              <span className="text-xl">🔄</span>
               <span>Actualizar</span>
             </button>
             <button
@@ -145,7 +146,7 @@ const UserManagement = () => {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
           <div className="flex items-center space-x-2">
-            <span className="text-xl">⚠️</span>
+            <Error size={6}/>
             <span>{error}</span>
           </div>
         </div>
@@ -169,7 +170,7 @@ const UserManagement = () => {
           </div>
           <div className="flex items-end">
             <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors duration-200">
-              🔍 Filtros
+              Filtros
             </button>
           </div>
         </div>
@@ -188,19 +189,19 @@ const UserManagement = () => {
                   Nombres
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Apellidos
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   DNI
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Sección
+                  Email
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Especialidad
+                  Departamento
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Último Censo
+                  Seccion
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Rol
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Acciones
@@ -211,7 +212,7 @@ const UserManagement = () => {
               {peritos.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
-                    <div className="text-6xl mb-4">👥</div>
+                    <span className='w-full flex justify-center'><Usuarios size={12}/></span>
                     <p className="text-lg font-medium">No se encontraron peritos</p>
                     <p className="text-sm">
                       {searchTerm ? 'Intenta ajustar los filtros de búsqueda' : 'No hay peritos registrados en el sistema'}
@@ -227,22 +228,22 @@ const UserManagement = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {perito.Nombres || '-'}
+                      {perito.nombre_completo || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {perito.Apellidos || '-'}
+                      {perito.dni || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {perito.DNI || '-'}
+                      {perito.email || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {perito.Seccion || '-'}
+                      {perito.nombre_departamento || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {perito.Especialidad || '-'}
+                      {perito.nombre_seccion || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {perito.UltimoCenso || '-'}
+                      Perito
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">

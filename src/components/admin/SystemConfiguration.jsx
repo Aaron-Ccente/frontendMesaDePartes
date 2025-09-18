@@ -1,4 +1,4 @@
-import React from 'react';
+import Configuracion from '../../assets/icons/Configuracion';
 
 const SystemConfiguration = () => {
   return (
@@ -12,8 +12,8 @@ const SystemConfiguration = () => {
         </p>
       </div>
       
-      <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-        <div className="text-6xl mb-4">⚙️</div>
+      <div className="bg-white rounded-xl shadow-lg p-12 text-center flex flex-col justify-center items-center">
+        <Configuracion size={12}/>
         <h2 className="text-2xl font-semibold text-gray-700 mb-2">
           Funcionalidad en Desarrollo
         </h2>

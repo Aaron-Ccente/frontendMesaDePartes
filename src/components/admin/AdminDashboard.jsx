@@ -1,12 +1,37 @@
-import React from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import ThemeToggle from '../ui/ThemeToggle';
+import Estadistica from '../../assets/icons/Estadistica';
+import Usuarios from '../../assets/icons/Usuarios';
+import Documentos from '../../assets/icons/Documentos';
+import Configuracion from '../../assets/icons/Configuracion';
+import Politics from '../ui/Politics';
+import { useEffect } from 'react';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, loading, logout, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      navigate('/admin/login');
+    }
+  }, [loading, isAuthenticated, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1a4d2e] mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-dark-text-primary">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+  if (!isAuthenticated || !user) {
+    return null;
+  }
 
   const handleNavigation = (path) => {
     navigate(`/admin/dashboard${path}`);
@@ -23,7 +48,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-300">
-      
+      <Politics/>
       <header className="bg-gradient-to-r from-[#1a4d2e] to-[#2d7d4a] dark:from-dark-pnp-green-dark dark:to-dark-pnp-green text-white shadow-lg dark:shadow-gray-900/50">
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Panel de Administración</h1>
@@ -52,16 +77,16 @@ const AdminDashboard = () => {
               <h2 className="text-lg font-semibold text-gray-800 dark:text-dark-text-primary mb-6">Navegación</h2>
               <div className="space-y-3">
                 <button onClick={() => handleNavigation('')} className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${isActiveRoute('/admin/dashboard') && !isActiveRoute('/usuarios') && !isActiveRoute('/documentos') && !isActiveRoute('/configuracion') ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'}`}>
-                  <div className="flex items-center space-x-3"><span className="text-xl">📊</span><span>Estadísticas</span></div>
+                  <div className="flex items-center space-x-3"><span><Estadistica/></span><span>Estadísticas</span></div>
                 </button>
                 <button onClick={() => handleNavigation('/usuarios')} className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${isActiveRoute('/usuarios') ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'}`}>
-                  <div className="flex items-center space-x-3"><span className="text-xl">👥</span><span>Usuarios</span></div>
+                  <div className="flex items-center space-x-3"><span><Usuarios/></span><span>Usuarios</span></div>
                 </button>
                 <button onClick={() => handleNavigation('/documentos')} className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${isActiveRoute('/documentos') ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'}`}>
-                  <div className="flex items-center space-x-3"><span className="text-xl">📝</span><span>Documentos</span></div>
+                  <div className="flex items-center space-x-3"><span><Documentos size={6}/></span><span>Documentos</span></div>
                 </button>
                 <button onClick={() => handleNavigation('/configuracion')} className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${isActiveRoute('/configuracion') ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'}`}>
-                  <div className="flex items-center space-x-3"><span className="text-xl">⚙️</span><span>Configuración</span></div>
+                  <div className="flex items-center space-x-3"><span><Configuracion size={6}/></span><span>Configuración</span></div>
                 </button>
               </div>
             </nav>

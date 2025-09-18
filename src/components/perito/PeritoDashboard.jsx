@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import ThemeToggle from '../ui/ThemeToggle';
@@ -143,7 +142,7 @@ const PeritoDashboard = () => {
                   }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <span className="text-xl">📊</span>
+                    
                     <span>Resumen</span>
                   </div>
                 </button>
@@ -157,7 +156,7 @@ const PeritoDashboard = () => {
                   }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <span className="text-xl">📝</span>
+                    
                     <span>Documentos</span>
                   </div>
                 </button>
