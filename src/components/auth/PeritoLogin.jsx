@@ -9,7 +9,7 @@ const PeritoLogin = () => {
   const { loginPerito } = useAuth();
   const [formData, setFormData] = useState({
     CIP: '',
-    contrasena: ''
+    password_hash: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -27,7 +27,7 @@ const PeritoLogin = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.CIP || !formData.contrasena) {
+    if (!formData.CIP || !formData.password_hash) {
       setError('CIP y contraseña son requeridos');
       return;
     }
@@ -35,11 +35,11 @@ const PeritoLogin = () => {
     try {
       setLoading(true);
       setError('');
-      // Intentar login
+
       const response = await peritoAuthService.loginPerito(formData);
       
       if (response.success) {
-        // Configurar sesión en el contexto
+
         await loginPerito(response.data);  
         // Redirigir al dashboard de perito
         navigate('/perito/dashboard');
@@ -105,14 +105,14 @@ const PeritoLogin = () => {
 
             {/* Contraseña */}
             <div>
-              <label htmlFor="contrasena" className="block text-sm font-medium text-gray-700 mb-2 dark:text-dark-text-secondary">
+              <label htmlFor="password_hash" className="block text-sm font-medium text-gray-700 mb-2 dark:text-dark-text-secondary">
                 Contraseña
               </label>
               <input
                 type="password"
-                id="contrasena"
-                name="contrasena"
-                value={formData.contrasena}
+                id="password_hash"
+                name="password_hash"
+                value={formData.password_hash}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent dark:text-dark-text-secondary"
                 placeholder="Ingrese su contraseña"
@@ -149,7 +149,7 @@ const PeritoLogin = () => {
                 <img src='/src/assets/images/fondo_oficri.webp' width={140} height={140}/>
                 <img src='/src/assets/images/fondo_pnp.webp' width={140} height={140}/>
               </div>
-              <h2 className='text-3xl text-light-gray font-bold'>Mesa De Partes PNP</h2>
+              <h2 className='text-3xl text-light-gray font-bold'>Mesa De Partes OFICRI</h2>
               <p className='text-sm text-light-gray'>Sistema de Gestión de requisitos Forenses</p>
         </div>
       </div>
