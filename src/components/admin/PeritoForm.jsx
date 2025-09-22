@@ -56,22 +56,25 @@ const PeritoForm = () => {
     id_tipo_departamento: ''
   };
 
-  const { values, errors, isSubmitting, handleChange, handleSubmit, setFieldValue } = useForm({
+  const { values, errors, isSubmitting, handleChange, handleSubmit, setFieldValue, setValues } = useForm({
     initialValues,
     onSubmit: async (formData) => {
       try {
         setLoading(true);
         setError('');
         setSuccess('');
-        console.log(formData);
+        
         let result;
         if (isEditing) {
-          const { password_hash: _ph, confirmar_password: _cp, ...updateData } = formData;
-          console.log(updateData)
+          // Para edición, no enviamos la contraseña si no se cambió
+          const updateData = { ...formData };
+          if (!updateData.password_hash) {
+            delete updateData.password_hash;
+            delete updateData.confirmar_password;
+          }
           result = await peritoService.updatePerito(cip, updateData);
         } else {
           const { confirmar_password: _cp, ...createData } = formData;
-          console.log(createData)
           result = await peritoService.createPerito(createData);
         }
 
@@ -118,49 +121,37 @@ const PeritoForm = () => {
     }
   });
 
-  // Cargar opciones para los select
+  // Cargar opciones para los select (tanto para crear como editar)
   useEffect(() => {
-    if (isEditing && cip) {
     const loadOptions = async () => {
       try {
-        const especialidades = await peritoService.getEspecialidades();
-        const grados = await peritoService.getGrados();
-        const secciones = await peritoService.getSecciones();
-        const tiposDepartamento = await peritoService.getTiposDepartamento();
+        const [
+          especialidadesRes, 
+          gradosRes, 
+          turnosRes, 
+          tiposDepartamentoRes
+        ] = await Promise.all([
+          ComplementServices.getEspecialidades(),
+          ComplementServices.getGrados(),
+          ComplementServices.getTurnos(),
+          ComplementServices.getTiposDepartamento()
+        ]);
 
         setOptions({
-          especialidades,
-          grados,
-          secciones,
-          tiposDepartamento
+          especialidades: especialidadesRes.data || [],
+          grados: gradosRes.data || [],
+          turnos: turnosRes.data || [],
+          tiposDepartamento: tiposDepartamentoRes.data || [],
+          secciones: [] // Se cargarán después según el tipo de departamento seleccionado
         });
       } catch (error) {
         console.error('Error cargando opciones:', error);
         setError('Error cargando opciones del formulario');
       }
     };
-    loadOptions();}
-    else{
-      const loadDataNotEditing = async () =>{
-         try {
-        const especialidadesRes = await ComplementServices.getEspecialidades();
-        const gradosRes = await ComplementServices.getGrados();
-        const turnosRes = await ComplementServices.getTurnos();
-        const tiposDepartamentoRes = await ComplementServices.getTiposDepartamento();
-         setOptions({
-          especialidades: especialidadesRes.data,
-          grados: gradosRes.data,
-          turnos: turnosRes.data,
-          tiposDepartamento: tiposDepartamentoRes.data
-        });
-      } catch (error) {
-        console.error('Error cargando opciones:', error);
-        setError('Error cargando opciones del formulario');
-      }
-      }
-      loadDataNotEditing()
-    }
-  }, [isEditing, cip]);
+    
+    loadOptions();
+  }, []);
 
   // Cargar datos del perito para edición
   useEffect(() => {
@@ -170,72 +161,79 @@ const PeritoForm = () => {
           setLoading(true);
           setError('');
           const response = await peritoService.getPeritoByCIP(cip);
+          
+          if (!response.success) {
+            setError(response.message || 'Error cargando perito');
+            return;
+          }
+          
           const perito = response.data;
           
           // Función para formatear fechas
           const formatDateForInput = (dateString) => {
             if (!dateString) return '';
             
-            // fecha YYYY-MM-DD
-            if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-              return dateString;
-            }
-            
-            if (dateString instanceof Date) {
-              const isoDate = dateString.toISOString().split('T')[0];
-              return isoDate;
-            }
-
-            if (typeof dateString === 'string') {
-              try {
-                const date = new Date(dateString);
-                if (!isNaN(date.getTime())) {
-                  const isoDate = date.toISOString().split('T')[0];
-                  return isoDate;
-                }
-              } catch (error) {
-                console.log(error)
+            try {
+              const date = new Date(dateString);
+              if (!isNaN(date.getTime())) {
+                return date.toISOString().split('T')[0];
               }
+            } catch (error) {
+              console.error('Error formateando fecha:', error);
             }
             return '';
           };
           
-          // Cargar datos del usuario
-          setFieldValue('CIP', perito.CIP || '');
-          setFieldValue('nombre_usuario', perito.nombre_usuario || '');
-          setFieldValue('nombre_completo', perito.nombre_completo || '');
-          
-          // Cargar datos del perito
-          Object.keys(perito).forEach(key => {
-            if (perito[key] !== null && perito[key] !== undefined) {
-              // Formatear fechas específicamente
-              if (key === 'fecha_integracion_pnp' || key === 'fecha_incorporacion' || key === 'ultimo_ascenso_pnp') {
-                const fechaFormateada = formatDateForInput(perito[key]);
-                setFieldValue(key, fechaFormateada);
-              } else if (key !== 'CIP' && key !== 'nombre_usuario' && key !== 'nombre_completo') {
-                setFieldValue(key, perito[key]);
-              }
-            }
-          });
+          // Preparar datos para el formulario
+          const formData = {
+            // Campos de usuario
+            CIP: perito.CIP || '',
+            nombre_usuario: perito.nombre_usuario || '',
+            nombre_completo: perito.nombre_completo || '',
+            password_hash: '', // No cargamos la contraseña por seguridad
+            confirmar_password: '',
+            
+            // Campos de perito
+            dni: perito.dni || '',
+            email: perito.email || '',
+            unidad: perito.unidad || '',
+            fecha_integracion_pnp: formatDateForInput(perito.fecha_integracion_pnp),
+            fecha_incorporacion: formatDateForInput(perito.fecha_incorporacion),
+            codigo_codofin: perito.codigo_codofin || '',
+            domicilio: perito.domicilio || '',
+            telefono: perito.telefono || '',
+            cursos_institucionales: Array.isArray(perito.cursos_institucionales) 
+              ? perito.cursos_institucionales.join(', ') 
+              : perito.cursos_institucionales || '',
+            cursos_extranjero: Array.isArray(perito.cursos_extranjero) 
+              ? perito.cursos_extranjero.join(', ') 
+              : perito.cursos_extranjero || '',
+            ultimo_ascenso_pnp: formatDateForInput(perito.ultimo_ascenso_pnp),
+            fotografia_url: perito.fotografia_url || null,
 
-          // Cargar relaciones
-          if (perito.id_especialidad) setFieldValue('id_especialidad', perito.id_especialidad);
-          if (perito.id_grado) setFieldValue('id_grado', perito.id_grado);
-          if (perito.id_turno) setFieldValue('id_turno', perito.id_turno);
-          if (perito.id_tipo_departamento) setFieldValue('id_tipo_departamento', perito.id_tipo_departamento);
+            // Campos de relación
+            id_especialidad: perito.id_especialidad || '',
+            id_grado: perito.id_grado || '',
+            id_turno: perito.id_turno || '',
+            id_seccion: perito.id_seccion || '',
+            id_tipo_departamento: perito.id_tipo_departamento || ''
+          };
+
+          // Establecer valores en el formulario
+          setValues(formData);
+
+          // Cargar secciones según el tipo de departamento si existe
+          if (perito.id_tipo_departamento) {
+            chargeSections(perito.id_tipo_departamento);
+          }
 
           // Mostrar foto si existe
           if (perito.fotografia_url) {
-            try {
-              setPhotoPreview(perito.fotografia_url);
-            } catch (error) {
-              setError('Error cargando foto del perito: ' + error.message);
-            }
-          } else {
-            console.log('No hay foto para el perito');
+            setPhotoPreview(perito.fotografia_url);
           }
           
         } catch (error) {
+          console.error('Error cargando perito:', error);
           setError('Error cargando datos del perito: ' + (error.message || 'Error desconocido'));
         } finally {
           setLoading(false);
@@ -244,7 +242,7 @@ const PeritoForm = () => {
 
       loadPerito();
     }
-  }, [isEditing, cip, setFieldValue]);
+  }, [isEditing, cip, setValues]);
 
   const handleCancel = () => {
     navigate('/admin/dashboard/usuarios');
@@ -273,12 +271,18 @@ const PeritoForm = () => {
     }
   };
 
-  const chargeSections = async (id) => {
-    console.log(id)
-    const seccionesRes = await ComplementServices.getSecciones(id);
-    setOptions({...options, secciones: seccionesRes.data});
-    console.log(seccionesRes)
-  }
+  const chargeSections = async (idTipoDepartamento) => {
+    try {
+      const seccionesRes = await ComplementServices.getSecciones(idTipoDepartamento);
+      setOptions(prev => ({
+        ...prev, 
+        secciones: seccionesRes.data || []
+      }));
+    } catch (error) {
+      console.error('Error cargando secciones:', error);
+      setError('Error cargando secciones');
+    }
+  };
 
   const removePhoto = () => {
     setPhotoPreview(null);
@@ -609,13 +613,13 @@ const PeritoForm = () => {
             />
           </div>
 
-          {/* Relaciones */}
+         {/* Relaciones */}
           <div className="lg:col-span-2">
             <h3 className="text-lg font-semibold text-[#1a4d2e] mb-4 border-b pb-2">
               Información de Relación
             </h3>
           </div>
-          
+
           <div>
             <label htmlFor="id_tipo_departamento" className="block text-sm font-medium text-gray-700 mb-2">
               Tipo de Departamento
@@ -623,14 +627,18 @@ const PeritoForm = () => {
             <select
               id="id_tipo_departamento"
               name="id_tipo_departamento"
-              value={values.id_tipo_departamento}
-              onChange={(e) => {handleChange('id_tipo_departamento', e.target.value)
-                                chargeSections(e.target.value);}}
+              value={values.id_tipo_departamento || ""}
+              onChange={(e) => {
+                handleChange('id_tipo_departamento', e.target.value);
+                chargeSections(e.target.value);
+              }}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
             >
               <option value="">Seleccione un tipo de departamento</option>
-              {options.tiposDepartamento.map((tipo, index) => (
-                <option key={index} value={tipo.id_tipo_departamento}
+              {options.tiposDepartamento.map((tipo) => (
+                <option 
+                  key={tipo.id_tipo_departamento} 
+                  value={tipo.id_tipo_departamento}
                 >
                   {tipo.nombre_departamento}
                 </option>
@@ -645,33 +653,40 @@ const PeritoForm = () => {
             <select
               id="id_especialidad"
               name="id_especialidad"
-              value={values.id_especialidad}
+              value={values.id_especialidad || ""}
               onChange={(e) => handleChange('id_especialidad', e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
             >
               <option value="">Seleccione una especialidad</option>
-              {options.especialidades.map((especialidad, index) => (
-                <option key={index} value={especialidad.id_especialidad}>
+              {options.especialidades.map((especialidad) => (
+                <option 
+                  key={especialidad.id_especialidad} 
+                  value={especialidad.id_especialidad}
+                >
                   {especialidad.nombre}
                 </option>
               ))}
             </select>
           </div>
 
-         <div>
+          <div>
             <label htmlFor="id_seccion" className="block text-sm font-medium text-gray-700 mb-2">
               Secciones
             </label>
             <select
               id="id_seccion"
               name="id_seccion"
-              value={values.id_seccion}
+              value={values.id_seccion || ""}
               onChange={(e) => handleChange('id_seccion', e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+              disabled={!values.id_tipo_departamento} // Deshabilitar si no hay tipo de departamento seleccionado
             >
-              <option value="">Seleccione una especialidad</option>
-              {options.secciones && options.secciones.map((seccion, index) => (
-                <option key={index} value={seccion.id_seccion}>
+              <option value="">{values.id_tipo_departamento ? "Seleccione una sección" : "Primero seleccione un tipo de departamento"}</option>
+              {options.secciones.map((seccion) => (
+                <option 
+                  key={seccion.id_seccion} 
+                  value={seccion.id_seccion}
+                >
                   {seccion.nombre}
                 </option>
               ))}
@@ -685,13 +700,16 @@ const PeritoForm = () => {
             <select
               id="id_grado"
               name="id_grado"
-              value={values.id_grado}
+              value={values.id_grado || ""}
               onChange={(e) => handleChange('id_grado', e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
             >
               <option value="">Seleccione un grado</option>
-              {options.grados.map((grado, index) => (
-                <option key={index} value={grado.id_grado}>
+              {options.grados.map((grado) => (
+                <option 
+                  key={grado.id_grado} 
+                  value={grado.id_grado}
+                >
                   {grado.nombre}
                 </option>
               ))}
@@ -705,13 +723,16 @@ const PeritoForm = () => {
             <select
               id="id_turno"
               name="id_turno"
-              value={values.id_turno}
+              value={values.id_turno || ""}
               onChange={(e) => handleChange('id_turno', e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
             >
               <option value="">Seleccione un turno</option>
-              {options.turnos.map((turno, index) => (
-                <option key={index} value={turno.id_turno}>
+              {options.turnos.map((turno) => (
+                <option 
+                  key={turno.id_turno} 
+                  value={turno.id_turno}
+                >
                   {turno.nombre}
                 </option>
               ))}
