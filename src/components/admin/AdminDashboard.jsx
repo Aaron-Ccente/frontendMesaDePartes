@@ -47,9 +47,9 @@ const AdminDashboard = () => {
   };
 
   return (
+
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-300 flex flex-col">
-      <Politics/>
-      
+      <Politics/> 
       {/* Header */}
       <header className="bg-gradient-to-r from-[#1a4d2e] to-[#2d7d4a] dark:from-dark-pnp-green-dark dark:to-dark-pnp-green text-white shadow-lg dark:shadow-gray-900/50 sticky top-0 z-10">
         <div className="max-w-full mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
@@ -59,12 +59,12 @@ const AdminDashboard = () => {
             <ThemeToggle size="md" />
             
             <div className="text-right">
-              <p className="text-sm text-gray-200 dark:text-dark-text-secondary">Bienvenido,</p>
+              <p className="text-sm text-gray-200">Bienvenido,</p>
               <p className="font-semibold">{user?.Nombre || 'Administrador'}</p>
             </div>
             <button
               onClick={handleLogout}
-              className="bg-white dark:bg-dark-surface text-[#1a4d2e] dark:text-dark-pnp-green px-4 py-2 rounded-lg shadow hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary transition-colors duration-200"
+              className="bg-white text-[#1a4d2e] px-4 py-2 rounded-lg shadow hover:bg-gray-100 transition-colors duration-200"
             >
               Cerrar Sesión
             </button>
