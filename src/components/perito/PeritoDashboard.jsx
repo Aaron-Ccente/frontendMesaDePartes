@@ -39,7 +39,7 @@ const PeritoDashboard = () => {
         <div className="max-w-full mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <div>
-              <h1 className="text-2xl font-bold">Mesa de Partes PNP</h1>
+              <h1 className="text-2xl font-bold">Mesa de Partes OFICRI</h1>
               <p className="text-sm text-gray-200 dark:text-dark-text-secondary">Panel de Perito</p>
             </div>
           </div>
