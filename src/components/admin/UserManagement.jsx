@@ -224,7 +224,7 @@ const UserManagement = () => {
                           className="text-[#1a4d2e] hover:text-[#2d7d4a] transition-colors duration-200 dark:text-green-500 dark:hover:text-green-400"
                           disabled={deleteLoading === perito.CIP}
                         >
-                          ✏️ Editar
+                          Editar
                         </button>
                         <button
                           onClick={() => handleDeletePerito(perito.CIP)}
@@ -234,7 +234,7 @@ const UserManagement = () => {
                           {deleteLoading === perito.CIP ? (
                             <span className="animate-spin">⏳</span>
                           ) : (
-                            '🗑️ Eliminar'
+                            'Eliminar'
                           )}
                         </button>
                       </div>

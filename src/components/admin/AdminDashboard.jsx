@@ -47,12 +47,12 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-300">
-      <Politics />
-      
-      {/* 🔹 Header superior con verde oscuro fijo */}
-      <header className="bg-[#1a4d2e] dark:bg-[#1a4d2e] text-white shadow-lg">
-        <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-300 flex flex-col">
+      <Politics/> 
+      {/* Header */}
+      <header className="bg-gradient-to-r from-[#1a4d2e] to-[#2d7d4a] dark:from-dark-pnp-green-dark dark:to-dark-pnp-green text-white shadow-lg dark:shadow-gray-900/50 sticky top-0 z-10">
+        <div className="max-w-full mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Panel de Administración</h1>
           <div className="flex items-center space-x-4">
             {/* Botón de cambio de tema */}
@@ -72,80 +72,89 @@ const AdminDashboard = () => {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          
-          {/* Sidebar Navigation */}
-          <div className="lg:col-span-1">
-            <nav className="bg-white dark:bg-dark-surface rounded-xl shadow-lg dark:shadow-gray-900/20 p-6 border border-gray-200 dark:border-dark-border">
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-dark-text-primary mb-6">Navegación</h2>
-              <div className="space-y-3">
-                <button
-                  onClick={() => handleNavigation('')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
-                    isActiveRoute('/admin/dashboard') && 
-                    !isActiveRoute('/usuarios') && 
-                    !isActiveRoute('/documentos') && 
-                    !isActiveRoute('/configuracion')
-                      ? 'bg-[#1a4d2e] text-white shadow-md'
-                      : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <Estadistica />
-                    <span>Estadísticas</span>
-                  </div>
-                </button>
+      {/* Main Content Area */}
+      <div className="flex flex-1">
+        {/* Sidebar Navigation - Fixed to left */}
+        <div className="w-64 bg-white dark:bg-dark-surface shadow-lg dark:shadow-gray-900/20 border-r border-gray-200 dark:border-dark-border sticky top-[76px] h-[calc(100vh-76px)] overflow-y-auto">
+          <nav className="p-6">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-dark-text-primary mb-6">Navegación</h2>
+            <div className="space-y-3">
+              <button 
+                onClick={() => handleNavigation('')} 
+                className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
+                  isActiveRoute('/admin/dashboard') && !isActiveRoute('/usuarios') && !isActiveRoute('/documentos') && !isActiveRoute('/configuracion')  && !isActiveRoute('/administradores')
+                    ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' 
+                    : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <span><Estadistica/></span>
+                  <span>Estadísticas</span>
+                </div>
+              </button>
+              
+              <button 
+                onClick={() => handleNavigation('/usuarios')} 
+                className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
+                  isActiveRoute('/usuarios') 
+                    ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' 
+                    : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <span><Usuarios/></span>
+                  <span>Usuarios</span>
+                </div>
+              </button>
 
-                <button
-                  onClick={() => handleNavigation('/usuarios')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
-                    isActiveRoute('/usuarios')
-                      ? 'bg-[#1a4d2e] text-white shadow-md'
-                      : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <Usuarios />
-                    <span>Usuarios</span>
-                  </div>
-                </button>
+              <button 
+                onClick={() => handleNavigation('/administradores')} 
+                className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
+                  isActiveRoute('/administradores') 
+                    ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' 
+                    : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <span><Usuarios/></span>
+                  <span>Administradores</span>
+                </div>
+              </button>
 
-                <button
-                  onClick={() => handleNavigation('/documentos')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
-                    isActiveRoute('/documentos')
-                      ? 'bg-[#1a4d2e] text-white shadow-md'
-                      : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <Documentos size={6} />
-                    <span>Documentos</span>
-                  </div>
-                </button>
+              <button 
+                onClick={() => handleNavigation('/documentos')} 
+                className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
+                  isActiveRoute('/documentos') 
+                    ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' 
+                    : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <span><Documentos size={6}/></span>
+                  <span>Documentos</span>
+                </div>
+              </button>
+              
+              <button 
+                onClick={() => handleNavigation('/configuracion')} 
+                className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
+                  isActiveRoute('/configuracion') 
+                    ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' 
+                    : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <span><Configuracion size={6}/></span>
+                  <span>Configuración</span>
+                </div>
+              </button>
+            </div>
+          </nav>
+        </div>
 
-                <button
-                  onClick={() => handleNavigation('/configuracion')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
-                    isActiveRoute('/configuracion')
-                      ? 'bg-[#1a4d2e] text-white shadow-md'
-                      : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <Configuracion size={6} />
-                    <span>Configuración</span>
-                  </div>
-                </button>
-              </div>
-            </nav>
-          </div>
-
-          {/* Main Content Area */}
-          <div className="lg:col-span-3">
-            <Outlet />
-          </div>
+        {/* Content Area - Takes remaining space */}
+        <div className="flex-1 p-6 overflow-auto">
+          <Outlet />
         </div>
       </div>
     </div>
