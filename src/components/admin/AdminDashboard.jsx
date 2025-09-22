@@ -82,7 +82,7 @@ const AdminDashboard = () => {
               <button 
                 onClick={() => handleNavigation('')} 
                 className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
-                  isActiveRoute('/admin/dashboard') && !isActiveRoute('/usuarios') && !isActiveRoute('/documentos') && !isActiveRoute('/configuracion') 
+                  isActiveRoute('/admin/dashboard') && !isActiveRoute('/usuarios') && !isActiveRoute('/documentos') && !isActiveRoute('/configuracion')  && !isActiveRoute('/administradores')
                     ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' 
                     : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
                 }`}
@@ -106,7 +106,21 @@ const AdminDashboard = () => {
                   <span>Usuarios</span>
                 </div>
               </button>
-              
+
+              <button 
+                onClick={() => handleNavigation('/administradores')} 
+                className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
+                  isActiveRoute('/administradores') 
+                    ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' 
+                    : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <span><Usuarios/></span>
+                  <span>Administradores</span>
+                </div>
+              </button>
+
               <button 
                 onClick={() => handleNavigation('/documentos')} 
                 className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
