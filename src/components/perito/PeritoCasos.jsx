@@ -13,7 +13,7 @@ const PeritoCasos = () => {
 
       {/* Placeholder Content */}
       <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-        <div className="text-6xl mb-4">🔍</div>
+        <div className="text-6xl mb-4"></div>
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">
           Gestión de Casos
         </h2>
@@ -21,7 +21,7 @@ const PeritoCasos = () => {
           Aquí podrás ver todos los casos que te han sido asignados y su estado actual.
         </p>
         <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg inline-block">
-          <p className="text-sm">🚧 Funcionalidad en desarrollo</p>
+          <p className="text-sm">Funcionalidad en desarrollo</p>
         </div>
       </div>
     </div>

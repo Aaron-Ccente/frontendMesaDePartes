@@ -56,22 +56,25 @@ const PeritoForm = () => {
     id_tipo_departamento: ''
   };
 
-  const { values, errors, isSubmitting, handleChange, handleSubmit, setFieldValue } = useForm({
+  const { values, errors, isSubmitting, handleChange, handleSubmit, setFieldValue, setValues } = useForm({
     initialValues,
     onSubmit: async (formData) => {
       try {
         setLoading(true);
         setError('');
         setSuccess('');
-        console.log(formData);
+        
         let result;
         if (isEditing) {
-          const { password_hash: _ph, confirmar_password: _cp, ...updateData } = formData;
-          console.log(updateData)
+          // Para edición, no enviamos la contraseña si no se cambió
+          const updateData = { ...formData };
+          if (!updateData.password_hash) {
+            delete updateData.password_hash;
+            delete updateData.confirmar_password;
+          }
           result = await peritoService.updatePerito(cip, updateData);
         } else {
           const { confirmar_password: _cp, ...createData } = formData;
-          console.log(createData)
           result = await peritoService.createPerito(createData);
         }
 
@@ -118,49 +121,37 @@ const PeritoForm = () => {
     }
   });
 
-  // Cargar opciones para los select
+  // Cargar opciones para los select (tanto para crear como editar)
   useEffect(() => {
-    if (isEditing && cip) {
     const loadOptions = async () => {
       try {
-        const especialidades = await peritoService.getEspecialidades();
-        const grados = await peritoService.getGrados();
-        const secciones = await peritoService.getSecciones();
-        const tiposDepartamento = await peritoService.getTiposDepartamento();
+        const [
+          especialidadesRes, 
+          gradosRes, 
+          turnosRes, 
+          tiposDepartamentoRes
+        ] = await Promise.all([
+          ComplementServices.getEspecialidades(),
+          ComplementServices.getGrados(),
+          ComplementServices.getTurnos(),
+          ComplementServices.getTiposDepartamento()
+        ]);
 
         setOptions({
-          especialidades,
-          grados,
-          secciones,
-          tiposDepartamento
+          especialidades: especialidadesRes.data || [],
+          grados: gradosRes.data || [],
+          turnos: turnosRes.data || [],
+          tiposDepartamento: tiposDepartamentoRes.data || [],
+          secciones: [] // Se cargarán después según el tipo de departamento seleccionado
         });
       } catch (error) {
         console.error('Error cargando opciones:', error);
         setError('Error cargando opciones del formulario');
       }
     };
-    loadOptions();}
-    else{
-      const loadDataNotEditing = async () =>{
-         try {
-        const especialidadesRes = await ComplementServices.getEspecialidades();
-        const gradosRes = await ComplementServices.getGrados();
-        const turnosRes = await ComplementServices.getTurnos();
-        const tiposDepartamentoRes = await ComplementServices.getTiposDepartamento();
-         setOptions({
-          especialidades: especialidadesRes.data,
-          grados: gradosRes.data,
-          turnos: turnosRes.data,
-          tiposDepartamento: tiposDepartamentoRes.data
-        });
-      } catch (error) {
-        console.error('Error cargando opciones:', error);
-        setError('Error cargando opciones del formulario');
-      }
-      }
-      loadDataNotEditing()
-    }
-  }, [isEditing, cip]);
+    
+    loadOptions();
+  }, []);
 
   // Cargar datos del perito para edición
   useEffect(() => {
@@ -170,72 +161,79 @@ const PeritoForm = () => {
           setLoading(true);
           setError('');
           const response = await peritoService.getPeritoByCIP(cip);
+          
+          if (!response.success) {
+            setError(response.message || 'Error cargando perito');
+            return;
+          }
+          
           const perito = response.data;
           
           // Función para formatear fechas
           const formatDateForInput = (dateString) => {
             if (!dateString) return '';
             
-            // fecha YYYY-MM-DD
-            if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-              return dateString;
-            }
-            
-            if (dateString instanceof Date) {
-              const isoDate = dateString.toISOString().split('T')[0];
-              return isoDate;
-            }
-
-            if (typeof dateString === 'string') {
-              try {
-                const date = new Date(dateString);
-                if (!isNaN(date.getTime())) {
-                  const isoDate = date.toISOString().split('T')[0];
-                  return isoDate;
-                }
-              } catch (error) {
-                console.log(error)
+            try {
+              const date = new Date(dateString);
+              if (!isNaN(date.getTime())) {
+                return date.toISOString().split('T')[0];
               }
+            } catch (error) {
+              console.error('Error formateando fecha:', error);
             }
             return '';
           };
           
-          // Cargar datos del usuario
-          setFieldValue('CIP', perito.CIP || '');
-          setFieldValue('nombre_usuario', perito.nombre_usuario || '');
-          setFieldValue('nombre_completo', perito.nombre_completo || '');
-          
-          // Cargar datos del perito
-          Object.keys(perito).forEach(key => {
-            if (perito[key] !== null && perito[key] !== undefined) {
-              // Formatear fechas específicamente
-              if (key === 'fecha_integracion_pnp' || key === 'fecha_incorporacion' || key === 'ultimo_ascenso_pnp') {
-                const fechaFormateada = formatDateForInput(perito[key]);
-                setFieldValue(key, fechaFormateada);
-              } else if (key !== 'CIP' && key !== 'nombre_usuario' && key !== 'nombre_completo') {
-                setFieldValue(key, perito[key]);
-              }
-            }
-          });
+          // Preparar datos para el formulario
+          const formData = {
+            // Campos de usuario
+            CIP: perito.CIP || '',
+            nombre_usuario: perito.nombre_usuario || '',
+            nombre_completo: perito.nombre_completo || '',
+            password_hash: '', // No cargamos la contraseña por seguridad
+            confirmar_password: '',
+            
+            // Campos de perito
+            dni: perito.dni || '',
+            email: perito.email || '',
+            unidad: perito.unidad || '',
+            fecha_integracion_pnp: formatDateForInput(perito.fecha_integracion_pnp),
+            fecha_incorporacion: formatDateForInput(perito.fecha_incorporacion),
+            codigo_codofin: perito.codigo_codofin || '',
+            domicilio: perito.domicilio || '',
+            telefono: perito.telefono || '',
+            cursos_institucionales: Array.isArray(perito.cursos_institucionales) 
+              ? perito.cursos_institucionales.join(', ') 
+              : perito.cursos_institucionales || '',
+            cursos_extranjero: Array.isArray(perito.cursos_extranjero) 
+              ? perito.cursos_extranjero.join(', ') 
+              : perito.cursos_extranjero || '',
+            ultimo_ascenso_pnp: formatDateForInput(perito.ultimo_ascenso_pnp),
+            fotografia_url: perito.fotografia_url || null,
 
-          // Cargar relaciones
-          if (perito.id_especialidad) setFieldValue('id_especialidad', perito.id_especialidad);
-          if (perito.id_grado) setFieldValue('id_grado', perito.id_grado);
-          if (perito.id_turno) setFieldValue('id_turno', perito.id_turno);
-          if (perito.id_tipo_departamento) setFieldValue('id_tipo_departamento', perito.id_tipo_departamento);
+            // Campos de relación
+            id_especialidad: perito.id_especialidad || '',
+            id_grado: perito.id_grado || '',
+            id_turno: perito.id_turno || '',
+            id_seccion: perito.id_seccion || '',
+            id_tipo_departamento: perito.id_tipo_departamento || ''
+          };
+
+          // Establecer valores en el formulario
+          setValues(formData);
+
+          // Cargar secciones según el tipo de departamento si existe
+          if (perito.id_tipo_departamento) {
+            chargeSections(perito.id_tipo_departamento);
+          }
 
           // Mostrar foto si existe
           if (perito.fotografia_url) {
-            try {
-              setPhotoPreview(perito.fotografia_url);
-            } catch (error) {
-              setError('Error cargando foto del perito: ' + error.message);
-            }
-          } else {
-            console.log('No hay foto para el perito');
+            setPhotoPreview(perito.fotografia_url);
           }
           
         } catch (error) {
+          console.error('Error cargando perito:', error);
           setError('Error cargando datos del perito: ' + (error.message || 'Error desconocido'));
         } finally {
           setLoading(false);
@@ -244,7 +242,7 @@ const PeritoForm = () => {
 
       loadPerito();
     }
-  }, [isEditing, cip, setFieldValue]);
+  }, [isEditing, cip, setValues]);
 
   const handleCancel = () => {
     navigate('/admin/dashboard/usuarios');
@@ -262,7 +260,7 @@ const PeritoForm = () => {
     }
 
     try {
-      // Convertir a WebP y Base64
+      // Convertir a WebP и Base64
       const webpBase64 = await convertImageToWebPBase64(file);
       setPhotoPreview(webpBase64);
       setFieldValue('fotografia_url', webpBase64);
@@ -273,12 +271,18 @@ const PeritoForm = () => {
     }
   };
 
-  const chargeSections = async (id) => {
-    console.log(id)
-    const seccionesRes = await ComplementServices.getSecciones(id);
-    setOptions({...options, secciones: seccionesRes.data});
-    console.log(seccionesRes)
-  }
+  const chargeSections = async (idTipoDepartamento) => {
+    try {
+      const seccionesRes = await ComplementServices.getSecciones(idTipoDepartamento);
+      setOptions(prev => ({
+        ...prev, 
+        secciones: seccionesRes.data || []
+      }));
+    } catch (error) {
+      console.error('Error cargando secciones:', error);
+      setError('Error cargando secciones');
+    }
+  };
 
   const removePhoto = () => {
     setPhotoPreview(null);
@@ -289,21 +293,21 @@ const PeritoForm = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 dark:bg-gray-900 dark:text-gray-100 min-h-screen p-4">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-[#1a4d2e] mb-2">
+            <h1 className="text-3xl font-bold text-[#1a4d2e] dark:text-green-800 mb-2">
               {isEditing ? 'Editar Perito' : 'Crear Nuevo Perito'}
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-300">
               {isEditing ? 'Modificar información del perito' : 'Agregar nuevo perito al sistema'}
             </p>
           </div>
           <button
             onClick={handleCancel}
-            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+            className="bg-gray-500 hover:bg-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
           >
             Cancelar
           </button>
@@ -321,17 +325,17 @@ const PeritoForm = () => {
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-6">
+      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Información de Usuario */}
           <div className="lg:col-span-2">
-            <h3 className="text-lg font-semibold text-[#1a4d2e] mb-4 border-b pb-2">
+            <h3 className="text-lg font-semibold text-[#1a4d2e] dark:text-green-800 mb-4 border-b pb-2 dark:border-gray-700">
               Información de Usuario
             </h3>
           </div>
 
           <div>
-            <label htmlFor="CIP" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="CIP" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               CIP *
             </label>
             <input
@@ -341,16 +345,16 @@ const PeritoForm = () => {
               value={values.CIP}
               onChange={(e) => handleChange('CIP', e.target.value)}
               disabled={isEditing}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent ${
-                errors.CIP ? 'border-red-500' : 'border-gray-300'
-              } ${isEditing ? 'bg-gray-100' : ''}`}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent ${
+                errors.CIP ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+              } ${isEditing ? 'bg-gray-100 dark:bg-gray-700' : 'bg-white dark:bg-gray-700'} dark:text-white`}
               placeholder="Ingrese el CIP"
             />
             {errors.CIP && <span className="text-red-500 text-sm">{errors.CIP}</span>}
           </div>
 
           <div>
-            <label htmlFor="nombre_usuario" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="nombre_usuario" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Nombre de Usuario *
             </label>
             <input
@@ -360,9 +364,9 @@ const PeritoForm = () => {
               autoComplete='username'
               value={values.nombre_usuario}
               onChange={(e) => handleChange('nombre_usuario', e.target.value)}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent ${
-                errors.nombre_usuario ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent ${
+                errors.nombre_usuario ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+              } bg-white dark:bg-gray-700 dark:text-white`}
               placeholder="usuario123"
             />
             {errors.nombre_usuario && <span className="text-red-500 text-sm">{errors.nombre_usuario}</span>}
@@ -371,7 +375,7 @@ const PeritoForm = () => {
           {!isEditing && (
             <>
               <div>
-                <label htmlFor="password_hash" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password_hash" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Contraseña *
                 </label>
                 <input
@@ -381,16 +385,16 @@ const PeritoForm = () => {
                   autoComplete='new-password'
                   value={values.password_hash}
                   onChange={(e) => handleChange('password_hash', e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent ${
-                    errors.password_hash ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent ${
+                    errors.password_hash ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  } bg-white dark:bg-gray-700 dark:text-white`}
                   placeholder="Ingrese la contraseña"
                 />
                 {errors.password_hash && <span className="text-red-500 text-sm">{errors.password_hash}</span>}
               </div>
 
               <div>
-                <label htmlFor="confirmar_password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="confirmar_password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Confirmar Contraseña *
                 </label>
                 <input
@@ -400,9 +404,9 @@ const PeritoForm = () => {
                   name="confirmar_password"
                   value={values.confirmar_password}
                   onChange={(e) => handleChange('confirmar_password', e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent ${
-                    errors.confirmar_password ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent ${
+                    errors.confirmar_password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  } bg-white dark:bg-gray-700 dark:text-white`}
                   placeholder="Confirme la contraseña"
                 />
                 {errors.confirmar_password && <span className="text-red-500 text-sm">{errors.confirmar_password}</span>}
@@ -411,7 +415,7 @@ const PeritoForm = () => {
           )}
 
           <div className="lg:col-span-2">
-            <label htmlFor="nombre_completo" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="nombre_completo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Nombre Completo *
             </label>
             <input
@@ -421,9 +425,9 @@ const PeritoForm = () => {
               name="nombre_completo"
               value={values.nombre_completo}
               onChange={(e) => handleChange('nombre_completo', e.target.value)}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent ${
-                errors.nombre_completo ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent ${
+                errors.nombre_completo ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+              } bg-white dark:bg-gray-700 dark:text-white`}
               placeholder="Ingrese el nombre completo"
             />
             {errors.nombre_completo && <span className="text-red-500 text-sm">{errors.nombre_completo}</span>}
@@ -431,13 +435,13 @@ const PeritoForm = () => {
 
           {/* Información de Perito */}
           <div className="lg:col-span-2">
-            <h3 className="text-lg font-semibold text-[#1a4d2e] mb-4 border-b pb-2">
+            <h3 className="text-lg font-semibold text-[#1a4d2e] dark:text-green-800 mb-4 border-b pb-2 dark:border-gray-700">
               Información del Perito
             </h3>
           </div>
 
           <div>
-            <label htmlFor="dni" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="dni" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               DNI *
             </label>
             <input
@@ -447,16 +451,16 @@ const PeritoForm = () => {
               value={values.dni}
               onChange={(e) => handleChange('dni', e.target.value)}
               maxLength="8"
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent ${
-                errors.dni ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent ${
+                errors.dni ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+              } bg-white dark:bg-gray-700 dark:text-white`}
               placeholder="12345678"
             />
             {errors.dni && <span className="text-red-500 text-sm">{errors.dni}</span>}
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Email *
             </label>
             <input
@@ -466,16 +470,16 @@ const PeritoForm = () => {
               name="email"
               value={values.email}
               onChange={(e) => handleChange('email', e.target.value)}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent ${
-                errors.email ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent ${
+                errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+              } bg-white dark:bg-gray-700 dark:text-white`}
               placeholder="correo@pnp.gob.pe"
             />
             {errors.email && <span className="text-red-500 text-sm">{errors.email}</span>}
           </div>
 
           <div>
-            <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Teléfono
             </label>
             <input
@@ -484,13 +488,13 @@ const PeritoForm = () => {
               name="telefono"
               value={values.telefono}
               onChange={(e) => handleChange('telefono', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
               placeholder="999999999"
             />
           </div>
 
           <div>
-            <label htmlFor="unidad" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="unidad" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Unidad
             </label>
             <input
@@ -499,13 +503,13 @@ const PeritoForm = () => {
               name="unidad"
               value={values.unidad}
               onChange={(e) => handleChange('unidad', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
               placeholder="Unidad PNP"
             />
           </div>
 
           <div>
-            <label htmlFor="codigo_codofin" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="codigo_codofin" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Código Codofin *
             </label>
             <input
@@ -514,16 +518,16 @@ const PeritoForm = () => {
               name="codigo_codofin"
               value={values.codigo_codofin}
               onChange={(e) => handleChange('codigo_codofin', e.target.value)}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent ${
-                errors.codigo_codofin ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent ${
+                errors.codigo_codofin ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+              } bg-white dark:bg-gray-700 dark:text-white`}
               placeholder="COD001"
             />
             {errors.codigo_codofin && <span className="text-red-500 text-sm">{errors.codigo_codofin}</span>}
           </div>
 
           <div>
-            <label htmlFor="fecha_integracion_pnp" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="fecha_integracion_pnp" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Fecha de Integración PNP
             </label>
             <input
@@ -532,12 +536,12 @@ const PeritoForm = () => {
               name="fecha_integracion_pnp"
               value={values.fecha_integracion_pnp || ''}
               onChange={(e) => handleChange('fecha_integracion_pnp', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
             />
           </div>
 
           <div>
-            <label htmlFor="fecha_incorporacion" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="fecha_incorporacion" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Fecha de Incorporación
             </label>
             <input
@@ -546,12 +550,12 @@ const PeritoForm = () => {
               name="fecha_incorporacion"
               value={values.fecha_incorporacion || ''}
               onChange={(e) => handleChange('fecha_incorporacion', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
             />
           </div>
 
           <div>
-            <label htmlFor="ultimo_ascenso_pnp" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="ultimo_ascenso_pnp" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Último Ascenso PNP
             </label>
             <input
@@ -560,12 +564,12 @@ const PeritoForm = () => {
               name="ultimo_ascenso_pnp"
               value={values.ultimo_ascenso_pnp || ''}
               onChange={(e) => handleChange('ultimo_ascenso_pnp', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
             />
           </div>
 
           <div className="lg:col-span-2">
-            <label htmlFor="domicilio" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="domicilio" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Domicilio
             </label>
             <input
@@ -574,13 +578,13 @@ const PeritoForm = () => {
               name="domicilio"
               value={values.domicilio}
               onChange={(e) => handleChange('domicilio', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
               placeholder="Dirección completa"
             />
           </div>
 
           <div className="lg:col-span-2">
-            <label htmlFor="cursos_institucionales" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="cursos_institucionales" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Cursos Institucionales
             </label>
             <textarea
@@ -588,14 +592,14 @@ const PeritoForm = () => {
               name="cursos_institucionales"
               value={values.cursos_institucionales}
               onChange={(e) => handleChange('cursos_institucionales', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
               placeholder="Lista de cursos institucionales (separados por coma)"
               rows="3"
             />
           </div>
 
           <div className="lg:col-span-2">
-            <label htmlFor="cursos_extranjero" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="cursos_extranjero" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Cursos en el Extranjero
             </label>
             <textarea
@@ -603,34 +607,38 @@ const PeritoForm = () => {
               name="cursos_extranjero"
               value={values.cursos_extranjero}
               onChange={(e) => handleChange('cursos_extranjero', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
               placeholder="Lista de cursos en el extranjero (separados por coma)"
               rows="3"
             />
           </div>
 
-          {/* Relaciones */}
+         {/* Relaciones */}
           <div className="lg:col-span-2">
-            <h3 className="text-lg font-semibold text-[#1a4d2e] mb-4 border-b pb-2">
+            <h3 className="text-lg font-semibold text-[#1a4d2e] dark:text-green-800 mb-4 border-b pb-2 dark:border-gray-700">
               Información de Relación
             </h3>
           </div>
-          
+
           <div>
-            <label htmlFor="id_tipo_departamento" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="id_tipo_departamento" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Tipo de Departamento
             </label>
             <select
               id="id_tipo_departamento"
               name="id_tipo_departamento"
-              value={values.id_tipo_departamento}
-              onChange={(e) => {handleChange('id_tipo_departamento', e.target.value)
-                                chargeSections(e.target.value);}}
+              value={values.id_tipo_departamento || ""}
+              onChange={(e) => {
+                handleChange('id_tipo_departamento', e.target.value);
+                chargeSections(e.target.value);
+              }}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
             >
               <option value="">Seleccione un tipo de departamento</option>
-              {options.tiposDepartamento.map((tipo, index) => (
-                <option key={index} value={tipo.id_tipo_departamento}
+              {options.tiposDepartamento.map((tipo) => (
+                <option 
+                  key={tipo.id_tipo_departamento} 
+                  value={tipo.id_tipo_departamento}
                 >
                   {tipo.nombre_departamento}
                 </option>
@@ -639,39 +647,45 @@ const PeritoForm = () => {
           </div>
 
           <div>
-            <label htmlFor="id_especialidad" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="id_especialidad" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Especialidad
             </label>
             <select
               id="id_especialidad"
               name="id_especialidad"
-              value={values.id_especialidad}
+              value={values.id_especialidad || ""}
               onChange={(e) => handleChange('id_especialidad', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
             >
               <option value="">Seleccione una especialidad</option>
-              {options.especialidades.map((especialidad, index) => (
-                <option key={index} value={especialidad.id_especialidad}>
+              {options.especialidades.map((especialidad) => (
+                <option 
+                  key={especialidad.id_especialidad} 
+                  value={especialidad.id_especialidad}
+                >
                   {especialidad.nombre}
                 </option>
               ))}
             </select>
           </div>
-
          <div>
-            <label htmlFor="id_seccion" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="id_seccion" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Secciones
             </label>
             <select
               id="id_seccion"
               name="id_seccion"
-              value={values.id_seccion}
+              value={values.id_seccion || ""}
               onChange={(e) => handleChange('id_seccion', e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+              disabled={!values.id_tipo_departamento}
             >
-              <option value="">Seleccione una especialidad</option>
-              {options.secciones && options.secciones.map((seccion, index) => (
-                <option key={index} value={seccion.id_seccion}>
+              <option value="">{values.id_tipo_departamento ? "Seleccione una sección" : "Primero seleccione un tipo de departamento"}</option>
+              {options.secciones.map((seccion) => (
+                <option 
+                  key={seccion.id_seccion} 
+                  value={seccion.id_seccion}
+                >
                   {seccion.nombre}
                 </option>
               ))}
@@ -679,19 +693,22 @@ const PeritoForm = () => {
           </div>  
 
           <div>
-            <label htmlFor="id_grado" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="id_grado" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Grado
             </label>
             <select
               id="id_grado"
               name="id_grado"
-              value={values.id_grado}
+              value={values.id_grado || ""}
               onChange={(e) => handleChange('id_grado', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
             >
               <option value="">Seleccione un grado</option>
-              {options.grados.map((grado, index) => (
-                <option key={index} value={grado.id_grado}>
+              {options.grados.map((grado) => (
+                <option 
+                  key={grado.id_grado} 
+                  value={grado.id_grado}
+                >
                   {grado.nombre}
                 </option>
               ))}
@@ -699,19 +716,22 @@ const PeritoForm = () => {
           </div>
 
           <div>
-            <label htmlFor="id_turno" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="id_turno" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Turno
             </label>
             <select
               id="id_turno"
               name="id_turno"
-              value={values.id_turno}
+              value={values.id_turno || ""}
               onChange={(e) => handleChange('id_turno', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
             >
               <option value="">Seleccione un turno</option>
-              {options.turnos.map((turno, index) => (
-                <option key={index} value={turno.id_turno}>
+              {options.turnos.map((turno) => (
+                <option 
+                  key={turno.id_turno} 
+                  value={turno.id_turno}
+                >
                   {turno.nombre}
                 </option>
               ))}
@@ -720,14 +740,14 @@ const PeritoForm = () => {
 
           {/* Foto */}
           <div className="lg:col-span-2">
-            <h3 className="text-lg font-semibold text-[#1a4d2e] mb-4 border-b pb-2">
+            <h3 className="text-lg font-semibold text-[#1a4d2e] dark:text-green-800 mb-4 border-b pb-2 dark:border-gray-700">
               Foto
             </h3>
           </div>
 
           {/* Foto */}
           <div className="lg:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Fotografía
             </label>
             <div className="space-y-3">
@@ -736,25 +756,25 @@ const PeritoForm = () => {
                 type="file"
                 accept="image/*"
                 onChange={handlePhotoChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
               />
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 Formatos: JPEG, PNG, GIF. Se convertirán automáticamente a WebP. Máximo: 5MB
               </p>
               
               {/* Loading indicator para foto */}
               {loading && isEditing && !photoPreview && (
-                <div className="flex items-center justify-center p-4 bg-gray-50 rounded-lg">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1a4d2e] mr-2"></div>
-                  <span className="text-sm text-gray-600">Cargando foto...</span>
+                <div className="flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1a4d2e] dark:border-green-400 mr-2"></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Cargando foto...</span>
                 </div>
               )}
               
               {!photoPreview && !loading && (
-                <div className="flex items-center justify-center p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                <div className="flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
                   <div className="text-center">
                     
-                    <p className="text-sm text-gray-500 mt-2">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                       {isEditing ? 'No hay foto cargada' : 'Selecciona una foto'}
                     </p>
                   </div>
@@ -766,7 +786,7 @@ const PeritoForm = () => {
                   <img
                     src={photoPreview}
                     alt="Vista previa"
-                    className="w-32 h-32 object-cover rounded-lg border border-gray-300"
+                    className="w-32 h-32 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
                     onError={(e) => {
                       console.error('Error cargando imagen:', e);
                       setError('Error al mostrar la imagen');
@@ -791,14 +811,14 @@ const PeritoForm = () => {
           <button
             type="button"
             onClick={handleCancel}
-            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+            className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={isSubmitting || loading}
-            className="bg-[#1a4d2e] hover:bg-[#2d7d4a] text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-[#1a4d2e] hover:bg-[#2d7d4a] dark:bg-green-600 dark:hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting || loading
               ? (isEditing ? 'Actualizando...' : 'Creando...') 

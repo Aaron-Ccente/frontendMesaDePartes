@@ -16,7 +16,7 @@ const PeritoResumen = () => {
         <div className="bg-white dark:bg-dark-surface rounded-xl shadow-lg dark:shadow-gray-900/20 p-6 border border-gray-200 dark:border-dark-border">
           <div className="flex items-center space-x-3">
             <div className="p-3 bg-blue-100 dark:bg-dark-accent/20 rounded-lg">
-              <span className="text-2xl text-blue-600 dark:text-dark-accent">📝</span>
+              <span className="text-2xl text-blue-600 dark:text-dark-accent"></span>
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-dark-text-secondary">Documentos</p>
@@ -28,7 +28,7 @@ const PeritoResumen = () => {
         <div className="bg-white dark:bg-dark-surface rounded-xl shadow-lg dark:shadow-gray-900/20 p-6 border border-gray-200 dark:border-dark-border">
           <div className="flex items-center space-x-3">
             <div className="p-3 bg-green-100 dark:bg-dark-pnp-green-dark/20 rounded-lg">
-              <span className="text-2xl text-green-600 dark:text-dark-pnp-green">🔍</span>
+              <span className="text-2xl text-green-600 dark:text-dark-pnp-green"></span>
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-dark-text-secondary">Casos Activos</p>

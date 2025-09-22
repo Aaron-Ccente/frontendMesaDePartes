@@ -13,7 +13,7 @@ const PeritoPerfil = () => {
 
       {/* Placeholder Content */}
       <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-        <div className="text-6xl mb-4">👤</div>
+        <div className="text-6xl mb-4"></div>
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">
           Perfil de Perito
         </h2>
@@ -21,7 +21,7 @@ const PeritoPerfil = () => {
           Aquí podrás ver y editar tu información personal, cambiar contraseña y configurar preferencias.
         </p>
         <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg inline-block">
-          <p className="text-sm">🚧 Funcionalidad en desarrollo</p>
+          <p className="text-sm">Funcionalidad en desarrollo</p>
         </div>
       </div>
     </div>
