@@ -13,9 +13,11 @@ import PeritoLogin from './components/auth/PeritoLogin';
 import AdminDashboard from './components/admin/AdminDashboard';
 import DashboardStats from './components/admin/DashboardStats';
 import UserManagement from './components/admin/UserManagement';
+import Administradores from './components/admin/Administradores';
 import DocumentManagement from './components/admin/DocumentManagement';
 import SystemConfiguration from './components/admin/SystemConfiguration';
 import PeritoForm from './components/admin/PeritoForm';
+import AdminForm from './components/admin/AdminForm';
 
 // Perito Components
 import PeritoDashboard from './components/perito/PeritoDashboard';
@@ -45,6 +47,9 @@ function App() {
               <Route path="usuarios" element={<UserManagement />} />
               <Route path="usuarios/crear" element={<PeritoForm />} />
               <Route path="usuarios/editar/:cip" element={<PeritoForm />} />
+              <Route path="administradores" element={<Administradores />} />
+              <Route path="administradores/crear" element={<AdminForm />} />
+              <Route path="administradores/editar/:cip" element={<AdminForm />} />
               <Route path="documentos" element={<DocumentManagement />} />
               <Route path="configuracion" element={<SystemConfiguration />} />
             </Route>

@@ -11,7 +11,7 @@ class PeritoAuthService {
         },
         body: JSON.stringify({
           CIP: credentials.CIP,
-          contrasena: credentials.contrasena
+          password_hash: credentials.password_hash
         }),
       });
 

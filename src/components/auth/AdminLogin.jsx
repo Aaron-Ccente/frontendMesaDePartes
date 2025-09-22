@@ -150,7 +150,7 @@ const AdminLogin = () => {
                 <img src='/src/assets/images/fondo_oficri.webp' width={140} height={140}/>
                 <img src='/src/assets/images/fondo_pnp.webp' width={140} height={140}/>
               </div>
-              <h2 className='text-3xl text-light-gray font-bold'>Mesa De Partes PNP</h2>
+              <h2 className='text-3xl text-light-gray font-bold'>Mesa De Partes OFICRI</h2>
               <p className='text-sm text-light-gray'>Sistema de Gestión de administrativo</p>
         </div>
       </div>
