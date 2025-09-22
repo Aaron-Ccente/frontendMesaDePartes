@@ -96,7 +96,7 @@ const AdminRegister = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="mb-5">
-            <h1 className="text-3xl font-bold text-[#1a4d2e] mb-2">Mesa de Partes PNP</h1>
+            <h1 className="text-3xl font-bold text-[#1a4d2e] mb-2">Mesa de Partes OFICRI</h1>
             <h2 className="text-lg text-gray-600">Registro Administrativo</h2>
           </div>
         </div>
