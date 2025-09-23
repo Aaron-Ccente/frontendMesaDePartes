@@ -4,30 +4,30 @@ import { authService } from '../../services/authService';
 import Usuarios from '../../assets/icons/Usuarios';
 import Error from '../../assets/icons/Error';
 
-const Administradores = () => {
+const MesaDePartes = () => {
   const navigate = useNavigate();
-  const [administradores, setAdministradores] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalAdmins, setTotalAdmins] = useState(0);
+  const [totalUsuarios, setTotalUsuarios] = useState(0);
   const [error, setError] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(null);
 
-  const adminService = authService;
+  const service = authService;
 
   const isMountedRef = useRef(false);
   const searchTimeoutRef = useRef(null);
 
-  const loadAdministradores = useCallback(
+  const loadUsuarios = useCallback(
     async (page = 1, search = '') => {
       try {
         if (isMountedRef.current) setLoading(true);
         setError('');
 
-        const response = adminService.getAllAdmins
-          ? await adminService.getAllAdmins(page, 10, search)
+        const response = service.getAllAdmins
+          ? await service.getAllAdmins(page, 10, search)
           : { data: [], pagination: { pages: 1, total: 0, page } };
 
         if (!isMountedRef.current) return;
@@ -35,31 +35,31 @@ const Administradores = () => {
         const data = response.data ?? response;
         const pagination = response.pagination ?? { pages: 1, total: (Array.isArray(data) ? data.length : 0), page };
 
-        setAdministradores(Array.isArray(data) ? data : (data || []));
+        setUsuarios(Array.isArray(data) ? data : (data || []));
         setTotalPages(pagination.pages || 1);
-        setTotalAdmins(pagination.total ?? (Array.isArray(data) ? data.length : 0));
+        setTotalUsuarios(pagination.total ?? (Array.isArray(data) ? data.length : 0));
         setCurrentPage(pagination.page || page);
       } catch (err) {
         if (!isMountedRef.current) return;
-        console.error('Error cargando administradores:', err);
-        setError(err?.message || 'Error cargando administradores');
+        console.error('Error cargando usuarios:', err);
+        setError(err?.message || 'Error cargando usuarios');
       } finally {
         if (!isMountedRef.current);
         setLoading(false);
       }
     },
-    [adminService]
+    [service]
   );
 
   useEffect(() => {
     isMountedRef.current = true;
-    loadAdministradores();
+    loadUsuarios();
 
     return () => {
       isMountedRef.current = false;
       if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     };
-  }, [loadAdministradores]);
+  }, [loadUsuarios]);
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -69,46 +69,46 @@ const Administradores = () => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
 
     searchTimeoutRef.current = setTimeout(() => {
-      loadAdministradores(1, value);
+      loadUsuarios(1, value);
     }, 500);
   };
 
   const handlePageChange = (page) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
-    loadAdministradores(page, searchTerm);
+    loadUsuarios(page, searchTerm);
   };
 
-  const handleCreateAdmin = () => navigate('/admin/dashboard/administradores/crear');
-  const handleEditAdmin = (cip) => navigate(`/admin/dashboard/administradores/editar/${cip}`);
+  const handleCreate = () => navigate('/admin/dashboard/mesadepartes/crear');
+  const handleEdit = (cip) => navigate(`/admin/dashboard/mesadepartes/editar/${cip}`);
 
-  const handleDeleteAdmin = async (cip) => {
-    if (!window.confirm(`¿Eliminar al administrador con CIP ${cip}?`)) return;
+  const handleDelete = async (cip) => {
+    if (!window.confirm(`¿Eliminar al usuario con CIP ${cip}?`)) return;
 
     try {
       setDeleteLoading(cip);
-      if (!adminService.deleteAdmin) throw new Error('deleteAdmin no implementado en authService');
-      await adminService.deleteAdmin(cip);
+      if (!service.deleteAdmin) throw new Error('deleteAdmin no implementado en authService');
+      await service.deleteAdmin(cip);
 
       if (!isMountedRef.current) return;
-      await loadAdministradores(currentPage, searchTerm);
-      alert('Administrador eliminado correctamente');
+      await loadUsuarios(currentPage, searchTerm);
+      alert('Usuario eliminado correctamente');
     } catch (err) {
-      console.error('Error eliminando administrador:', err);
-      alert(`Error eliminando administrador: ${err?.message || err}`);
+      console.error('Error eliminando usuario:', err);
+      alert(`Error eliminando usuario: ${err?.message || err}`);
     } finally {
       if (isMountedRef.current) setDeleteLoading(null);
     }
   };
 
-  const handleRefresh = () => loadAdministradores(currentPage, searchTerm);
+  const handleRefresh = () => loadUsuarios(currentPage, searchTerm);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1a4d2e] mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Cargando administradores...</p>
+          <p className="text-gray-600 dark:text-gray-300">Cargando usuarios de mesa de partes...</p>
         </div>
       </div>
     );
@@ -121,10 +121,10 @@ const Administradores = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-[#1a4d2e] dark:text-green-400 mb-2">
-              Gestión de Administradores
+              Gestión de usuarios de Mesa de Partes
             </h1>
             <p className="text-gray-600 dark:text-gray-300">
-              Administrar cuentas administrativas ({totalAdmins} total)
+              Administrar cuentas ({totalUsuarios} total)
             </p>
           </div>
           <div className="flex space-x-3">
@@ -135,11 +135,11 @@ const Administradores = () => {
               <span>Actualizar</span>
             </button>
             <button
-              onClick={handleCreateAdmin}
+              onClick={handleCreate}
               className="bg-[#1a4d2e] hover:bg-[#2d7d4a] text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2"
             >
               <span className="text-xl">➕</span>
-              <span>Crear Administrador</span>
+              <span>Crear usuario</span>
             </button>
           </div>
         </div>
@@ -160,7 +160,7 @@ const Administradores = () => {
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <label htmlFor="search" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Buscar Administrador
+              Buscar usuario
             </label>
             <input
               type="text"
@@ -173,7 +173,7 @@ const Administradores = () => {
           </div>
           <div className="flex items-end">
             <button className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-lg transition-colors duration-200">
-              Filtros
+              Filtrar
             </button>
           </div>
         </div>
@@ -193,40 +193,40 @@ const Administradores = () => {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {administradores.length === 0 ? (
+              {usuarios.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                     <span className="w-full flex justify-center"><Usuarios size={12} /></span>
-                    <p className="text-lg font-medium">No se encontraron administradores</p>
-                    <p className="text-sm">{searchTerm ? 'Ajusta los filtros de búsqueda' : 'No hay administradores registrados'}</p>
+                    <p className="text-lg font-medium">No se encontraron usuarios</p>
+                    <p className="text-sm">{searchTerm ? 'Ajusta los filtros de búsqueda' : 'No hay usuarios registrados'}</p>
                   </td>
                 </tr>
               ) : (
-                administradores.map((admin) => (
-                  <tr key={admin.CIP || admin.nombre_usuario} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
+                usuarios.map((u) => (
+                  <tr key={u.CIP || u.nombre_usuario} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#1a4d2e] text-white">
-                        {admin.CIP || '-'}
+                        {u.CIP || '-'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">{admin.nombre_usuario || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">{admin.nombre_completo || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">{admin.rol || 'Administrador'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">{u.nombre_usuario || '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">{u.nombre_completo || '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">{u.rol || 'MesaDePartes'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
                         <button
-                          onClick={() => handleEditAdmin(admin.CIP || admin.nombre_usuario)}
+                          onClick={() => handleEdit(u.CIP || u.nombre_usuario)}
                           className="text-[#1a4d2e] dark:text-green-400 hover:text-[#2d7d4a] dark:hover:text-green-300 transition-colors duration-200"
-                          disabled={deleteLoading === (admin.CIP || admin.nombre_usuario)}
+                          disabled={deleteLoading === (u.CIP || u.nombre_usuario)}
                         >
                           Editar
                         </button>
                         <button
-                          onClick={() => handleDeleteAdmin(admin.CIP || admin.nombre_usuario)}
+                          onClick={() => handleDelete(u.CIP || u.nombre_usuario)}
                           className="text-red-600 dark:text-red-400 hover:text-red-800 transition-colors duration-200 disabled:opacity-50"
-                          disabled={deleteLoading === (admin.CIP || admin.nombre_usuario)}
+                          disabled={deleteLoading === (u.CIP || u.nombre_usuario)}
                         >
-                          {deleteLoading === (admin.CIP || admin.nombre_usuario) ? <span className="animate-spin">⏳</span> : 'Eliminar'}
+                          {deleteLoading === (u.CIP || u.nombre_usuario) ? <span className="animate-spin">⏳</span> : 'Eliminar'}
                         </button>
                       </div>
                     </td>
@@ -243,7 +243,7 @@ const Administradores = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-700 dark:text-gray-300">
-              Mostrando <span className="font-medium">{administradores.length}</span> de <span className="font-medium">{totalAdmins}</span> administradores
+              Mostrando <span className="font-medium">{usuarios.length}</span> de <span className="font-medium">{totalUsuarios}</span> usuarios
             </div>
             <div className="flex space-x-2">
               <button
@@ -294,4 +294,4 @@ const Administradores = () => {
   );
 };
 
-export default Administradores;
+export default MesaDePartes;

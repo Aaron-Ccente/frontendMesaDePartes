@@ -51,7 +51,7 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-300 flex flex-col">
       <Politics/> 
       {/* Header */}
-      <header className="bg-gradient-to-r from-[#1a4d2e] to-[#2d7d4a] dark:from-dark-pnp-green-dark dark:to-dark-pnp-green text-white shadow-lg dark:shadow-gray-900/50 sticky top-0 z-10">
+      <header className="bg-gradient-to-r from-[#1a4d2e] to-[#1a4d2e] text-white shadow-lg dark:shadow-gray-900/50 sticky top-0 z-10">
         <div className="max-w-full mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Panel de Administración</h1>
           <div className="flex items-center space-x-4">
@@ -60,7 +60,7 @@ const AdminDashboard = () => {
             
             <div className="text-right">
               <p className="text-sm text-gray-200">Bienvenido,</p>
-              <p className="font-semibold">{user?.Nombre || 'Administrador'}</p>
+              <p className="font-semibold">{user?.nombre_completo || 'Administrador'}</p>
             </div>
             <button
               onClick={handleLogout}
@@ -82,7 +82,7 @@ const AdminDashboard = () => {
               <button 
                 onClick={() => handleNavigation('')} 
                 className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
-                  isActiveRoute('/admin/dashboard') && !isActiveRoute('/usuarios') && !isActiveRoute('/documentos') && !isActiveRoute('/configuracion')  && !isActiveRoute('/administradores')
+                  isActiveRoute('/admin/dashboard') && !isActiveRoute('/usuarios') && !isActiveRoute('/documentos') && !isActiveRoute('/configuracion')  && !isActiveRoute('/administradores') && !isActiveRoute('/mesadepartes')
                     ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' 
                     : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
                 }`}
@@ -118,6 +118,20 @@ const AdminDashboard = () => {
                 <div className="flex items-center space-x-3">
                   <span><Usuarios/></span>
                   <span>Administradores</span>
+                </div>
+              </button>
+
+              <button 
+                onClick={() => handleNavigation('/mesadepartes')} 
+                className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
+                  isActiveRoute('/mesadepartes') 
+                    ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' 
+                    : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <span><Usuarios/></span>
+                  <span>Mesa de Partes</span>
                 </div>
               </button>
 
