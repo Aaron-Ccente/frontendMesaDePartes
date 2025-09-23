@@ -15,7 +15,7 @@ const SystemConfiguration = () => {
       
       {/* Contenido principal */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-12 text-center flex flex-col justify-center items-center">
-        <Configuracion size={50} className="text-gray-700 dark:text-gray-300"/>
+        <Configuracion size={12} className="text-gray-700 dark:text-gray-300"/>
         <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-2">
           Funcionalidad en Desarrollo
         </h2>
