@@ -25,6 +25,7 @@ import PeritoResumen from './components/perito/PeritoResumen';
 import PeritoDocumentos from './components/perito/PeritoDocumentos';
 import PeritoCasos from './components/perito/PeritoCasos';
 import PeritoPerfil from './components/perito/PeritoPerfil';
+import MesaDePartes from './components/admin/MesaDePartes';
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
               <Route path="administradores" element={<Administradores />} />
               <Route path="administradores/crear" element={<AdminForm />} />
               <Route path="administradores/editar/:cip" element={<AdminForm />} />
+              <Route path="mesadepartes" element={<MesaDePartes />} />
               <Route path="documentos" element={<DocumentManagement />} />
               <Route path="configuracion" element={<SystemConfiguration />} />
             </Route>

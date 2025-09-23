@@ -55,7 +55,7 @@ const DashboardStats = () => {
           Panel de Administración
         </h1>
         <p className="text-gray-600 dark:text-gray-300 text-lg">
-          Gestión del sistema Mesa de Partes PNP
+          Gestión del sistema Mesa de Partes OFICRI
         </p>
       </div>
 
