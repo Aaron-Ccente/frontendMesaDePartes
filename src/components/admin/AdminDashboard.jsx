@@ -71,16 +71,18 @@ const AdminDashboard = () => {
           </div>
         </div>
       </header>
-
       {/* Main Content Area */}
       <div className="flex flex-1">
-        {/* Sidebar Navigation - Fixed to left */}
+        {/* Sidebar Navigation */}
         <div className="w-64 bg-white dark:bg-dark-surface shadow-lg dark:shadow-gray-900/20 border-r border-gray-200 dark:border-dark-border sticky top-[76px] h-[calc(100vh-76px)] overflow-y-auto">
           <nav className="p-6">
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-dark-text-primary mb-6">Navegación</h2>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-dark-text-primary mb-6">
+              Navegación
+            </h2>
             <div className="space-y-3">
-              <button 
-                onClick={() => handleNavigation('')} 
+              {/* Estadísticas */}
+              <button
+                onClick={() => handleNavigation('')}
                 className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
                   isActiveRoute('/admin/dashboard') && !isActiveRoute('/usuarios') && !isActiveRoute('/documentos') && !isActiveRoute('/configuracion')  && !isActiveRoute('/administradores') && !isActiveRoute('/mesadepartes')
                     ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' 
@@ -88,39 +90,46 @@ const AdminDashboard = () => {
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <span><Estadistica/></span>
+                  <span>
+                    <Estadistica />
+                  </span>
                   <span>Estadísticas</span>
                 </div>
               </button>
-              
-              <button 
-                onClick={() => handleNavigation('/usuarios')} 
+
+              {/* Usuarios */}
+              <button
+                onClick={() => handleNavigation('/usuarios')}
                 className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
-                  isActiveRoute('/usuarios') 
-                    ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' 
+                  isActiveRoute('/usuarios')
+                    ? 'bg-[#1a4d2e] text-white shadow-md'
                     : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <span><Usuarios/></span>
+                  <span>
+                    <Usuarios />
+                  </span>
                   <span>Usuarios</span>
                 </div>
               </button>
 
-              <button 
-                onClick={() => handleNavigation('/administradores')} 
+              {/* Administradores */}
+              <button
+                onClick={() => handleNavigation('/administradores')}
                 className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
-                  isActiveRoute('/administradores') 
-                    ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' 
+                  isActiveRoute('/administradores')
+                    ? 'bg-[#1a4d2e] text-white shadow-md'
                     : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <span><Usuarios/></span>
+                  <span>
+                    <Usuarios />
+                  </span>
                   <span>Administradores</span>
                 </div>
               </button>
-
               <button 
                 onClick={() => handleNavigation('/mesadepartes')} 
                 className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
@@ -138,27 +147,32 @@ const AdminDashboard = () => {
               <button 
                 onClick={() => handleNavigation('/documentos')} 
                 className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
-                  isActiveRoute('/documentos') 
-                    ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' 
+                  isActiveRoute('/documentos')
+                    ? 'bg-[#1a4d2e] text-white shadow-md'
                     : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <span><Documentos size={6}/></span>
+                  <span>
+                    <Documentos size={6} />
+                  </span>
                   <span>Documentos</span>
                 </div>
               </button>
-              
-              <button 
-                onClick={() => handleNavigation('/configuracion')} 
+
+              {/* Configuración */}
+              <button
+                onClick={() => handleNavigation('/configuracion')}
                 className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
-                  isActiveRoute('/configuracion') 
-                    ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' 
+                  isActiveRoute('/configuracion')
+                    ? 'bg-[#1a4d2e] text-white shadow-md'
                     : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <span><Configuracion size={6}/></span>
+                  <span>
+                    <Configuracion size={6} />
+                  </span>
                   <span>Configuración</span>
                 </div>
               </button>
@@ -166,7 +180,7 @@ const AdminDashboard = () => {
           </nav>
         </div>
 
-        {/* Content Area - Takes remaining space */}
+        {/* Content Area */}
         <div className="flex-1 p-6 overflow-auto">
           <Outlet />
         </div>
