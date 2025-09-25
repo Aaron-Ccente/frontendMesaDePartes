@@ -124,7 +124,7 @@ const MesaDePartesDashboard = () => {
               <div className="flex items-center justify-between text-xs mt-1">
                 <span className="text-gray-500 dark:text-dark-text-muted">Rol:</span>
                 <span className="px-2 py-1 bg-blue-100 dark:bg-dark-accent/20 text-blue-800 dark:text-dark-accent rounded-full">
-                  {user.nombre_rol}
+                  {user.nombre_rol ==='CENTRAL'? 'MESA DE PARTES' : user.nombre_rol}
                 </span>
               </div>
             </div>
