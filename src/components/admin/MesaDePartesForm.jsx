@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from '../../hooks/useForm';
-import { authService } from '../../services/authService';
+import MesaDePartes from '../../services/mesadepartesService';
 import ShowToast from '../ui/ShowToast';
 
 const MesaDePartesForm = () => {
@@ -18,8 +18,7 @@ const MesaDePartesForm = () => {
     nombre_usuario: '',
     password_hash: '',
     confirmar_password: '',
-    nombre_completo: '',
-    rol: 'MesaDePartes'
+    nombre_completo: ''
   };
 
   const { values, errors, isSubmitting, handleChange, handleSubmit, setValues } = useForm({
@@ -45,21 +44,14 @@ const MesaDePartesForm = () => {
             delete updateData.password_hash;
             delete updateData.confirmar_password;
           }
-          // asegurarse rol correcto para mesa de partes
-          updateData.rol = updateData.rol || 'MesaDePartes';
-          const res = await authService.updateAdmin(cip, updateData);
-          if (!res || res.error) {
-            throw new Error(res?.message || res?.error || 'Error actualizando usuario de mesa de partes');
-          }
+          const res = await MesaDePartes.updateUserMesaDePartes(cip, updateData);
+          if (res?.error) throw new Error(res.error || res.message || 'Error actualizando usuario');
           setSuccess(res.message || 'Usuario actualizado correctamente');
         } else {
           const { confirmar_password, ...createData } = formData;
           console.log(confirmar_password)
-          createData.rol = createData.rol || 'MesaDePartes';
-          const res = await authService.registerAdmin(createData);
-          if (!res || res.error) {
-            throw new Error(res?.message || res?.error || 'Error creando usuario de mesa de partes');
-          }
+          const res = await MesaDePartes.createUserMesaDePartes(createData);
+          if (res?.error) throw new Error(res.error || res.message || 'Error creando usuario');
           setSuccess(res.message || 'Usuario creado correctamente');
         }
 
@@ -79,10 +71,10 @@ const MesaDePartesForm = () => {
       if (!isEditing) return;
       try {
         setLoading(true);
-        const res = await authService.getAdminByCIP(cip);
+        const res = await MesaDePartes.getUserMesaDePartesByCIP(cip);
         if (!mounted) return;
-        if (!res) {
-          setError('No se encontró el usuario de mesa de partes');
+        if (res?.error) {
+          setError(res.error || res.message || 'No se encontró el usuario');
           return;
         }
         const admin = res.data ?? res;
@@ -91,8 +83,7 @@ const MesaDePartesForm = () => {
           nombre_usuario: admin.nombre_usuario || '',
           password_hash: '',
           confirmar_password: '',
-          nombre_completo: admin.nombre_completo || '',
-          rol: admin.rol || 'MesaDePartes'
+          nombre_completo: admin.nombre_completo || ''
         });
       } catch (err) {
         console.error(err);
@@ -188,18 +179,6 @@ const MesaDePartesForm = () => {
               placeholder="Nombre completo"
             />
             {errors.nombre_completo && <span className="text-red-500 text-sm">{errors.nombre_completo}</span>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Rol</label>
-            <select
-              value={values.rol}
-              onChange={(e) => handleChange('rol', e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg border-gray-300"
-            >
-              <option value="MesaDePartes">MesaDePartes</option>
-              <option value="Administrador">Administrador</option>
-            </select>
           </div>
         </div>
 
