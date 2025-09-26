@@ -26,6 +26,12 @@ import PeritoDocumentos from './components/perito/PeritoDocumentos';
 import PeritoCasos from './components/perito/PeritoCasos';
 import PeritoPerfil from './components/perito/PeritoPerfil';
 import MesaDePartes from './components/admin/MesaDePartes';
+import MesaDePartesForm from './components/admin/MesaDePartesForm';
+import MesaDePartesLogin from './components/auth/MesaDePartesLogin';
+import MesaDePartesDashboard from './components/mesadepartes/MesaDePartesDashboard';
+import CrearOficio from './components/mesadepartes/CrearOficio';
+import RespuestaOficio from './components/mesadepartes/RespuestaOficio';
+import MesaDePartesResumen from './components/mesadepartes/MesaDePartesResumen';
 
 function App() {
   return (
@@ -37,6 +43,7 @@ function App() {
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/register" element={<AdminRegister />} />
             <Route path="/login" element={<PeritoLogin />} />
+            <Route path="/mesadepartes/login" element={<MesaDePartesLogin />} />
 
             {/* Dashboard Routes with nested navigation - Protected */}
             <Route path="/admin/dashboard" element={
@@ -52,7 +59,9 @@ function App() {
               <Route path="administradores/crear" element={<AdminForm />} />
               <Route path="administradores/editar/:cip" element={<AdminForm />} />
               <Route path="mesadepartes" element={<MesaDePartes />} />
-              <Route path="documentos" element={<DocumentManagement />} />
+              <Route path="mesadepartes/crear" element={<MesaDePartesForm />} />
+              <Route path="mesadepartes/editar/:cip" element={<MesaDePartesForm />} />
+              <Route path="documentos" element={<DocumentManagement />}  />
               <Route path="configuracion" element={<SystemConfiguration />} />
             </Route>
 
@@ -66,6 +75,17 @@ function App() {
               <Route path="documentos" element={<PeritoDocumentos />} />
               <Route path="casos" element={<PeritoCasos />} />
               <Route path="perfil" element={<PeritoPerfil />} />
+            </Route>
+
+            {/* Perito Dashboard Routes */}
+            <Route path="/mesadepartes/dashboard" element={
+              <ProtectedRoute requireUserMesaDePartes={true}>
+                <MesaDePartesDashboard />
+              </ProtectedRoute>
+            }>
+              <Route index element={<MesaDePartesResumen />} />
+              <Route path="crear/oficio" element={<CrearOficio />} />
+              <Route path="respuestas/oficio" element={<RespuestaOficio />} />
             </Route>
 
             {/* Redirects */}

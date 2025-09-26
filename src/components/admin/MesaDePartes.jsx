@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '../../services/authService';
+import MesaDePartesService from '../../services/mesadepartesService';
 import Usuarios from '../../assets/icons/Usuarios';
 import Error from '../../assets/icons/Error';
 
@@ -15,7 +15,7 @@ const MesaDePartes = () => {
   const [error, setError] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(null);
 
-  const service = authService;
+  const service = MesaDePartesService;
 
   const isMountedRef = useRef(false);
   const searchTimeoutRef = useRef(null);
@@ -26,11 +26,12 @@ const MesaDePartes = () => {
         if (isMountedRef.current) setLoading(true);
         setError('');
 
-        const response = service.getAllAdmins
-          ? await service.getAllAdmins(page, 10, search)
+        const response = service.getAllUserMesaDePartes
+          ? await service.getAllUserMesaDePartes(page, 10, search)
           : { data: [], pagination: { pages: 1, total: 0, page } };
 
         if (!isMountedRef.current) return;
+        if (response?.error) throw new Error(response.error || 'Error obteniendo usuarios');
 
         const data = response.data ?? response;
         const pagination = response.pagination ?? { pages: 1, total: (Array.isArray(data) ? data.length : 0), page };
@@ -87,8 +88,9 @@ const MesaDePartes = () => {
 
     try {
       setDeleteLoading(cip);
-      if (!service.deleteAdmin) throw new Error('deleteAdmin no implementado en authService');
-      await service.deleteAdmin(cip);
+      if (!service.deleteUserMesaDePartes) throw new Error('deletePerito no implementado en mesadepartesService');
+      const res = await service.deleteUserMesaDePartes(cip);
+      if (res?.error) throw new Error(res.error || res.message || 'Error eliminando usuario');
 
       if (!isMountedRef.current) return;
       await loadUsuarios(currentPage, searchTerm);
@@ -211,7 +213,7 @@ const MesaDePartes = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">{u.nombre_usuario || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">{u.nombre_completo || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">{u.rol || 'MesaDePartes'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">{u.nombre_rol || u.rol || 'MesaDePartes'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
                         <button

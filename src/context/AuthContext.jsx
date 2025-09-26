@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 import { AuthContext } from './AuthContext.js';
+import { MesaDePartesAuthService } from '../services/mesadepartesAuthService'; // añadido
+
+// Añadir función para normalizar roles
+const normalizeRole = (role) => {
+  if (!role) return null;
+  return String(role).toLowerCase().replace(/[\s_-]/g, '');
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -10,10 +17,9 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        //loading
         setLoading(true);
 
-        // Verificar token de administrador
+        // 1. PRIMERO verificar token de administrador (más seguro/prioritario)
         if (authService.getToken()) {
           try {
             const isValid = await authService.validateAndRefreshToken();
@@ -22,25 +28,30 @@ export const AuthProvider = ({ children }) => {
               if (userData) {
                 setUser({...userData, role: 'admin'});
                 setIsAuthenticated(true);
+                setLoading(false);
                 return; // Terminar aquí si es admin válido
               }
             }
-            // Si no es válido
+            // Si no es válido, limpiar
             authService.logout();
           } catch (error) {
-            console.error('Error validando token:', error);
+            console.error('Error validando token admin:', error);
             authService.logout();
           }
         }
 
-        // Verificar sesión de perito
+        // 2. SEGUNDO verificar sesión de perito
         const peritoData = localStorage.getItem('peritoData');
-        if (peritoData) {
+        const peritoToken = localStorage.getItem('peritoToken');
+        
+        if (peritoToken && peritoData) {
           try {
             const parsedData = JSON.parse(peritoData);
+            // Validar que los datos del perito sean completos
             if (parsedData.CIP && parsedData.role === 'perito') {
               setUser(parsedData);
               setIsAuthenticated(true);
+              setLoading(false);
               return;
             }
           } catch (error) {
@@ -50,16 +61,35 @@ export const AuthProvider = ({ children }) => {
           }
         }
 
-        // Si no hay ninguna sesión válida
+        // 3. TERCERO verificar sesión de mesa de partes
+        const mesaData = localStorage.getItem('mesadepartesData');
+        const mesaToken = localStorage.getItem('mesadepartesToken');
+        
+        if (mesaToken && mesaData) {
+          try {
+            const parsedMesa = JSON.parse(mesaData);
+            // Validar que los datos sean completos
+            if (parsedMesa?.CIP) {
+              const role = normalizeRole(parsedMesa.role) || 'mesadepartes';
+              setUser({ ...parsedMesa, role });
+              setIsAuthenticated(true);
+              setLoading(false);
+              return;
+            }
+          } catch (err) {
+            console.error('Error parsing mesadepartes data:', err);
+            localStorage.removeItem('mesadepartesToken');
+            localStorage.removeItem('mesadepartesData');
+          }
+        }
+
+        // 4. Si no hay ninguna sesión válida
         setUser(null);
         setIsAuthenticated(false);
 
       } catch (error) {
         console.error('Error en initializeAuth:', error);
         // Limpiar todo en caso de error
-        authService.logout();
-        localStorage.removeItem('peritoToken');
-        localStorage.removeItem('peritoData');
         setUser(null);
         setIsAuthenticated(false);
       } finally {
@@ -70,6 +100,61 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
+  // cuando haces login o guardas user, usa normalizeRole
+  const loginMesaDePartes = async (mesadepartes) => {
+    try {
+      setLoading(true);
+
+      // Si ya viene la respuesta del servicio
+      if (mesadepartes && (mesadepartes.token || mesadepartes.CIP) && !mesadepartes.password_hash) {
+        const token = mesadepartes.token || mesadepartes.accessToken || null;
+        const data = mesadepartes.data || mesadepartes.user || mesadepartes;
+
+        if (token) localStorage.setItem('mesadepartesToken', token);
+        if (data) {
+          const role = normalizeRole(data.role) || 'mesadepartes';
+          const store = { ...data, role };
+          localStorage.setItem('mesadepartesData', JSON.stringify(store));
+          setUser(store);
+          setIsAuthenticated(true);
+          return { success: true };
+        }
+        return { success: false, message: mesadepartes.message || 'Login fallido' };
+      }
+
+      // Si se pasan credenciales, llamar al service
+      if (mesadepartes && mesadepartes.CIP && mesadepartes.password_hash) {
+        const resp = await MesaDePartesAuthService.loginMesaDePartes({
+          CIP: mesadepartes.CIP,
+          password_hash: mesadepartes.password_hash
+        });
+
+        const token = resp?.token || resp?.accessToken || null;
+        const data = resp?.data || resp?.user || resp;
+
+        if (token) localStorage.setItem('mesadepartesToken', token);
+        if (data) {
+          const role = normalizeRole(data.role) || 'mesadepartes';
+          const store = { ...data, role };
+          localStorage.setItem('mesadepartesData', JSON.stringify(store));
+          setUser(store);
+          setIsAuthenticated(true);
+          return { success: true };
+        }
+
+        return { success: false, message: resp?.message || 'Credenciales inválidas' };
+      }
+
+      return { success: false, message: 'Datos inválidos para login' };
+    } catch (error) {
+      console.error('loginMesaDePartes error:', error);
+      return { success: false, message: error?.message || 'Error en el login' };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // cuando haces login o guardas user, usa normalizeRole
   const login = async (credentials) => {
     try {
       setLoading(true);
@@ -120,6 +205,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const logoutMesaDePartes = () => {
+    localStorage.removeItem('mesadepartesToken');
+    localStorage.removeItem('mesadepartesData');
+    // Si el usuario actual es mesadepartes, limpiar contexto
+    if (user?.role === 'mesadepartes') {
+      setUser(null);
+      setIsAuthenticated(false);
+    }
+  };
+
   const register = async (adminData) => {
     try {
       setLoading(true);
@@ -150,18 +245,36 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
   };
 
+  // Actualizar updateUser para normalizar rol al guardar
   const updateUser = (userData) => {
-    setUser(userData);
-    if (userData.role === 'admin') {
-      authService.setAdminData(userData);
-    } else if (userData.role === 'perito') {
-      localStorage.setItem('peritoData', JSON.stringify(userData));
+    const role = normalizeRole(userData.role) || normalizeRole(userData?.rol) || user?.role || null;
+    const dataToStore = { ...userData, role };
+    setUser(dataToStore);
+
+    if (role === 'admin') {
+      authService.setAdminData(dataToStore);
+    } else if (role === 'perito') {
+      localStorage.setItem('peritoData', JSON.stringify(dataToStore));
+    } else if (role && role.includes('mesa')) {
+      localStorage.setItem('mesadepartesData', JSON.stringify(dataToStore));
     }
   };
 
-  // Funciones helper para verificar el tipo de usuario
-  const isAdmin = () => user && user.role === 'admin';
-  const isPerito = () => user && user.role === 'perito';
+  // Funciones helper mejoradas
+  const isAdmin = () => {
+    const role = normalizeRole(user?.role);
+    return role === 'admin';
+  };
+
+  const isPerito = () => {
+    const role = normalizeRole(user?.role);
+    return role === 'perito';
+  };
+
+  const isMesaDePartes = () => {
+    const role = normalizeRole(user?.role);
+    return role === 'mesadepartes' || role.includes('mesa');
+  };
   const getUserRole = () => user?.role || null;
 
   const value = {
@@ -176,7 +289,10 @@ export const AuthProvider = ({ children }) => {
     updateUser,
     isAdmin,
     isPerito,
-    getUserRole
+    getUserRole,
+    isMesaDePartes,
+    loginMesaDePartes,
+    logoutMesaDePartes
   };
 
   return (

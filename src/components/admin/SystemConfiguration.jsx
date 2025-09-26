@@ -5,7 +5,7 @@ const SystemConfiguration = () => {
     <div className="space-y-6">
       {/* Encabezado */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-        <h1 className="text-3xl font-bold text-[#14532d] dark:text-green-800 mb-2">
+        <h1 className="text-3xl font-bold text-[#14532d] dark:text-green-400 mb-2">
           Configuración del Sistema
         </h1>
         <p className="text-gray-600 dark:text-gray-300">
