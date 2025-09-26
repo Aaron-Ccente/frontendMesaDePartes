@@ -5,7 +5,7 @@ const DocumentManagement = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-        <h1 className="text-3xl font-bold text-[#1a4d2e] dark:text-green-800 mb-2">
+        <h1 className="text-3xl font-bold text-[#1a4d2e] dark:text-green-400 mb-2">
           Gestión de Documentos
         </h1>
         <p className="text-gray-600 dark:text-gray-300">
