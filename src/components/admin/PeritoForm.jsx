@@ -298,7 +298,7 @@ const PeritoForm = () => {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-[#1a4d2e] dark:text-green-800 mb-2">
+            <h1 className="text-3xl font-bold text-[#1a4d2e] dark:text-green-400 mb-2">
               {isEditing ? 'Editar Perito' : 'Crear Nuevo Perito'}
             </h1>
             <p className="text-gray-600 dark:text-gray-300">
@@ -329,7 +329,7 @@ const PeritoForm = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Información de Usuario */}
           <div className="lg:col-span-2">
-            <h3 className="text-lg font-semibold text-[#1a4d2e] dark:text-green-800 mb-4 border-b pb-2 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-[#1a4d2e] dark:text-green-400 mb-4 border-b pb-2 dark:border-gray-700">
               Información de Usuario
             </h3>
           </div>
@@ -435,7 +435,7 @@ const PeritoForm = () => {
 
           {/* Información de Perito */}
           <div className="lg:col-span-2">
-            <h3 className="text-lg font-semibold text-[#1a4d2e] dark:text-green-800 mb-4 border-b pb-2 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-[#1a4d2e] dark:text-green-400 mb-4 border-b pb-2 dark:border-gray-700">
               Información del Perito
             </h3>
           </div>
@@ -615,7 +615,7 @@ const PeritoForm = () => {
 
          {/* Relaciones */}
           <div className="lg:col-span-2">
-            <h3 className="text-lg font-semibold text-[#1a4d2e] dark:text-green-800 mb-4 border-b pb-2 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-[#1a4d2e] dark:text-green-400 mb-4 border-b pb-2 dark:border-gray-700">
               Información de Relación
             </h3>
           </div>
@@ -632,7 +632,7 @@ const PeritoForm = () => {
                 handleChange('id_tipo_departamento', e.target.value);
                 chargeSections(e.target.value);
               }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
             >
               <option value="">Seleccione un tipo de departamento</option>
               {options.tiposDepartamento.map((tipo) => (
@@ -677,7 +677,7 @@ const PeritoForm = () => {
               name="id_seccion"
               value={values.id_seccion || ""}
               onChange={(e) => handleChange('id_seccion', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
               disabled={!values.id_tipo_departamento}
             >
               <option value="">{values.id_tipo_departamento ? "Seleccione una sección" : "Primero seleccione un tipo de departamento"}</option>
@@ -740,7 +740,7 @@ const PeritoForm = () => {
 
           {/* Foto */}
           <div className="lg:col-span-2">
-            <h3 className="text-lg font-semibold text-[#1a4d2e] dark:text-green-800 mb-4 border-b pb-2 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-[#1a4d2e] dark:text-green-400 mb-4 border-b pb-2 dark:border-gray-700">
               Foto
             </h3>
           </div>
