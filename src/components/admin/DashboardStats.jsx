@@ -51,7 +51,7 @@ const DashboardStats = () => {
     <div className="space-y-6 bg-gray-50 dark:bg-gray-900 p-4 min-h-screen transition-colors duration-300">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors duration-300">
-        <h1 className="text-3xl font-bold text-green-800 dark:text-green-800 mb-2">
+        <h1 className="text-3xl font-bold text-green-800 dark:text-green-400 mb-4">
           Panel de Administración
         </h1>
         <p className="text-gray-600 dark:text-gray-300 text-lg">
