@@ -52,7 +52,7 @@ const AdminDashboard = () => {
       {/* Header */}
       <header className="bg-gradient-to-r from-[#1a4d2e] to-[#1a4d2e] text-white shadow-lg dark:shadow-gray-900/50 sticky top-0 z-10">
         <div className="max-w-full mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Panel de Administración</h1>
+          <h1 className="text-2xl font-bold flex justify-center items-center gap-4"><img width={64} height={64} alt='Escudo de OFICRI' src='/src/assets/images/fondo_oficri.webp'/>Panel de Administración</h1>
           <div className="flex items-center space-x-4">
             {/* Botón de cambio de tema */}
             <ThemeToggle size="md" />
