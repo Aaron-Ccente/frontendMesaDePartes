@@ -35,7 +35,7 @@ const MesaDePartesDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-300 flex flex-col">
       {/* Header */}
-      <header className="bg-gradient-to-r from-[#1a4d2e] to-[#1a4d2e] text-white shadow-lg dark:shadow-gray-900/50 sticky top-0 z-10">
+      <header className="bg-gradient-to-r from-[#1a4d2e] to-[#1a4d2e] text-white shadow-lg dark:shadow-gray-900/50 sticky top-0 z-30">
         <div className="max-w-full mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <div className='flex justify-center items-center gap-4'>
@@ -53,10 +53,6 @@ const MesaDePartesDashboard = () => {
             <div className="text-right">
               <p className="text-sm text-gray-200 dark:text-dark-text-secondary">Bienvenido,</p>
               <p className="font-semibold">{user.nombre_completo}</p>
-              <p className="text-xs text-gray-200 dark:text-dark-text-secondary">
-                {user.Seccion ? `${user.Seccion}` : 'Sin sección asignada'}
-                {user.Especialidad && ` - ${user.Especialidad}`}
-              </p>
               <p className="text-xs text-gray-200 dark:text-dark-text-secondary">CIP: {user.CIP}</p>
             </div>
             <button
@@ -72,8 +68,8 @@ const MesaDePartesDashboard = () => {
       {/* Main Content Area */}
       <div className="flex flex-1">
         {/* Sidebar Navigation - Fixed to left */}
-        <div className="w-80 bg-white dark:bg-dark-surface shadow-lg dark:shadow-gray-900/20 border-r border-gray-200 dark:border-dark-border sticky top-[76px] h-[calc(100vh-76px)] overflow-y-auto">
-          
+        <div className="md:fixed md:left-0 md:top-[96px] md:w-80 md:h-[calc(100vh-76px)] md:overflow-y-auto md:z-20 w-full bg-white dark:bg-dark-surface shadow-lg dark:shadow-gray-900/20 border-r border-gray-200 dark:border-dark-border">
+            
           {/* Información del Perito */}
           <div className="p-6 border-b border-gray-200 dark:border-dark-border">
             <h2 className="text-lg font-semibold text-gray-800 dark:text-dark-text-primary mb-4">Mi Información</h2>
@@ -183,7 +179,7 @@ const MesaDePartesDashboard = () => {
         </div>
 
         {/* Content Area - Takes remaining space */}
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 p-6 overflow-auto md:ml-80">
           <Outlet />
         </div>
       </div>
