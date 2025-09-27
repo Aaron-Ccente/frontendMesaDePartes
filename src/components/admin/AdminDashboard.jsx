@@ -50,7 +50,7 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-300 flex flex-col">
       <Politics />
       {/* Header */}
-      <header className="bg-gradient-to-r from-[#1a4d2e] to-[#1a4d2e] text-white shadow-lg dark:shadow-gray-900/50 sticky top-0 z-10">
+      <header className="bg-gradient-to-r from-[#1a4d2e] to-[#1a4d2e] text-white shadow-lg dark:shadow-gray-900/50 sticky top-0 z-30">
         <div className="max-w-full mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-2xl font-bold flex justify-center items-center gap-4"><img width={64} height={64} alt='Escudo de OFICRI' src='/src/assets/images/fondo_oficri.webp'/>Panel de Administración</h1>
           <div className="flex items-center space-x-4">
@@ -73,7 +73,7 @@ const AdminDashboard = () => {
       {/* Main Content Area */}
       <div className="flex flex-1">
         {/* Sidebar Navigation */}
-        <div className="w-64 bg-white dark:bg-dark-surface shadow-lg dark:shadow-gray-900/20 border-r border-gray-200 dark:border-dark-border sticky top-[76px] h-[calc(100vh-76px)] overflow-y-auto">
+        <div className="md:fixed md:left-0 md:top-[76px] md:w-80 md:h-[calc(100vh-76px)] md:overflow-y-auto md:z-20 w-full bg-white dark:bg-dark-surface shadow-lg dark:shadow-gray-900/20 border-r border-gray-200 dark:border-dark-border">
           <nav className="p-6">
             <h2 className="text-lg font-semibold text-gray-800 dark:text-dark-text-primary mb-6">
               Navegación
@@ -190,7 +190,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 p-6 overflow-auto md:ml-80">
           <Outlet />
         </div>
       </div>
