@@ -112,6 +112,7 @@ const PeritoLogin = () => {
                 type="password"
                 id="password_hash"
                 name="password_hash"
+                autoComplete='current-password'
                 value={formData.password_hash}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent dark:text-dark-text-secondary"
