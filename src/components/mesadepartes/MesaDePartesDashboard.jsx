@@ -1,6 +1,8 @@
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import ThemeToggle from '../ui/ThemeToggle';
+import CreateOfficeIcon from '../../assets/icons/CreateOfficeIcon';
+import ReceiveOfficeIcon from '../../assets/icons/ReceiveOfficeIcon';
 
 const MesaDePartesDashboard = () => {
   const navigate = useNavigate();
@@ -156,7 +158,7 @@ const MesaDePartesDashboard = () => {
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  
+                  <CreateOfficeIcon/>
                   <span>Crear oficios</span>
                 </div>
               </button>
@@ -170,7 +172,7 @@ const MesaDePartesDashboard = () => {
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                 
+                  <ReceiveOfficeIcon/>
                   <span>Respuestas de Oficio</span>
                 </div>
               </button>
