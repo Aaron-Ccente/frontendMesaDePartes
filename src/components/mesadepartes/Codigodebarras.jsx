@@ -1,29 +1,61 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import Barcode from "react-barcode";
 
 function Codigodebarras() {
   const [formData, setFormData] = useState({
     numeroOficio: "",
     fechaHora: "",
-    unidadSolicitante: '',
+    fiscalia: "",
     regionSolicitante: "",
     implicado: "",
     dniImplicado: "",
-    derivacion: "",
+    fiscal_remitente: "",
     tipoExamen: "",
     muestra: "",
     especialidad: "",
   });
 
   const [codigo, setCodigo] = useState("");
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("formDataCodigodeBarras");
+    if (saved) {
+      setFormData(JSON.parse(saved));
+    }
+    setIsInitialized(true);
+  }, []);
+
+  useEffect(() => {
+    if (isInitialized) {
+      localStorage.setItem("formDataCodigodeBarras", JSON.stringify(formData));
+    }
+  }, [formData, isInitialized]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const generarCodigo = () => {
-    const nuevoCodigo = `${2025}-${formData.numeroOficio}-${formData.tipoExamen}`;
+    const nuevoCodigo = `${formData.numeroOficio}`;
     setCodigo(nuevoCodigo);
+  };
+
+  const limpiarFormulario = () => {
+    setFormData({
+      numeroOficio: "",
+      fechaHora: "",
+      fiscalia: "",
+      regionSolicitante: "",
+      implicado: "",
+      dniImplicado: "",
+      fiscal_remitente: "",
+      tipoExamen: "",
+      muestra: "",
+      especialidad: "",
+    });
+    localStorage.removeItem("formDataCodigodeBarras");
+    setCodigo("");
   };
 
   return (
@@ -34,7 +66,7 @@ function Codigodebarras() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600">NÚMERO DE OFICIO:</label>
+          <label className="text-sm font-medium text-gray-600">Número de oficio:</label>
           <input
             type="text"
             name="numeroOficio"
@@ -43,30 +75,31 @@ function Codigodebarras() {
             className="border border-gray-300 p-2 rounded-lg"
           />
         </div>
+
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600">FECHA Y HORA DEL INCIDENTE:</label>
+          <label className="text-sm font-medium text-gray-600">Fiscalía:</label>
           <input
             type="text"
-            name="fechaHora"
-            value={formData.fechaHora}
+            name="fiscalia"
+            value={formData.fiscalia}
             onChange={handleChange}
             className="border border-gray-300 p-2 rounded-lg"
           />
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600">UNIDAD SOLICITANTE:</label>
+          <label className="text-sm font-medium text-gray-600">Fiscal Remitente:</label>
           <input
             type="text"
-            name="unidadSolicitante"
-            value={formData.unidadSolicitante}
+            name="fiscal_remitente"
+            value={formData.fiscal_remitente}
             onChange={handleChange}
             className="border border-gray-300 p-2 rounded-lg"
           />
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600">REGIÓN SOLICITANTE:</label>
+          <label className="text-sm font-medium text-gray-600">Región de la fiscalía:</label>
           <input
             type="text"
             name="regionSolicitante"
@@ -77,7 +110,22 @@ function Codigodebarras() {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600">IMPLICADO:</label>
+          <label className="text-sm font-medium text-gray-600">Tipo de examen:</label>
+          <select
+            name="tipoExamen"
+            value={formData.tipoExamen}
+            onChange={handleChange}
+            className="border border-gray-300 p-2 rounded-lg"
+          >
+            <option value="">Seleccione un tipo de examen</option>
+            <option value="Dosaje Etílico">Dosaje Etílico</option>
+            <option value="Toxicológico">Toxicológico</option>
+            <option value="Dosaje Etílico y Toxicológico">Dosaje Etílico y Toxicológico</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-600">Implicado:</label>
           <input
             type="text"
             name="implicado"
@@ -88,7 +136,7 @@ function Codigodebarras() {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600">DNI DEL IMPLICADO:</label>
+          <label className="text-sm font-medium text-gray-600">DNI del implicado:</label>
           <input
             type="text"
             name="dniImplicado"
@@ -99,23 +147,11 @@ function Codigodebarras() {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600">DERIVACIÓN:</label>
+          <label className="text-sm font-medium text-gray-600">Fecha y hora del incidente:</label>
           <input
             type="text"
-            name="derivacion"
-            value={formData.derivacion}
-            onChange={handleChange}
-            className="border border-gray-300 p-2 rounded-lg"
-          />
-        </div>
-
-
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600">TIPO DE EXAMEN:</label>
-          <input
-            type="text"
-            name="tipoExamen"
-            value={formData.tipoExamen}
+            name="fechaHora"
+            value={formData.fechaHora}
             onChange={handleChange}
             className="border border-gray-300 p-2 rounded-lg"
           />
@@ -133,7 +169,7 @@ function Codigodebarras() {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600">ESPECIALIDAD:</label>
+          <label className="text-sm font-medium text-gray-600">Especialidad a derivar:</label>
           <input
             type="text"
             name="especialidad"
@@ -144,12 +180,24 @@ function Codigodebarras() {
         </div>
       </div>
 
-      <button
-        onClick={generarCodigo}
-        className="bg-blue-600 text-white py-2 px-6 rounded-lg mt-6 hover:bg-blue-700 transition-colors"
-      >
-        Generar código de barras
-      </button>
+      <div className="flex gap-4 mt-6">
+        
+         <button
+          onClick={limpiarFormulario}
+          className="bg-gray-500 text-white py-2 px-6 rounded-lg hover:bg-gray-600 transition-colors"
+        >
+          Limpiar
+        </button>
+
+        <button
+          type="button"
+          onClick={generarCodigo}
+          className="w-full bg-gradient-to-r from-[#1a4d2e] to-[#2d7d4a] text-white py-1 px-2 rounded-xl font-semibold text-base transition-all duration-300 hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+        >
+          Generar código de barras
+        </button>
+
+      </div>
 
       {codigo && (
         <div className="mt-6 bg-white p-4 rounded-lg shadow-sm">
@@ -161,4 +209,3 @@ function Codigodebarras() {
 }
 
 export default Codigodebarras;
-
