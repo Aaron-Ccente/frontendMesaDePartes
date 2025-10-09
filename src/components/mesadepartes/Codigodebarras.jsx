@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Barcode from "react-barcode";
-
+import { ComplementServices } from '../../services/complementService';
 function Codigodebarras() {
   const [formData, setFormData] = useState({
     numeroOficio: "",
@@ -17,7 +17,7 @@ function Codigodebarras() {
 
   const [codigo, setCodigo] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
-
+  const [especialidades, setEspecialidades] = useState([]);
   useEffect(() => {
     const saved = localStorage.getItem("formDataCodigodeBarras");
     if (saved) {
@@ -30,6 +30,16 @@ function Codigodebarras() {
     if (isInitialized) {
       localStorage.setItem("formDataCodigodeBarras", JSON.stringify(formData));
     }
+    const loadData = async ()=>{
+      try {
+        const especialidadesRes = await ComplementServices.getTiposDepartamento();
+        console.log(especialidadesRes)
+        setEspecialidades(especialidadesRes.data || [])
+      } catch (error) {
+        console.log(error)
+      }
+    }
+    loadData();
   }, [formData, isInitialized]);
 
   const handleChange = (e) => {
@@ -59,12 +69,17 @@ function Codigodebarras() {
   };
 
   return (
-    <div className="flex flex-col items-center p-6 bg-gray-50 rounded-2xl shadow-md w-full max-w-2xl mx-auto">
+    <div className="flex flex-col items-center p-6 bg-gray-50 rounded-2xl shadow-md w-full mx-auto">
       <h2 className="text-xl font-semibold mb-6 text-gray-700 text-center">
-        Formulario de Generación de Código de Barras
+        Formulario de Generación del Oficio y Código de Barras
       </h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+      <div className="w-full">
+            <h3 className="text-lg font-semibold text-[#1a4d2e] dark:text-green-400 mb-4 border-b pb-2 dark:border-gray-700">
+              Información de Encabezado
+            </h3>
+      </div>
+      <div className="grid grid-cols-1 max-lg:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+        
         <div className="flex flex-col">
           <label className="text-sm font-medium text-gray-600">Número de oficio:</label>
           <input
@@ -109,20 +124,13 @@ function Codigodebarras() {
           />
         </div>
 
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600">Tipo de examen:</label>
-          <select
-            name="tipoExamen"
-            value={formData.tipoExamen}
-            onChange={handleChange}
-            className="border border-gray-300 p-2 rounded-lg"
-          >
-            <option value="">Seleccione un tipo de examen</option>
-            <option value="Dosaje Etílico">Dosaje Etílico</option>
-            <option value="Toxicológico">Toxicológico</option>
-            <option value="Dosaje Etílico y Toxicológico">Dosaje Etílico y Toxicológico</option>
-          </select>
-        </div>
+      </div>
+      <div className="w-full pt-2">
+            <h3 className="text-lg font-semibold text-[#1a4d2e] dark:text-green-400 mb-4 border-b pb-2 dark:border-gray-700">
+              Información general del implicado
+            </h3>
+      </div>
+      <div className="grid grid-cols-1 max-lg:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
 
         <div className="flex flex-col">
           <label className="text-sm font-medium text-gray-600">Implicado:</label>
@@ -157,6 +165,54 @@ function Codigodebarras() {
           />
         </div>
 
+      </div>
+      <div className="w-full pt-2">
+            <h3 className="text-lg font-semibold text-[#1a4d2e] dark:text-green-400 mb-4 border-b pb-2 dark:border-gray-700">
+              Información para derivar documento
+            </h3>
+      </div>
+      <div className="grid grid-cols-1 max-lg:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+     
+        <div className="flex flex-col">
+            <label htmlFor="id_tipo_departamento" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Especialidad requerida
+            </label>
+            <select
+              id="id_tipo_departamento"
+              name="id_tipo_departamento"
+              value={formData.id_tipo_departamento || ""}
+              onChange={(e) => {
+                handleChange('id_tipo_departamento', e.target.value);
+              }}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
+            >
+              <option value="">Seleccione un tipo de departamento</option>
+              {especialidades.map((tipo) => (
+                <option 
+                  key={tipo.id_tipo_departamento} 
+                  value={tipo.id_tipo_departamento}
+                >
+                  {tipo.nombre_departamento}
+                </option>
+              ))}
+            </select>
+          </div>
+
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-600">Tipo de examen:</label>
+          <select
+            name="tipoExamen"
+            value={formData.tipoExamen}
+            onChange={handleChange}
+            className="border border-gray-300 p-2 rounded-lg"
+          >
+            <option value="">Seleccione un tipo de examen</option>
+            <option value="Dosaje Etílico">Dosaje Etílico</option>
+            <option value="Toxicológico">Toxicológico</option>
+            <option value="Dosaje Etílico y Toxicológico">Dosaje Etílico y Toxicológico</option>
+          </select>
+        </div>
+
         <div className="flex flex-col">
           <label className="text-sm font-medium text-gray-600">MUESTRA REMITIDA / A EXTRAER:</label>
           <input
@@ -169,15 +225,38 @@ function Codigodebarras() {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600">Especialidad a derivar:</label>
-          <input
-            type="text"
-            name="especialidad"
-            value={formData.especialidad}
+          <label className="text-sm font-medium text-gray-600">Asignar a perito:</label>
+          <select
+            name="perito"
+            value={formData.perito}
             onChange={handleChange}
             className="border border-gray-300 p-2 rounded-lg"
-          />
+          >
+            <option value="">Seleccione un perito</option>
+            <option value="Dosaje Etílico">Dosaje Etílico</option>
+            <option value="Toxicológico">Toxicológico</option>
+            <option value="Dosaje Etílico y Toxicológico">Dosaje Etílico y Toxicológico</option>
+          </select>
         </div>
+            
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-600">Prioridad:</label>
+          <select
+            name="prioridad"
+            value={formData.prioridad}
+            onChange={handleChange}
+            className="border border-gray-300 p-2 rounded-lg"
+          >
+            <option value="">Seleccione la prioridad</option>
+            <option value="Dosaje Etílico">FLAGRANCIA</option>
+            <option value="Toxicológico">ALTO</option>
+            <option value="Dosaje Etílico y Toxicológico">URGENTE</option>
+            <option value="Dosaje Etílico y Toxicológico">NORMAL</option>
+            <option value="Dosaje Etílico y Toxicológico">MEDIA</option>
+          </select>
+        </div>   
+
+
       </div>
 
       <div className="flex gap-4 mt-6">
