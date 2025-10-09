@@ -1,12 +1,25 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
 
+const tokenKeyMesaDePartes = 'mesadepartesToken';
+const tokenKeyPerito = 'peritoToken';
+const tokenKeyAdmin = 'adminToken';
+ // Para obtener el token de usuario
+const getAuthHeaders = (includeJson = true) => {
+  const token = localStorage.getItem(tokenKeyMesaDePartes) || localStorage.getItem(tokenKeyAdmin) || localStorage.getItem(tokenKeyPerito);
+  const headers = {};
+  if (includeJson) headers['Content-Type'] = 'application/json';
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
+};
+
 class ComplementService{
 
   // Obtiene todas las especialidades
   async getEspecialidades() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/especialidades`, {
-        method: 'GET'
+        method: 'GET',
+        headers: getAuthHeaders()
       });
       const data = await response.json();
       if (!response.ok) {
@@ -24,7 +37,8 @@ class ComplementService{
   async getGrados() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/grados`, {
-        method: 'GET'
+        method: 'GET',
+        headers: getAuthHeaders()
       });
       const data = await response.json();
       if (!response.ok) {
@@ -42,7 +56,8 @@ class ComplementService{
   async getTiposDepartamento() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/tipodepartamentos`, {
-        method: 'GET'
+        method: 'GET',
+        headers: getAuthHeaders()
       });
       const data = await response.json();
       if (!response.ok) {
@@ -59,7 +74,8 @@ class ComplementService{
   async getTurnos() {
         try {
         const response = await fetch(`${API_BASE_URL}/api/turnos`, {
-            method: 'GET'
+            method: 'GET',
+            headers: getAuthHeaders()
         });
         const data = await response.json();
         if (!response.ok) {
@@ -74,10 +90,10 @@ class ComplementService{
     }
 
     async getSecciones(id){
-      console.log(id);
       try {
         const response = await fetch(`${API_BASE_URL}/api/secciones?id=${id}`, {
-            method: 'GET'
+            method: 'GET',
+            headers: getAuthHeaders()
         });
         const data = await response.json();
         if (!response.ok) {
