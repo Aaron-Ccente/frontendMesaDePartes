@@ -66,12 +66,12 @@ const PeritoForm = () => {
         
         let result;
         if (isEditing) {
-          // Para edición, no enviamos la contraseña si no se cambió
           const updateData = { ...formData };
           if (!updateData.password_hash) {
             delete updateData.password_hash;
             delete updateData.confirmar_password;
           }
+          console.log(updateData)
           result = await peritoService.updatePerito(cip, updateData);
         } else {
           const { confirmar_password: _cp, ...createData } = formData;
@@ -142,7 +142,7 @@ const PeritoForm = () => {
           grados: gradosRes.data || [],
           turnos: turnosRes.data || [],
           tiposDepartamento: tiposDepartamentoRes.data || [],
-          secciones: [] // Se cargarán después según el tipo de departamento seleccionado
+          secciones: []
         });
       } catch (error) {
         console.error('Error cargando opciones:', error);
@@ -184,13 +184,13 @@ const PeritoForm = () => {
             return '';
           };
           
-          // Preparar datos para el formulario
+          // datos para el formulario
           const formData = {
             // Campos de usuario
             CIP: perito.CIP || '',
             nombre_usuario: perito.nombre_usuario || '',
             nombre_completo: perito.nombre_completo || '',
-            password_hash: '', // No cargamos la contraseña por seguridad
+            password_hash: '',
             confirmar_password: '',
             
             // Campos de perito
@@ -218,16 +218,12 @@ const PeritoForm = () => {
             id_seccion: perito.id_seccion || '',
             id_tipo_departamento: perito.id_tipo_departamento || ''
           };
-
-          // Establecer valores en el formulario
           setValues(formData);
 
-          // Cargar secciones según el tipo de departamento si existe
           if (perito.id_tipo_departamento) {
             chargeSections(perito.id_tipo_departamento);
           }
 
-          // Mostrar foto si existe
           if (perito.fotografia_url) {
             setPhotoPreview(perito.fotografia_url);
           }
@@ -260,7 +256,7 @@ const PeritoForm = () => {
     }
 
     try {
-      // Convertir a WebP и Base64
+      // Convertir en Base64
       const webpBase64 = await convertImageToWebPBase64(file);
       setPhotoPreview(webpBase64);
       setFieldValue('fotografia_url', webpBase64);
@@ -797,7 +793,7 @@ const PeritoForm = () => {
                     onClick={removePhoto}
                     className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
                   >
-                    ×
+                    x
                   </button>
                 </div>
               )}

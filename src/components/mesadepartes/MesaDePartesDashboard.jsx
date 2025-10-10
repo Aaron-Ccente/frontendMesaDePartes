@@ -1,6 +1,8 @@
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import ThemeToggle from '../ui/ThemeToggle';
+import CreateOfficeIcon from '../../assets/icons/CreateOfficeIcon';
+import ReceiveOfficeIcon from '../../assets/icons/ReceiveOfficeIcon';
 
 const MesaDePartesDashboard = () => {
   const navigate = useNavigate();
@@ -35,12 +37,15 @@ const MesaDePartesDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-300 flex flex-col">
       {/* Header */}
-      <header className="bg-gradient-to-r from-[#1a4d2e] to-[#1a4d2e] text-white shadow-lg dark:shadow-gray-900/50 sticky top-0 z-10">
+      <header className="bg-gradient-to-r from-[#1a4d2e] to-[#1a4d2e] text-white shadow-lg dark:shadow-gray-900/50 sticky top-0 z-30">
         <div className="max-w-full mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            <div>
-              <h1 className="text-2xl font-bold">Mesa de Partes OFICRI</h1>
-              <p className="text-sm text-gray-200 dark:text-dark-text-secondary">Panel de Perito</p>
+            <div className='flex justify-center items-center gap-4'>
+              <img width={64} height={64} alt='Escudo de OFICRI' src='/src/assets/images/fondo_oficri.webp'/>
+              <div>
+                <h1 className="text-2xl font-bold">Mesa de Partes OFICRI</h1>
+                <p className="text-sm text-gray-200 dark:text-dark-text-secondary">Panel de Mesa De Partes</p>
+              </div>
             </div>
           </div>
           <div className="flex items-center space-x-4">
@@ -50,10 +55,6 @@ const MesaDePartesDashboard = () => {
             <div className="text-right">
               <p className="text-sm text-gray-200 dark:text-dark-text-secondary">Bienvenido,</p>
               <p className="font-semibold">{user.nombre_completo}</p>
-              <p className="text-xs text-gray-200 dark:text-dark-text-secondary">
-                {user.Seccion ? `${user.Seccion}` : 'Sin sección asignada'}
-                {user.Especialidad && ` - ${user.Especialidad}`}
-              </p>
               <p className="text-xs text-gray-200 dark:text-dark-text-secondary">CIP: {user.CIP}</p>
             </div>
             <button
@@ -69,8 +70,8 @@ const MesaDePartesDashboard = () => {
       {/* Main Content Area */}
       <div className="flex flex-1">
         {/* Sidebar Navigation - Fixed to left */}
-        <div className="w-80 bg-white dark:bg-dark-surface shadow-lg dark:shadow-gray-900/20 border-r border-gray-200 dark:border-dark-border sticky top-[76px] h-[calc(100vh-76px)] overflow-y-auto">
-          
+        <div className="md:fixed md:left-0 md:top-[96px] md:w-80 md:h-[calc(100vh-76px)] md:overflow-y-auto md:z-20 w-full bg-white dark:bg-dark-surface shadow-lg dark:shadow-gray-900/20 border-r border-gray-200 dark:border-dark-border">
+            
           {/* Información del Perito */}
           <div className="p-6 border-b border-gray-200 dark:border-dark-border">
             <h2 className="text-lg font-semibold text-gray-800 dark:text-dark-text-primary mb-4">Mi Información</h2>
@@ -80,11 +81,11 @@ const MesaDePartesDashboard = () => {
                 <span className="font-medium text-gray-800 dark:text-dark-text-primary">{user.CIP}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-dark-text-secondary">Nombres:</span>
+                <span className="text-gray-600 dark:text-dark-text-secondary">Nombre completo:</span>
                 <span className="font-medium text-gray-800 dark:text-dark-text-primary">{user.nombre_completo}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-dark-text-secondary">Apellidos:</span>
+                <span className="text-gray-600 dark:text-dark-text-secondary">Nombre de referencia:</span>
                 <span className="font-medium text-gray-800 dark:text-dark-text-primary">{user.nombre_usuario}</span>
               </div>
               {user.Email && (
@@ -157,7 +158,7 @@ const MesaDePartesDashboard = () => {
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  
+                  <CreateOfficeIcon/>
                   <span>Crear oficios</span>
                 </div>
               </button>
@@ -171,7 +172,7 @@ const MesaDePartesDashboard = () => {
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                 
+                  <ReceiveOfficeIcon/>
                   <span>Respuestas de Oficio</span>
                 </div>
               </button>
@@ -180,7 +181,7 @@ const MesaDePartesDashboard = () => {
         </div>
 
         {/* Content Area - Takes remaining space */}
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 p-6 overflow-auto md:ml-80">
           <Outlet />
         </div>
       </div>

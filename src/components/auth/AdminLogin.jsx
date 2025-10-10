@@ -92,6 +92,7 @@ const AdminLogin = () => {
               type="text"
               id="CIP"
               name="CIP"
+              autoComplete='cip'
               value={values.CIP}
               onChange={(e) => handleChange('CIP', e.target.value)}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent dark:text-dark-text-secondary`}
@@ -110,6 +111,7 @@ const AdminLogin = () => {
               type="password"
               id="password_hash"
               name="password_hash"
+              autoComplete='current-password'
               value={values.password_hash}
               onChange={(e) => handleChange('password_hash', e.target.value)}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent dark:text-dark-text-secondary`}

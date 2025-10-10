@@ -1,8 +1,10 @@
-import React from 'react'
+import Codigodebarras from './codigodebarras'
 
 function CrearOficio() {
   return (
-    <div>CrearOficio</div>
+    <div>
+      <Codigodebarras/>
+    </div>
   )
 }
 
