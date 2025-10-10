@@ -13,6 +13,8 @@ function Codigodebarras() {
     tipoExamen: "",
     muestra: "",
     especialidad: "",
+    id_tipo_departamento: "",
+    estado: "CREACIÓN DE OFICIO"
   });
 
   const [codigo, setCodigo] = useState("");
@@ -63,6 +65,8 @@ function Codigodebarras() {
       tipoExamen: "",
       muestra: "",
       especialidad: "",
+      id_tipo_departamento: "",
+      estado: "CREACIÓN DE OFICIO"
     });
     localStorage.removeItem("formDataCodigodeBarras");
     setCodigo("");
@@ -175,12 +179,12 @@ function Codigodebarras() {
      
         <div className="flex flex-col">
             <label htmlFor="id_tipo_departamento" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Especialidad requerida
+              Especialidad requerida:
             </label>
             <select
               id="id_tipo_departamento"
               name="id_tipo_departamento"
-              value={formData.id_tipo_departamento || ""}
+              value={formData.id_tipo_departamento}
               onChange={(e) => {
                 handleChange('id_tipo_departamento', e.target.value);
               }}
@@ -256,6 +260,17 @@ function Codigodebarras() {
           </select>
         </div>   
 
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-600">Estado del oficio:</label>
+          <input
+            type="text"
+            name="estado"
+            value={formData.estado}
+            onChange={handleChange}
+            disabled="true"
+            className="border border-gray-300 p-2 rounded-lg cursor-no-drop"
+          />
+        </div>
 
       </div>
 
