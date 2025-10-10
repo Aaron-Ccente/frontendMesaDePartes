@@ -20,9 +20,9 @@ const MesaDePartesDashboard = () => {
   const handleLogout = () => {
     loginMesaDePartes();
     navigate('/mesadepartes/login');
+    localStorage.removeItem("formDataCodigodeBarras");
   };
 
-  // El ProtectedRoute ya verifica la autenticación, así que aquí solo necesitamos el usuario
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary flex items-center justify-center transition-colors duration-300">
