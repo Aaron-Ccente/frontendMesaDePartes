@@ -14,6 +14,26 @@ const getAuthHeaders = (includeJson = true) => {
 
 class ComplementService{
 
+  // Obtener perito por seagun su especialidad
+  async getAllPeritoAccordingToSpecialty(id_especialidad) {
+    try {
+      const url = `${API_BASE_URL}/api/peritos/especialidad?id_especialidad=${id_especialidad}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        return { error: data.error || data.message || 'Error obteniendo peritos.' };
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error en getAllPeritoAccordingToSpecialty:', error);
+      return { error: error.message || 'Error de red' };
+    }
+  }
+
   // Obtiene todas las especialidades
   async getEspecialidades() {
     try {
