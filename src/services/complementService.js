@@ -126,6 +126,24 @@ class ComplementService{
         throw error;
         }
     }
+
+    async getAllPriorities(){
+      try {
+            const response = await fetch(`${API_BASE_URL}/api/prioridades`, {
+            method: 'GET',
+            headers: getAuthHeaders()
+        })
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Error al obtener las prioridades');
+        }
+
+        return data;
+      } catch (error) {
+        console.error('Error al obtener los turnos:', error);
+        throw error;
+      }
+      }
 }
 
 
