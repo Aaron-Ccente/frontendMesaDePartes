@@ -24,6 +24,7 @@ function CrearOficio() {
   const [closeModal, setCloseModal] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [especialidades, setEspecialidades] = useState([]);
+  const [peritos, setPeritos] = useState([]);
 
   useEffect(() => {
     const saved = localStorage.getItem("formDataCodigodeBarras");
