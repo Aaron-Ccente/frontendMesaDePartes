@@ -173,7 +173,7 @@ const UserManagement = () => {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                {['CIP','Nombres','DNI','Email','Departamento','Seccion','Rol','Acciones'].map((col) => (
+                {['CIP','Nombres','DNI','Email','Departamento','Rol','Acciones'].map((col) => (
                   <th key={col} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     {col}
                   </th>
@@ -210,9 +210,6 @@ const UserManagement = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">
                       {perito.nombre_departamento || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">
-                      {perito.nombre_seccion || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">
                       Perito
