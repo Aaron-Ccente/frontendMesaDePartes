@@ -108,12 +108,6 @@ const PeritoDashboard = () => {
                   <span className="font-medium text-gray-800 dark:text-dark-text-primary">{user.nombre_departamento}</span>
                 </div>
               )}
-              {user.nombre_seccion && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-dark-text-secondary">Sección:</span>
-                  <span className="font-medium text-gray-800 dark:text-dark-text-primary">{user.nombre_seccion}</span>
-                </div>
-              )}
               {user.nombre_grado && (
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-dark-text-secondary">Grado:</span>
