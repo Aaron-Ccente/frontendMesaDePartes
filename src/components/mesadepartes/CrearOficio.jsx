@@ -17,13 +17,14 @@ function CrearOficio() {
     id_tipo_departamento: "",
     id_usuario: "",
     estado: "CREACIÓN DE OFICIO",
-    prioridad: ""
+    id_prioridad: ""
   });
 
   const [codigo, setCodigo] = useState("");
   const [closeModal, setCloseModal] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [especialidades, setEspecialidades] = useState([]);
+  const [prioridades, setPrioridades] = useState([]);
   const [peritos, setPeritos] = useState([]);
 
   useEffect(() => {
@@ -49,6 +50,8 @@ function CrearOficio() {
     const loadData = async () => {
       try {
         const especialidadesRes = await ComplementServices.getTiposDepartamento();
+        const prioridadesRes = await ComplementServices.getAllPriorities();
+        setPrioridades(Array.isArray(prioridadesRes?.data) ? prioridadesRes.data : []);
         setEspecialidades(Array.isArray(especialidadesRes?.data) ? especialidadesRes.data : []);
       } catch (error) {
         console.log(error);
@@ -306,17 +309,18 @@ function CrearOficio() {
         <div className="flex flex-col">
           <label className="text-sm font-medium text-gray-600">Prioridad:</label>
           <select
-            name="prioridad"
-            value={formData.prioridad}
-            onChange={handleChange}
+            id="id_prioridad"
+            name="id_prioridad"
+            value={formData.id_prioridad}
+            onChange={(e) => { handleChange('id_prioridad', e.target.value); }}
             className="border border-gray-300 p-2 rounded-lg"
           >
             <option value="">Seleccione la prioridad</option>
-            <option value="FLAGRANCIA">FLAGRANCIA</option>
-            <option value="ALTO">ALTO</option>
-            <option value="URGENTE">URGENTE</option>
-            <option value="NORMAL">NORMAL</option>
-            <option value="MEDIA">MEDIA</option>
+            {prioridades.map((prioridad) => (
+              <option key={prioridad.id_prioridad} value={prioridad.id_prioridad}>
+                {prioridad.nombre_prioridad}
+              </option>
+            ))}
           </select>
         </div>
 

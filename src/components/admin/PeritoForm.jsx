@@ -23,7 +23,6 @@ const PeritoForm = () => {
     grados: [],
     turnos: [],
     tiposDepartamento: [],
-    secciones: []
   });
 
   const initialValues = {
@@ -52,7 +51,6 @@ const PeritoForm = () => {
     id_especialidad: '',
     id_grado: '',
     id_turno: '',
-    id_seccion: '',
     id_tipo_departamento: ''
   };
 
@@ -141,8 +139,7 @@ const PeritoForm = () => {
           especialidades: especialidadesRes.data || [],
           grados: gradosRes.data || [],
           turnos: turnosRes.data || [],
-          tiposDepartamento: tiposDepartamentoRes.data || [],
-          secciones: []
+          tiposDepartamento: tiposDepartamentoRes.data || []
         });
       } catch (error) {
         console.error('Error cargando opciones:', error);
@@ -215,14 +212,9 @@ const PeritoForm = () => {
             id_especialidad: perito.id_especialidad || '',
             id_grado: perito.id_grado || '',
             id_turno: perito.id_turno || '',
-            id_seccion: perito.id_seccion || '',
             id_tipo_departamento: perito.id_tipo_departamento || ''
           };
           setValues(formData);
-
-          if (perito.id_tipo_departamento) {
-            chargeSections(perito.id_tipo_departamento);
-          }
 
           if (perito.fotografia_url) {
             setPhotoPreview(perito.fotografia_url);
@@ -264,19 +256,6 @@ const PeritoForm = () => {
     } catch (error) {
       console.error('Error procesando foto:', error);
       setError('Error al procesar la foto');
-    }
-  };
-
-  const chargeSections = async (idTipoDepartamento) => {
-    try {
-      const seccionesRes = await ComplementServices.getSecciones(idTipoDepartamento);
-      setOptions(prev => ({
-        ...prev, 
-        secciones: seccionesRes.data || []
-      }));
-    } catch (error) {
-      console.error('Error cargando secciones:', error);
-      setError('Error cargando secciones');
     }
   };
 
@@ -626,7 +605,6 @@ const PeritoForm = () => {
               value={values.id_tipo_departamento || ""}
               onChange={(e) => {
                 handleChange('id_tipo_departamento', e.target.value);
-                chargeSections(e.target.value);
               }}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
             >
@@ -664,29 +642,6 @@ const PeritoForm = () => {
               ))}
             </select>
           </div>
-         <div>
-            <label htmlFor="id_seccion" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Secciones
-            </label>
-            <select
-              id="id_seccion"
-              name="id_seccion"
-              value={values.id_seccion || ""}
-              onChange={(e) => handleChange('id_seccion', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
-              disabled={!values.id_tipo_departamento}
-            >
-              <option value="">{values.id_tipo_departamento ? "Seleccione una sección" : "Primero seleccione un tipo de departamento"}</option>
-              {options.secciones.map((seccion) => (
-                <option 
-                  key={seccion.id_seccion} 
-                  value={seccion.id_seccion}
-                >
-                  {seccion.nombre}
-                </option>
-              ))}
-            </select>
-          </div>  
 
           <div>
             <label htmlFor="id_grado" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
