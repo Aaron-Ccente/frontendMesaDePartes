@@ -21,6 +21,8 @@ const PeritoDashboard = () => {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem("peritoData");
+    localStorage.removeItem("peritoToken");
     logoutPerito();
     navigate('/login');
   };
