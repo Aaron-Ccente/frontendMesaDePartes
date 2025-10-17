@@ -77,7 +77,7 @@ const PeritoDashboard = () => {
 
       {/* Main Content Area */}
       <div className="flex flex-1">
-        {/* Sidebar Navigation - Fixed to left on md+ */}
+        {/* Sidebar Navigation */}
         <div className="md:fixed md:left-0 md:top-[76px] md:w-80 md:h-[calc(100vh-76px)] md:overflow-y-auto md:z-20 w-full bg-white dark:bg-dark-surface shadow-lg dark:shadow-gray-900/20 border-r border-gray-200 dark:border-dark-border">
           
           {/* Información del Perito */}
