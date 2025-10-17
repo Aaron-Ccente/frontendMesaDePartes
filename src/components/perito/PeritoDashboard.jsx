@@ -21,6 +21,8 @@ const PeritoDashboard = () => {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem("peritoData");
+    localStorage.removeItem("peritoToken");
     logoutPerito();
     navigate('/login');
   };
@@ -75,7 +77,7 @@ const PeritoDashboard = () => {
 
       {/* Main Content Area */}
       <div className="flex flex-1">
-        {/* Sidebar Navigation - Fixed to left on md+ */}
+        {/* Sidebar Navigation */}
         <div className="md:fixed md:left-0 md:top-[76px] md:w-80 md:h-[calc(100vh-76px)] md:overflow-y-auto md:z-20 w-full bg-white dark:bg-dark-surface shadow-lg dark:shadow-gray-900/20 border-r border-gray-200 dark:border-dark-border">
           
           {/* Información del Perito */}
@@ -104,12 +106,6 @@ const PeritoDashboard = () => {
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-dark-text-secondary">Departamento:</span>
                   <span className="font-medium text-gray-800 dark:text-dark-text-primary">{user.nombre_departamento}</span>
-                </div>
-              )}
-              {user.nombre_seccion && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-dark-text-secondary">Sección:</span>
-                  <span className="font-medium text-gray-800 dark:text-dark-text-primary">{user.nombre_seccion}</span>
                 </div>
               )}
               {user.nombre_grado && (

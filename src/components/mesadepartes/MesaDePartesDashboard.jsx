@@ -18,9 +18,11 @@ const MesaDePartesDashboard = () => {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem("formDataCodigodeBarras");
+    localStorage.removeItem("mesadepartesData");
+    localStorage.removeItem("mesadepartesToken");
     loginMesaDePartes();
     navigate('/mesadepartes/login');
-    localStorage.removeItem("formDataCodigodeBarras");
   };
 
   if (!user) {

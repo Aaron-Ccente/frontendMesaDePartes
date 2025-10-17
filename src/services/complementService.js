@@ -1,11 +1,10 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
 
 const tokenKeyMesaDePartes = 'mesadepartesToken';
-const tokenKeyPerito = 'peritoToken';
 const tokenKeyAdmin = 'adminToken';
  // Para obtener el token de usuario
 const getAuthHeaders = (includeJson = true) => {
-  const token = localStorage.getItem(tokenKeyMesaDePartes) || localStorage.getItem(tokenKeyAdmin) || localStorage.getItem(tokenKeyPerito);
+  const token = localStorage.getItem(tokenKeyMesaDePartes) || localStorage.getItem(tokenKeyAdmin);
   const headers = {};
   if (includeJson) headers['Content-Type'] = 'application/json';
   if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -13,6 +12,26 @@ const getAuthHeaders = (includeJson = true) => {
 };
 
 class ComplementService{
+
+  // Obtener perito por seagun su especialidad
+  async getAllPeritoAccordingToSpecialty(id_especialidad) {
+    try {
+      const url = `${API_BASE_URL}/api/peritos/especialidad?id_especialidad=${id_especialidad}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        return { error: data.error || data.message || 'Error obteniendo peritos.' };
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error en getAllPeritoAccordingToSpecialty:', error);
+      return { error: error.message || 'Error de red' };
+    }
+  }
 
   // Obtiene todas las especialidades
   async getEspecialidades() {
@@ -104,6 +123,39 @@ class ComplementService{
         } catch (error) {
         console.error('Error al obtener los turnos:', error);
         throw error;
+        }
+    }
+
+    async getAllPriorities(){
+      try {
+            const response = await fetch(`${API_BASE_URL}/api/prioridades`, {
+            method: 'GET',
+            headers: getAuthHeaders()
+        })
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Error al obtener las prioridades');
+        }
+
+        return data;
+      } catch (error) {
+        console.error('Error al obtener los turnos:', error);
+        throw error;
+      }
+      }
+
+    // Obtener tipos de examen por id de tipo de departamento
+    static async getTiposByDepartamento(id_departamento) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/tiposdeexamen/departamento/${id_departamento}`, {
+                method: 'GET',
+                headers: getAuthHeaders()
+            });
+            if (!response.ok) throw new Error('Error al obtener los tipos de examen por departamento');
+            return await response.json();
+        } catch (error) {
+            console.error(error);
+            throw error;
         }
     }
 }

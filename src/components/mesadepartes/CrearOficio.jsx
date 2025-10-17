@@ -15,15 +15,17 @@ function CrearOficio() {
     muestra: "",
     especialidad: "",
     id_tipo_departamento: "",
+    id_usuario: "",
     estado: "CREACIÓN DE OFICIO",
-    perito: "",
-    prioridad: ""
+    id_prioridad: ""
   });
 
   const [codigo, setCodigo] = useState("");
   const [closeModal, setCloseModal] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [especialidades, setEspecialidades] = useState([]);
+  const [prioridades, setPrioridades] = useState([]);
+  const [peritos, setPeritos] = useState([]);
 
   useEffect(() => {
     const saved = localStorage.getItem("formDataCodigodeBarras");
@@ -31,7 +33,7 @@ function CrearOficio() {
       try {
         setFormData(JSON.parse(saved));
       } catch (e) {
-        console.log(e)
+        console.log(e);
         localStorage.removeItem("formDataCodigodeBarras");
       }
     }
@@ -42,17 +44,21 @@ function CrearOficio() {
     if (isInitialized) {
       localStorage.setItem("formDataCodigodeBarras", JSON.stringify(formData));
     }
+  }, [formData, isInitialized]);
 
+  useEffect(() => {
     const loadData = async () => {
       try {
         const especialidadesRes = await ComplementServices.getTiposDepartamento();
-        setEspecialidades(especialidadesRes.data || []);
+        const prioridadesRes = await ComplementServices.getAllPriorities();
+        setPrioridades(Array.isArray(prioridadesRes?.data) ? prioridadesRes.data : []);
+        setEspecialidades(Array.isArray(especialidadesRes?.data) ? especialidadesRes.data : []);
       } catch (error) {
         console.log(error);
       }
     };
     loadData();
-  }, [formData, isInitialized]);
+  }, []);
 
   const handleChange = (eOrName, maybeValue) => {
     if (typeof eOrName === "string") {
@@ -63,10 +69,40 @@ function CrearOficio() {
     }
   };
 
+  const handleAddPeritosAccordingToSpecialty = async (id_especialidad) => {
+    try {
+      if (!id_especialidad) {
+        setPeritos([]);
+        return;
+      }
+
+      const resp = await ComplementServices.getAllPeritoAccordingToSpecialty(id_especialidad);
+      const payload = resp?.data ?? resp;
+      let items;
+
+      if (payload && typeof payload === 'object' && 'success' in payload && payload.success) {
+        items = payload.data;
+      } else {
+        items = payload;
+      }
+
+      if (Array.isArray(items)) {
+        setPeritos(items);
+      } else if (items && typeof items === 'object') {
+        setPeritos([items]);
+      } else {
+        setPeritos([]);
+      }
+    } catch (err) {
+      console.error('Error cargando peritos por especialidad:', err);
+      setPeritos([]);
+    }
+  };
+
   const generarCodigo = () => {
     const nuevoCodigo = `${formData.numeroOficio || Date.now()}`;
     setCodigo(nuevoCodigo);
-    setCloseModal(true)
+    setCloseModal(true);
   };
 
   const limpiarFormulario = () => {
@@ -82,13 +118,14 @@ function CrearOficio() {
       muestra: "",
       especialidad: "",
       id_tipo_departamento: "",
+      id_usuario: "",
       estado: "CREACIÓN DE OFICIO",
-      perito: "",
       prioridad: ""
     };
     setFormData(initial);
     localStorage.removeItem("formDataCodigodeBarras");
     setCodigo("");
+    setPeritos([]);
   };
 
   return (
@@ -205,7 +242,11 @@ function CrearOficio() {
             id="id_tipo_departamento"
             name="id_tipo_departamento"
             value={formData.id_tipo_departamento}
-            onChange={(e) => handleChange('id_tipo_departamento', e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              handleChange('id_tipo_departamento', val);
+              handleAddPeritosAccordingToSpecialty(val);
+            }}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
           >
             <option value="">Seleccione un tipo de departamento</option>
@@ -246,32 +287,40 @@ function CrearOficio() {
         <div className="flex flex-col">
           <label className="text-sm font-medium text-gray-600">Asignar a perito:</label>
           <select
-            name="perito"
-            value={formData.perito}
-            onChange={handleChange}
+            id="id_usuario"
+            name="id_usuario"
+            value={formData.id_usuario}
+            onChange={(e) => { handleChange('id_usuario', e.target.value); }}
             className="border border-gray-300 p-2 rounded-lg"
           >
             <option value="">Seleccione un perito</option>
-            {/* Aquí deberías mapear peritos reales si tienes ese endpoint */}
-            <option value="perito1">Perito 1</option>
-            <option value="perito2">Perito 2</option>
+            {Array.isArray(peritos) && peritos.length > 0 ? (
+              peritos.map((perito) => (
+                <option key={perito.id_usuario} value={perito.id_usuario}>
+                  {perito.nombre_completo}
+                </option>
+              ))
+            ) : (
+              <option value="" disabled>No hay peritos</option>
+            )}
           </select>
         </div>
 
         <div className="flex flex-col">
           <label className="text-sm font-medium text-gray-600">Prioridad:</label>
           <select
-            name="prioridad"
-            value={formData.prioridad}
-            onChange={handleChange}
+            id="id_prioridad"
+            name="id_prioridad"
+            value={formData.id_prioridad}
+            onChange={(e) => { handleChange('id_prioridad', e.target.value); }}
             className="border border-gray-300 p-2 rounded-lg"
           >
             <option value="">Seleccione la prioridad</option>
-            <option value="FLAGRANCIA">FLAGRANCIA</option>
-            <option value="ALTO">ALTO</option>
-            <option value="URGENTE">URGENTE</option>
-            <option value="NORMAL">NORMAL</option>
-            <option value="MEDIA">MEDIA</option>
+            {prioridades.map((prioridad) => (
+              <option key={prioridad.id_prioridad} value={prioridad.id_prioridad}>
+                {prioridad.nombre_prioridad}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -306,7 +355,7 @@ function CrearOficio() {
       </div>
       {codigo && closeModal && (
         <div className="mt-6 bg-white p-4 rounded-lg shadow-sm w-full flex justify-center">
-          <Codigodebarras codigo={codigo} onClose={setCloseModal}/>
+          <Codigodebarras codigo={codigo} onClose={() => setCloseModal(false)} />
         </div>
       )}
     </div>
