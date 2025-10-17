@@ -11,7 +11,6 @@ function Politics() {
         <h2 className="text-3xl font-bold text-red-700 mb-4 text-center">
           Políticas y Condiciones de Uso
         </h2>
-        {/* Aqui va el mensaje (Adaptarlo al mensaje de validaciòn) */}
         <div className="text-gray-700 text-xl space-y-3">
           <p>
             El acceso a este sistema está restringido exclusivamente al
