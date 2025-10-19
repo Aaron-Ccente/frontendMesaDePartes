@@ -32,6 +32,9 @@ import MesaDePartesDashboard from './components/mesadepartes/MesaDePartesDashboa
 import CrearOficio from './components/mesadepartes/CrearOficio';
 import RespuestaOficio from './components/mesadepartes/RespuestaOficio';
 import MesaDePartesResumen from './components/mesadepartes/MesaDePartesResumen';
+import EspecialidadesManagement from './components/admin/SystemConfiguration/EspecialidadesManagement';
+import GradosManagement from './components/admin/SystemConfiguration/GradosManagement';
+import TurnosManagement from './components/admin/SystemConfiguration/TurnosManagement';
 
 function App() {
   return (
@@ -62,7 +65,10 @@ function App() {
               <Route path="mesadepartes/crear" element={<MesaDePartesForm />} />
               <Route path="mesadepartes/editar/:cip" element={<MesaDePartesForm />} />
               <Route path="documentos" element={<DocumentManagement />}  />
-              <Route path="configuracion" element={<SystemConfiguration />} />
+              <Route path="configuracion" element={<SystemConfiguration />}/>
+              <Route path="configuracion/especialidades" element={<EspecialidadesManagement />} />
+              <Route path="configuracion/grados" element={<GradosManagement />} />
+              <Route path="configuracion/turnos" element={<TurnosManagement />} />
             </Route>
 
             {/* Perito Dashboard Routes */}
