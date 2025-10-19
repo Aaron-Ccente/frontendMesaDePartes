@@ -6,18 +6,24 @@ import Usuarios from '../../assets/icons/Usuarios';
 import Documentos from '../../assets/icons/Documentos';
 import Configuracion from '../../assets/icons/Configuracion';
 import Politics from '../ui/Politics';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import FlechaAbajo from '../../assets/icons/FlechaAbajo';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, loading, logout, isAuthenticated } = useAuth();
+  const [config, setConfig] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       navigate('/admin/login');
     }
   }, [loading, isAuthenticated, navigate]);
+
+  const viewModal = () => {
+    setConfig(!config);
+  }
 
   if (loading) {
     return (
@@ -171,22 +177,79 @@ const AdminDashboard = () => {
                 </div>
               </button>
 
-              {/* Configuración */}
+             {/* Configuración */}
+            <div className="relative">
               <button
-                onClick={() => handleNavigation('/configuracion')}
+                onClick={
+                  () => {
+                    handleNavigation('/configuracion');
+                    viewModal();
+                  }
+                }
                 className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
                   isActiveRoute('/configuracion')
                     ? 'bg-[#1a4d2e] text-white shadow-md'
                     : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
                 }`}
               >
-                <div className="flex items-center space-x-3">
-                  <span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
                     <Configuracion size={6} />
-                  </span>
-                  <span>Configuración</span>
+                    <span>Configuración</span>
+                  </div>
+                  <FlechaAbajo 
+                    size={6} 
+                    rotate={config}
+                  />
                 </div>
               </button>
+
+              {config && (
+                <div className="ml-6 mt-2 space-y-2 border-l-2 border-gray-200 dark:border-dark-border pl-4">
+                  <button
+                    onClick={() => handleNavigation('/configuracion/especialidades')}
+                    className={`w-full text-left px-4 py-2 rounded-lg transition-all duration-200 ${
+                      isActiveRoute('/configuracion/especialidades')
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                        : 'text-gray-600 dark:text-dark-text-secondary hover:bg-gray-50 dark:hover:bg-dark-bg-tertiary'
+                    }`}
+                  >
+                    Especialidades
+                  </button>
+                  <button
+                    onClick={() => handleNavigation('/configuracion/grados')}
+                    className={`w-full text-left px-4 py-2 rounded-lg transition-all duration-200 ${
+                      isActiveRoute('/configuracion/grados')
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                        : 'text-gray-600 dark:text-dark-text-secondary hover:bg-gray-50 dark:hover:bg-dark-bg-tertiary'
+                    }`}
+                  >
+                    Grados
+                  </button>
+                  <button
+                    onClick={() => handleNavigation('/configuracion/turnos')}
+                    className={`w-full text-left px-4 py-2 rounded-lg transition-all duration-200 ${
+                      isActiveRoute('/configuracion/turnos')
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                        : 'text-gray-600 dark:text-dark-text-secondary hover:bg-gray-50 dark:hover:bg-dark-bg-tertiary'
+                    }`}
+                  >
+                    Turnos
+                  </button>
+                  <button
+                    onClick={() => handleNavigation('/configuracion/secciones')}
+                    className={`w-full text-left px-4 py-2 rounded-lg transition-all duration-200 ${
+                      isActiveRoute('/configuracion/secciones')
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                        : 'text-gray-600 dark:text-dark-text-secondary hover:bg-gray-50 dark:hover:bg-dark-bg-tertiary'
+                    }`}
+                  >
+                    Secciones
+                  </button>
+                </div>
+              )}
+            </div>
+
             </div>
           </nav>
         </div>
