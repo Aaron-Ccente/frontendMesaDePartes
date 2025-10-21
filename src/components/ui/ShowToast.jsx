@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 function ShowToast({ type = 'success', message = '', duration = 4000, onClose }) {
   const [visible, setVisible] = useState(false);
