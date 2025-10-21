@@ -33,25 +33,6 @@ class ComplementService{
     }
   }
 
-  // Obtiene todas las especialidades
-  async getEspecialidades() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/especialidades`, {
-        method: 'GET',
-        headers: getAuthHeaders()
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Error al obtener especialidades');
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error al obtener especialidades:', error);
-      throw error;
-    }
-  }
-
   // Obtiene todas los grados
   async getGrados() {
     try {
