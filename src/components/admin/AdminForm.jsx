@@ -134,6 +134,18 @@ const AdminForm = () => {
             />
             {errors.CIP && <span className="text-red-500 text-sm">{errors.CIP}</span>}
           </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Nombre Completo *</label>
+            <input
+              type="text"
+              value={values.nombre_completo}
+              onChange={(e) => handleChange('nombre_completo', e.target.value)}
+              className={`w-full px-4 py-2 border rounded-lg ${errors.nombre_completo ? 'border-red-500' : 'border-gray-300'}`}
+              placeholder="Nombre completo"
+            />
+            {errors.nombre_completo && <span className="text-red-500 text-sm">{errors.nombre_completo}</span>}
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Nombre de Usuario *</label>
@@ -175,29 +187,6 @@ const AdminForm = () => {
             </>
           )}
 
-          <div className="lg:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Nombre Completo *</label>
-            <input
-              type="text"
-              value={values.nombre_completo}
-              onChange={(e) => handleChange('nombre_completo', e.target.value)}
-              className={`w-full px-4 py-2 border rounded-lg ${errors.nombre_completo ? 'border-red-500' : 'border-gray-300'}`}
-              placeholder="Nombre completo"
-            />
-            {errors.nombre_completo && <span className="text-red-500 text-sm">{errors.nombre_completo}</span>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Rol</label>
-            <select
-              value={values.rol}
-              onChange={(e) => handleChange('rol', e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg border-gray-300"
-            >
-              <option value="Administrador">Administrador</option>
-              <option value="SuperAdmin">SuperAdmin</option>
-            </select>
-          </div>
         </div>
 
         <div className="mt-6 flex justify-end space-x-3">
