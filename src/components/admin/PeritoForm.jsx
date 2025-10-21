@@ -19,7 +19,6 @@ const PeritoForm = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [options, setOptions] = useState({
-    especialidades: [],
     grados: [],
     turnos: [],
     tiposDepartamento: [],
@@ -48,7 +47,6 @@ const PeritoForm = () => {
     fotografia_url: null,
 
     // Campos de relación
-    id_especialidad: '',
     id_grado: '',
     id_turno: '',
     id_tipo_departamento: ''
@@ -124,19 +122,16 @@ const PeritoForm = () => {
     const loadOptions = async () => {
       try {
         const [
-          especialidadesRes, 
           gradosRes, 
           turnosRes, 
           tiposDepartamentoRes
         ] = await Promise.all([
-          ComplementServices.getEspecialidades(),
           ComplementServices.getGrados(),
           ComplementServices.getTurnos(),
           ComplementServices.getTiposDepartamento()
         ]);
 
         setOptions({
-          especialidades: especialidadesRes.data || [],
           grados: gradosRes.data || [],
           turnos: turnosRes.data || [],
           tiposDepartamento: tiposDepartamentoRes.data || []
@@ -615,29 +610,6 @@ const PeritoForm = () => {
                   value={tipo.id_tipo_departamento}
                 >
                   {tipo.nombre_departamento}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="id_especialidad" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Especialidad
-            </label>
-            <select
-              id="id_especialidad"
-              name="id_especialidad"
-              value={values.id_especialidad || ""}
-              onChange={(e) => handleChange('id_especialidad', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
-            >
-              <option value="">Seleccione una especialidad</option>
-              {options.especialidades.map((especialidad) => (
-                <option 
-                  key={especialidad.id_especialidad} 
-                  value={especialidad.id_especialidad}
-                >
-                  {especialidad.nombre}
                 </option>
               ))}
             </select>
