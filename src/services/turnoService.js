@@ -86,4 +86,4 @@ class TurnoService{
     }
 }
 
-export const turnoService = new TurnoService();
+export default TurnoService;
