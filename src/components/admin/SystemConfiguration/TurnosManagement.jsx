@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import ShowToast from '../../ui/ShowToast'
 import TurnoForm from './Forms/TurnoForm'
-import { turnoService } from '../../../services/turnoService'
+import turnoService  from '../../../services/turnoService'
 
 function TurnosManagement() {
   const [turnos, setTurnos] = useState([])
