@@ -10,59 +10,47 @@ const getAuthHeaders = (includeJson = true) => {
   return headers;
 };
 
-class TurnoService{
-    // Obtener todas las prioridades
-    static async getAllTurnos() {
+export default class GradoService {
+     // Obtener todas las prioridades
+    static async getAllGrados() {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/turnos`, {
+            const response = await fetch(`${API_BASE_URL}/api/grados`, {
                 method: 'GET',
                 headers: getAuthHeaders()
             });
-            if (!response.ok) throw new Error('Error al obtener los turnos');
+            if (!response.ok) throw new Error('Error al obtener los grados');
             return await response.json();
         } catch (error) {
             console.error(error);
             throw error;
         }
     }
+    
     // Obtener prioridad por ID
-    static async getTurnoById(id) {
+    static async getPrioridadById(id) {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/turnos/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/grados/${id}`, {
                 method: 'GET',
                 headers: getAuthHeaders()
             });
-            if (!response.ok) throw new Error('Error al obtener el turno');
+            if (!response.ok) throw new Error('Error al obtener el grado');
             return await response.json();
         } catch (error) {
             console.error(error);
             throw error;
         }
+    
     }
+
     // Crear nueva prioridad
-    static async createTurno(turnoData) {
+    static async createPrioridad(prioridadData) {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/turnos`, {
+            const response = await fetch(`${API_BASE_URL}/api/grados`, {
                 method: 'POST',
                 headers: getAuthHeaders(),
-                body: JSON.stringify(turnoData)
+                body: JSON.stringify(prioridadData)
             });
-            if (!response.ok) throw new Error('Error al crear el turno');
-            return await response.json();
-        } catch (error) {
-            console.error(error);
-            throw error;
-        }
-    }
-    // Actualizar turno
-    static async updateTurno(id, turnoData) {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/turnos/${id}`, {
-                method: 'PUT',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(turnoData)
-            });
-            if (!response.ok) throw new Error('Error al actualizar el turno');
+            if (!response.ok) throw new Error('Error al crear el grado');
             return await response.json();
         } catch (error) {
             console.error(error);
@@ -70,14 +58,30 @@ class TurnoService{
         }
     }
 
-    // Eliminar turno
-    static async deleteTurno(id) {
+    // Actualizar prioridad
+    static async updatePrioridad(id, prioridadData) {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/turnos/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/grados/${id}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(prioridadData)
+            });
+            if (!response.ok) throw new Error('Error al actualizar el grado');
+            return await response.json();
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+    
+    // Eliminar prioridad
+    static async deletePrioridad(id) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/grados/${id}`, {
                 method: 'DELETE',
                 headers: getAuthHeaders()
             });
-            if (!response.ok) throw new Error('Error al eliminar el turno');
+            if (!response.ok) throw new Error('Error al eliminar el grado');
             return await response.json();
         } catch (error) {
             console.error(error);
@@ -85,5 +89,3 @@ class TurnoService{
         }
     }
 }
-
-export default TurnoService;

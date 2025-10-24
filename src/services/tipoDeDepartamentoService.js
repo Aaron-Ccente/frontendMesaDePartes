@@ -10,59 +10,47 @@ const getAuthHeaders = (includeJson = true) => {
   return headers;
 };
 
-class TurnoService{
-    // Obtener todas las prioridades
-    static async getAllTurnos() {
+class TipoDeDepartamentoService{
+    // Obtener todas las especialidades
+    static async getAllDepartamentos() {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/turnos`, {
+            const response = await fetch(`${API_BASE_URL}/api/tipodepartamentos`, {
                 method: 'GET',
                 headers: getAuthHeaders()
             });
-            if (!response.ok) throw new Error('Error al obtener los turnos');
+            if (!response.ok) throw new Error('Error al obtener las especialidades');
             return await response.json();
         } catch (error) {
             console.error(error);
             throw error;
         }
     }
-    // Obtener prioridad por ID
-    static async getTurnoById(id) {
+    
+    // Obtener especialidad por ID
+    static async getDepartamentosById(id) {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/turnos/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/tipodepartamentos/${id}`, {
                 method: 'GET',
                 headers: getAuthHeaders()
             });
-            if (!response.ok) throw new Error('Error al obtener el turno');
+            if (!response.ok) throw new Error('Error al obtener la especialidad');
             return await response.json();
         } catch (error) {
             console.error(error);
             throw error;
         }
+    
     }
-    // Crear nueva prioridad
-    static async createTurno(turnoData) {
+
+    // Crear nueva especialidad
+    static async createDepartamento(prioridadData) {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/turnos`, {
+            const response = await fetch(`${API_BASE_URL}/api/tipodepartamentos`, {
                 method: 'POST',
                 headers: getAuthHeaders(),
-                body: JSON.stringify(turnoData)
+                body: JSON.stringify(prioridadData)
             });
-            if (!response.ok) throw new Error('Error al crear el turno');
-            return await response.json();
-        } catch (error) {
-            console.error(error);
-            throw error;
-        }
-    }
-    // Actualizar turno
-    static async updateTurno(id, turnoData) {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/turnos/${id}`, {
-                method: 'PUT',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(turnoData)
-            });
-            if (!response.ok) throw new Error('Error al actualizar el turno');
+            if (!response.ok) throw new Error('Error al crear la especialidad');
             return await response.json();
         } catch (error) {
             console.error(error);
@@ -70,14 +58,30 @@ class TurnoService{
         }
     }
 
-    // Eliminar turno
-    static async deleteTurno(id) {
+    // Actualizar especialidad
+    static async updateDepartamento(id, prioridadData) {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/turnos/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/tipodepartamentos/${id}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(prioridadData)
+            });
+            if (!response.ok) throw new Error('Error al actualizar la especialidad');
+            return await response.json();
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+    
+    // Eliminar especialidad
+    static async deleteDepartamento(id) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/tipodepartamentos/${id}`, {
                 method: 'DELETE',
                 headers: getAuthHeaders()
             });
-            if (!response.ok) throw new Error('Error al eliminar el turno');
+            if (!response.ok) throw new Error('Error al eliminar la especialidad');
             return await response.json();
         } catch (error) {
             console.error(error);
@@ -86,4 +90,4 @@ class TurnoService{
     }
 }
 
-export default TurnoService;
+export default TipoDeDepartamentoService;

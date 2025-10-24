@@ -19,7 +19,6 @@ const PeritoForm = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [options, setOptions] = useState({
-    especialidades: [],
     grados: [],
     turnos: [],
     tiposDepartamento: [],
@@ -48,7 +47,6 @@ const PeritoForm = () => {
     fotografia_url: null,
 
     // Campos de relación
-    id_especialidad: '',
     id_grado: '',
     id_turno: '',
     id_tipo_departamento: ''
@@ -124,19 +122,16 @@ const PeritoForm = () => {
     const loadOptions = async () => {
       try {
         const [
-          especialidadesRes, 
           gradosRes, 
           turnosRes, 
           tiposDepartamentoRes
         ] = await Promise.all([
-          ComplementServices.getEspecialidades(),
           ComplementServices.getGrados(),
           ComplementServices.getTurnos(),
           ComplementServices.getTiposDepartamento()
         ]);
 
         setOptions({
-          especialidades: especialidadesRes.data || [],
           grados: gradosRes.data || [],
           turnos: turnosRes.data || [],
           tiposDepartamento: tiposDepartamentoRes.data || []
@@ -310,6 +305,7 @@ const PeritoForm = () => {
           </div>
 
           <div>
+          <div>
             <label htmlFor="CIP" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               CIP *
             </label>
@@ -345,6 +341,90 @@ const PeritoForm = () => {
               placeholder="usuario123"
             />
             {errors.nombre_usuario && <span className="text-red-500 text-sm">{errors.nombre_usuario}</span>}
+          </div>
+
+          <div className="lg:col-span-2">
+            <label htmlFor="nombre_completo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Nombre Completo *
+            </label>
+            <input
+              type="text"
+              id="nombre_completo"
+              autoComplete='username'
+              name="nombre_completo"
+              value={values.nombre_completo}
+              onChange={(e) => handleChange('nombre_completo', e.target.value)}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent ${
+                errors.nombre_completo ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+              } bg-white dark:bg-gray-700 dark:text-white`}
+              placeholder="Ingrese el nombre completo"
+            />
+            {errors.nombre_completo && <span className="text-red-500 text-sm">{errors.nombre_completo}</span>}
+          </div>
+
+          
+
+          </div>
+          
+          {/* Foto */}
+          <div className="lg:col-span-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Fotografía
+            </label>
+            <div className="space-y-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Formatos: JPEG, PNG, GIF. Se convertirán automáticamente a WebP. Máximo: 5MB
+              </p>
+              
+              {/* Loading indicator para foto */}
+              {loading && isEditing && !photoPreview && (
+                <div className="flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1a4d2e] dark:border-green-400 mr-2"></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Cargando foto...</span>
+                </div>
+              )}
+              
+              {!photoPreview && !loading && (
+                <div className="flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
+                  <div className="text-center">
+                    
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                      {isEditing ? 'No hay foto cargada' : 'Selecciona una foto'}
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              {photoPreview && (
+                <div className="flex justify-center items-center">
+                  <div className='relative'>
+                    <img
+                    src={photoPreview}
+                    alt="Vista previa"
+                    className="w-56 h-60 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
+                    onError={(e) => {
+                      console.error('Error cargando imagen:', e);
+                      setError('Error al mostrar la imagen');
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={removePhoto}
+                    className="absolute top-0 right-0 m-2 bg-red-500 text-white rounded-full w-8 h-8 text-xl hover:bg-red-600"
+                  >
+                    x
+                  </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {!isEditing && (
@@ -388,25 +468,6 @@ const PeritoForm = () => {
               </div>
             </>
           )}
-
-          <div className="lg:col-span-2">
-            <label htmlFor="nombre_completo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Nombre Completo *
-            </label>
-            <input
-              type="text"
-              id="nombre_completo"
-              autoComplete='username'
-              name="nombre_completo"
-              value={values.nombre_completo}
-              onChange={(e) => handleChange('nombre_completo', e.target.value)}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent ${
-                errors.nombre_completo ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              } bg-white dark:bg-gray-700 dark:text-white`}
-              placeholder="Ingrese el nombre completo"
-            />
-            {errors.nombre_completo && <span className="text-red-500 text-sm">{errors.nombre_completo}</span>}
-          </div>
 
           {/* Información de Perito */}
           <div className="lg:col-span-2">
@@ -621,29 +682,6 @@ const PeritoForm = () => {
           </div>
 
           <div>
-            <label htmlFor="id_especialidad" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Especialidad
-            </label>
-            <select
-              id="id_especialidad"
-              name="id_especialidad"
-              value={values.id_especialidad || ""}
-              onChange={(e) => handleChange('id_especialidad', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
-            >
-              <option value="">Seleccione una especialidad</option>
-              {options.especialidades.map((especialidad) => (
-                <option 
-                  key={especialidad.id_especialidad} 
-                  value={especialidad.id_especialidad}
-                >
-                  {especialidad.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
             <label htmlFor="id_grado" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Grado
             </label>
@@ -687,72 +725,6 @@ const PeritoForm = () => {
                 </option>
               ))}
             </select>
-          </div>
-
-          {/* Foto */}
-          <div className="lg:col-span-2">
-            <h3 className="text-lg font-semibold text-[#1a4d2e] dark:text-green-400 mb-4 border-b pb-2 dark:border-gray-700">
-              Foto
-            </h3>
-          </div>
-
-          {/* Foto */}
-          <div className="lg:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Fotografía
-            </label>
-            <div className="space-y-3">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Formatos: JPEG, PNG, GIF. Se convertirán automáticamente a WebP. Máximo: 5MB
-              </p>
-              
-              {/* Loading indicator para foto */}
-              {loading && isEditing && !photoPreview && (
-                <div className="flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1a4d2e] dark:border-green-400 mr-2"></div>
-                  <span className="text-sm text-gray-600 dark:text-gray-300">Cargando foto...</span>
-                </div>
-              )}
-              
-              {!photoPreview && !loading && (
-                <div className="flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
-                  <div className="text-center">
-                    
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                      {isEditing ? 'No hay foto cargada' : 'Selecciona una foto'}
-                    </p>
-                  </div>
-                </div>
-              )}
-              
-              {photoPreview && (
-                <div className="relative">
-                  <img
-                    src={photoPreview}
-                    alt="Vista previa"
-                    className="w-32 h-32 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
-                    onError={(e) => {
-                      console.error('Error cargando imagen:', e);
-                      setError('Error al mostrar la imagen');
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={removePhoto}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
-                  >
-                    x
-                  </button>
-                </div>
-              )}
-            </div>
           </div>
 
         </div>
