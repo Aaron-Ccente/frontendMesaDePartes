@@ -153,7 +153,7 @@ function CrearOficio() {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600">Fiscalía:</label>
+          <label className="text-sm font-medium text-gray-600">Unidad solicitante:</label>
           <input
             type="text"
             name="fiscalia"
@@ -164,7 +164,7 @@ function CrearOficio() {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600">Fiscal Remitente:</label>
+          <label className="text-sm font-medium text-gray-600">Unidad Remitente:</label>
           <input
             type="text"
             name="fiscal_remitente"
@@ -191,10 +191,21 @@ function CrearOficio() {
           Información general del implicado
         </h3>
       </div>
+      <div className="flex w-full gap-6">
+          <div className="flex items-center justify-center gap-2 flex-row-reverse">
+            <label>MUESTRAS REMITIDAS</label>
+            <input type="checkbox"/>
+          </div>
+
+          <div className="flex items-center justify-center gap-2 flex-row-reverse">
+            <label>TOMA DE MUESTRAS</label>
+            <input type="checkbox"/>
+          </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600">Implicado:</label>
+          <label className="text-sm font-medium text-gray-600">Examinado/Incriminado</label>
           <input
             type="text"
             name="implicado"
@@ -205,7 +216,7 @@ function CrearOficio() {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600">DNI del implicado:</label>
+          <label className="text-sm font-medium text-gray-600">DNI del Examinado/Incriminado:</label>
           <input
             type="text"
             name="dniImplicado"
@@ -334,6 +345,10 @@ function CrearOficio() {
             disabled
             className="border border-gray-300 p-2 rounded-lg cursor-not-allowed bg-gray-100"
           />
+        </div>
+
+        <div>
+          {/* campo asunto */}
         </div>
       </div>
 
