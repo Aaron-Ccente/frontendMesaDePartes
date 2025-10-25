@@ -36,6 +36,7 @@ import EspecialidadesManagement from './components/admin/SystemConfiguration/Esp
 import GradosManagement from './components/admin/SystemConfiguration/GradosManagement';
 import TurnosManagement from './components/admin/SystemConfiguration/TurnosManagement';
 import TiposExamenManagement from './components/admin/SystemConfiguration/TiposExamenManagement.jsx';
+import TiposDePrioridadManagement from './components/admin/SystemConfiguration/TiposDePrioridadManagement.jsx';
 
 function App() {
   return (
@@ -71,6 +72,7 @@ function App() {
               <Route path="configuracion/grados" element={<GradosManagement />} />
               <Route path="configuracion/turnos" element={<TurnosManagement />} />
               <Route path="configuracion/tipos-examen" element={<TiposExamenManagement />} />
+              <Route path="configuracion/prioridades" element={<TiposDePrioridadManagement />} />
             </Route>
 
             {/* Perito Dashboard Routes */}
