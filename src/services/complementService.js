@@ -126,14 +126,17 @@ class ComplementService{
       }
 
     // Obtener tipos de examen por id de tipo de departamento
-    static async getTiposByDepartamento(id_departamento) {
+    async getTiposByDepartamento(id_departamento) {
         try {
             const response = await fetch(`${API_BASE_URL}/api/tiposdeexamen/departamento/${id_departamento}`, {
                 method: 'GET',
                 headers: getAuthHeaders()
             });
-            if (!response.ok) throw new Error('Error al obtener los tipos de examen por departamento');
-            return await response.json();
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Error al obtener los tipos de examen por departamento');
+            }
+            return data;
         } catch (error) {
             console.error(error);
             throw error;
