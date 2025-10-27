@@ -1,4 +1,4 @@
-import Configuracion from '../../assets/icons/Configuracion';
+import Configuracion from "../../assets/icons/Configuracion";
 
 const SystemConfiguration = () => {
   return (
@@ -12,10 +12,10 @@ const SystemConfiguration = () => {
           Ajustes y parámetros del sistema
         </p>
       </div>
-      
+
       {/* Contenido principal */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-12 text-center flex flex-col justify-center items-center">
-        <Configuracion size={12} className="text-gray-700 dark:text-gray-300"/>
+        <Configuracion size={12} className="text-gray-700 dark:text-gray-300" />
         <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-2">
           Funcionalidad en Desarrollo
         </h2>
@@ -28,4 +28,3 @@ const SystemConfiguration = () => {
 };
 
 export default SystemConfiguration;
-

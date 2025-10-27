@@ -15,7 +15,10 @@ const DocumentManagement = () => {
 
       {/* Placeholder de funcionalidad */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-12 text-center flex justify-center flex-col items-center border-l-4 border-green-700">
-        <Documentos size={12} className="text-green-700 dark:text-green-400 mb-4" />
+        <Documentos
+          size={12}
+          className="text-green-700 dark:text-green-400 mb-4"
+        />
         <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-2">
           Funcionalidad en Desarrollo
         </h2>

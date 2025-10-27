@@ -1,105 +1,105 @@
-import { useEffect, useState } from 'react'
-import ShowToast from '../../ui/ShowToast'
-import TurnoForm from './Forms/TurnoForm'
-import turnoService  from '../../../services/turnoService'
+import { useEffect, useState } from "react";
+import ShowToast from "../../ui/ShowToast";
+import TurnoForm from "./Forms/TurnoForm";
+import turnoService from "../../../services/turnoService";
 
 function TurnosManagement() {
-  const [turnos, setTurnos] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [formLoading, setFormLoading] = useState(false)
-  const [deleteLoading, setDeleteLoading] = useState(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingTurno, setEditingTurno] = useState(null)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [searchTerm, setSearchTerm] = useState('')
+  const [turnos, setTurnos] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTurno, setEditingTurno] = useState(null);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    loadTurnos()
-  }, [])
+    loadTurnos();
+  }, []);
 
   const loadTurnos = async () => {
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError("");
     try {
-      const res = await turnoService.getAllTurnos()
+      const res = await turnoService.getAllTurnos();
       if (res && res.success) {
-        setTurnos(res.data || [])
+        setTurnos(res.data || []);
       } else {
-        setError(res?.message || 'Error al cargar los turnos')
+        setError(res?.message || "Error al cargar los turnos");
       }
     } catch (err) {
-      setError(err.message || 'Error al cargar los turnos')
+      setError(err.message || "Error al cargar los turnos");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleCreate = () => {
-    setEditingTurno(null)
-    setIsModalOpen(true)
-    setError('')
-    setSuccess('')
-  }
+    setEditingTurno(null);
+    setIsModalOpen(true);
+    setError("");
+    setSuccess("");
+  };
 
   const handleEdit = (id) => {
-    const t = turnos.find((x) => Number(x.id_turno) === Number(id))
+    const t = turnos.find((x) => Number(x.id_turno) === Number(id));
     if (t) {
-      setEditingTurno(t)
-      setIsModalOpen(true)
-      setError('')
-      setSuccess('')
+      setEditingTurno(t);
+      setIsModalOpen(true);
+      setError("");
+      setSuccess("");
     }
-  }
+  };
 
   const handleDelete = async (id) => {
-    if (!confirm('¿Seguro que desea eliminar este turno?')) return
-    setDeleteLoading(id)
-    setError('')
+    if (!confirm("¿Seguro que desea eliminar este turno?")) return;
+    setDeleteLoading(id);
+    setError("");
     try {
-      const res = await turnoService.deleteTurno(id)
+      const res = await turnoService.deleteTurno(id);
       if (res && res.success) {
-        setSuccess('Turno eliminado correctamente')
-        await loadTurnos()
+        setSuccess("Turno eliminado correctamente");
+        await loadTurnos();
       } else {
-        setError(res?.message || 'Error al eliminar turno')
+        setError(res?.message || "Error al eliminar turno");
       }
     } catch (err) {
-      setError(err.message || 'Error al eliminar turno')
+      setError(err.message || "Error al eliminar turno");
     } finally {
-      setDeleteLoading(null)
+      setDeleteLoading(null);
     }
-  }
+  };
 
   const handleSubmitForm = async (payload) => {
-    setFormLoading(true)
-    setError('')
+    setFormLoading(true);
+    setError("");
     try {
-      let res
+      let res;
       if (editingTurno && editingTurno.id_turno) {
-        res = await turnoService.updateTurno(editingTurno.id_turno, payload)
+        res = await turnoService.updateTurno(editingTurno.id_turno, payload);
       } else {
-        res = await turnoService.createTurno(payload)
+        res = await turnoService.createTurno(payload);
       }
 
       if (res && res.success) {
-        setSuccess(editingTurno ? 'Turno actualizado' : 'Turno creado')
-        setIsModalOpen(false)
-        setEditingTurno(null)
-        await loadTurnos()
+        setSuccess(editingTurno ? "Turno actualizado" : "Turno creado");
+        setIsModalOpen(false);
+        setEditingTurno(null);
+        await loadTurnos();
       } else {
-        setError(res?.message || 'Error en la operación')
+        setError(res?.message || "Error en la operación");
       }
     } catch (err) {
-      setError(err.message || 'Error en la operación')
+      setError(err.message || "Error en la operación");
     } finally {
-      setFormLoading(false)
+      setFormLoading(false);
     }
-  }
+  };
 
   const filtered = turnos.filter((t) =>
-    (t.nombre || '').toLowerCase().includes(searchTerm.toLowerCase())
-  )
+    (t.nombre || "").toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -126,7 +126,7 @@ function TurnosManagement() {
             disabled={loading}
             className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg disabled:opacity-50"
           >
-            {loading ? 'Cargando...' : 'Actualizar'}
+            {loading ? "Cargando..." : "Actualizar"}
           </button>
           <button
             onClick={handleCreate}
@@ -201,7 +201,7 @@ function TurnosManagement() {
                           disabled={deleteLoading === t.id_turno}
                           className="text-red-600 dark:text-red-400 hover:underline disabled:opacity-50"
                         >
-                          {deleteLoading === t.id_turno ? '...' : 'Eliminar'}
+                          {deleteLoading === t.id_turno ? "..." : "Eliminar"}
                         </button>
                       </div>
                     </td>
@@ -216,9 +216,9 @@ function TurnosManagement() {
       <TurnoForm
         isOpen={isModalOpen}
         onClose={() => {
-          setIsModalOpen(false)
-          setEditingTurno(null)
-          setError('')
+          setIsModalOpen(false);
+          setEditingTurno(null);
+          setError("");
         }}
         onSubmit={handleSubmitForm}
         initialData={editingTurno}
@@ -226,7 +226,7 @@ function TurnosManagement() {
         loading={formLoading}
       />
     </div>
-  )
+  );
 }
 
-export default TurnosManagement
+export default TurnosManagement;
