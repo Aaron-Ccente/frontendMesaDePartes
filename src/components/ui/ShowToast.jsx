@@ -18,6 +18,7 @@ function ShowToast({ type = 'success', message = '', duration = 4000, onClose })
   }
 
   const isSuccess = type === 'success';
+  const messages = Array.isArray(message) ? message : (message ? [message] : []);
 
   return (
     <div
@@ -44,7 +45,17 @@ function ShowToast({ type = 'success', message = '', duration = 4000, onClose })
 
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium">{isSuccess ? 'Éxito' : 'Error'}</p>
-            <p className="mt-1 text-sm opacity-90 break-words">{message}</p>
+            <div className="mt-1 text-sm opacity-90 break-words">
+              {messages.length === 0 ? null : (
+                messages.length === 1 ? (
+                  <p>{messages[0]}</p>
+                ) : (
+                  <ul className="list-disc pl-5">
+                    {messages.map((m, i) => <li key={i}>{m}</li>)}
+                  </ul>
+                )
+              )}
+            </div>
           </div>
 
           <div className="flex items-start ml-3">
