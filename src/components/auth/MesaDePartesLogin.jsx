@@ -83,6 +83,7 @@ const MesaDePartesLogin = () => {
                 id="CIP"
                 name="CIP"
                 value={formData.CIP}
+                autoComplete='username'
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent dark:text-dark-text-secondary"
                 placeholder="Ingrese su CIP"
