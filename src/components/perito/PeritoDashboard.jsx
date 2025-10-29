@@ -1,16 +1,11 @@
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import ThemeToggle from '../ui/ThemeToggle';
-import { useEffect } from 'react';
 
 const PeritoDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logoutPerito } = useAuth();
-
-  useEffect(()=>{
-    console.log(user)
-  },[user])
 
   const handleNavigation = (path) => {
     navigate(`/perito/dashboard${path}`);
