@@ -73,7 +73,6 @@ const PeritoForm = () => {
             delete updateData.password_hash;
             delete updateData.confirmar_password;
           }
-          console.log(updateData);
           result = await peritoService.updatePerito(cip, updateData);
         } else {
           const { confirmar_password: _cp, ...createData } = formData;
