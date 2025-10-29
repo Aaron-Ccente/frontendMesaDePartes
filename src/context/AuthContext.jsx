@@ -183,8 +183,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const loginPerito = async (peritoData) => {
+  const loginPerito = async (peritoData, token) => {
     try {
+
       setLoading(true);
       setUser(null);
       setIsAuthenticated(false);
@@ -192,7 +193,7 @@ export const AuthProvider = ({ children }) => {
         ...peritoData,
         role: 'perito'
       };
-      localStorage.setItem('peritoToken', 'temp-token');
+      localStorage.setItem('peritoToken', token);
       localStorage.setItem('peritoData', JSON.stringify(peritoWithRole));
       
       setUser(peritoWithRole);
