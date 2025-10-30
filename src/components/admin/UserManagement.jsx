@@ -1,35 +1,35 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { peritoService } from '../../services/peritoService';
-import Usuarios from '../../assets/icons/Usuarios';
-import Error from '../../assets/icons/Error';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { peritoService } from "../../services/peritoService";
+import Usuarios from "../../assets/icons/Usuarios";
+import Error from "../../assets/icons/Error";
 
 const UserManagement = () => {
   const navigate = useNavigate();
   const [peritos, setPeritos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalPeritos, setTotalPeritos] = useState(0);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(null);
 
   // Cargar peritos
-  const loadPeritos = async (page = 1, search = '') => {
+  const loadPeritos = async (page = 1, search = "") => {
     try {
       setLoading(true);
-      setError('');
-      
+      setError("");
+
       const response = await peritoService.getAllPeritos(page, 10, search);
-      
+
       setPeritos(response.data);
       setTotalPages(response.pagination.pages);
       setTotalPeritos(response.pagination.total);
       setCurrentPage(response.pagination.page);
     } catch (error) {
-      console.error('Error cargando peritos:', error);
-      setError(error.message || 'Error cargando peritos');
+      console.error("Error cargando peritos:", error);
+      setError(error.message || "Error cargando peritos");
     } finally {
       setLoading(false);
     }
@@ -61,7 +61,7 @@ const UserManagement = () => {
 
   // Crear nuevo perito
   const handleCreatePerito = () => {
-    navigate('/admin/dashboard/usuarios/crear');
+    navigate("/admin/dashboard/usuarios/crear");
   };
 
   // Editar
@@ -77,9 +77,9 @@ const UserManagement = () => {
       setDeleteLoading(cip);
       await peritoService.deletePerito(cip);
       await loadPeritos(currentPage, searchTerm);
-      alert('Perito eliminado exitosamente');
+      alert("Perito eliminado exitosamente");
     } catch (error) {
-      console.error('Error eliminando perito:', error);
+      console.error("Error eliminando perito:", error);
       alert(`Error eliminando perito: ${error.message}`);
     } finally {
       setDeleteLoading(null);
@@ -96,7 +96,9 @@ const UserManagement = () => {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1a4d2e] mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Cargando peritos...</p>
+          <p className="text-gray-600 dark:text-gray-300">
+            Cargando peritos...
+          </p>
         </div>
       </div>
     );
@@ -137,7 +139,7 @@ const UserManagement = () => {
       {error && (
         <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-600 dark:text-red-300 px-4 py-3 rounded-lg">
           <div className="flex items-center space-x-2">
-            <Error size={6}/>
+            <Error size={6} />
             <span>{error}</span>
           </div>
         </div>
@@ -147,7 +149,10 @@ const UserManagement = () => {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
-            <label htmlFor="search" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              htmlFor="search"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Buscar Perito
             </label>
             <input
@@ -173,8 +178,19 @@ const UserManagement = () => {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                {['CIP','Nombres','DNI','Email','Departamento','Rol','Acciones'].map((col) => (
-                  <th key={col} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {[
+                  "CIP",
+                  "Nombres",
+                  "DNI",
+                  "Email",
+                  "Departamento",
+                  "Rol",
+                  "Acciones",
+                ].map((col) => (
+                  <th
+                    key={col}
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
                     {col}
                   </th>
                 ))}
@@ -183,33 +199,45 @@ const UserManagement = () => {
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {peritos.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                    <span className="w-full flex justify-center"><Usuarios size={12}/></span>
-                    <p className="text-lg font-medium">No se encontraron peritos</p>
+                  <td
+                    colSpan="8"
+                    className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
+                  >
+                    <span className="w-full flex justify-center">
+                      <Usuarios size={12} />
+                    </span>
+                    <p className="text-lg font-medium">
+                      No se encontraron peritos
+                    </p>
                     <p className="text-sm">
-                      {searchTerm ? 'Intenta ajustar los filtros de búsqueda' : 'No hay peritos registrados en el sistema'}
+                      {searchTerm
+                        ? "Intenta ajustar los filtros de búsqueda"
+                        : "No hay peritos registrados en el sistema"}
                     </p>
                   </td>
                 </tr>
               ) : (
                 peritos.map((perito) => (
-                  <tr key={perito.CIP} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
+                  <tr
+                    key={perito.CIP}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#1a4d2e] text-white">
                         {perito.CIP}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">
-                      {perito.nombre_completo || '-'}
+                      {perito.nombre_completo || "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">
-                      {perito.dni || '-'}
+                      {perito.dni || "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">
-                      {perito.email || '-'}
+                      {perito.email || "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">
-                      {perito.nombre_departamento || '-'}
+                      {perito.nombre_departamento || "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">
                       Perito
@@ -231,7 +259,7 @@ const UserManagement = () => {
                           {deleteLoading === perito.CIP ? (
                             <span className="animate-spin">⏳</span>
                           ) : (
-                            'Eliminar'
+                            "Eliminar"
                           )}
                         </button>
                       </div>
@@ -249,7 +277,7 @@ const UserManagement = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-700 dark:text-gray-300">
-              Mostrando <span className="font-medium">{peritos.length}</span> de{' '}
+              Mostrando <span className="font-medium">{peritos.length}</span> de{" "}
               <span className="font-medium">{totalPeritos}</span> peritos
             </div>
             <div className="flex space-x-2">
@@ -264,7 +292,8 @@ const UserManagement = () => {
                 let pageNum;
                 if (totalPages <= 5) pageNum = i + 1;
                 else if (currentPage <= 3) pageNum = i + 1;
-                else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                else if (currentPage >= totalPages - 2)
+                  pageNum = totalPages - 4 + i;
                 else pageNum = currentPage - 2 + i;
 
                 return (
@@ -273,8 +302,8 @@ const UserManagement = () => {
                     onClick={() => handlePageChange(pageNum)}
                     className={`px-3 py-2 text-sm font-medium rounded-md ${
                       currentPage === pageNum
-                        ? 'text-white bg-[#1a4d2e] border border-[#1a4d2e]'
-                        : 'text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                        ? "text-white bg-[#1a4d2e] border border-[#1a4d2e]"
+                        : "text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
                     }`}
                   >
                     {pageNum}

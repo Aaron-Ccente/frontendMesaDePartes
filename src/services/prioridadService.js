@@ -90,4 +90,4 @@ class PrioridadService{
     }
 }
 
-export const prioridadService = new PrioridadService();
+export default PrioridadService;

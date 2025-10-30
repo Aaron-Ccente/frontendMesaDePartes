@@ -1,51 +1,51 @@
 import { useEffect, useState } from "react";
 import ShowToast from "../../ui/ShowToast";
-import TurnoForm from "./Forms/TurnoForm";
-import turnoService from "../../../services/turnoService";
+import PrioridadesForm from "./Forms/PrioridadesForm";
+import prioridadService from "../../../services/prioridadService";
 
-function TurnosManagement() {
-  const [turnos, setTurnos] = useState([]);
+function TiposDePrioridadManagement() {
+  const [prioridades, setPrioridades] = useState([]);
   const [loading, setLoading] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingTurno, setEditingTurno] = useState(null);
+  const [editingPrioridad, setEditingPrioridad] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    loadTurnos();
+    loadPrioridades();
   }, []);
 
-  const loadTurnos = async () => {
+  const loadPrioridades = async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await turnoService.getAllTurnos();
+      const res = await prioridadService.getAllPrioridades();
       if (res && res.success) {
-        setTurnos(res.data || []);
+        setPrioridades(res.data || []);
       } else {
-        setError(res?.message || "Error al cargar los turnos");
+        setError(res?.message || "Error al cargar prioridades");
       }
     } catch (err) {
-      setError(err.message || "Error al cargar los turnos");
+      setError(err.message || "Error al cargar prioridades");
     } finally {
       setLoading(false);
     }
   };
 
   const handleCreate = () => {
-    setEditingTurno(null);
+    setEditingPrioridad(null);
     setIsModalOpen(true);
     setError("");
     setSuccess("");
   };
 
   const handleEdit = (id) => {
-    const t = turnos.find((x) => Number(x.id_turno) === Number(id));
-    if (t) {
-      setEditingTurno(t);
+    const p = prioridades.find((x) => Number(x.id_prioridad) === Number(id));
+    if (p) {
+      setEditingPrioridad(p);
       setIsModalOpen(true);
       setError("");
       setSuccess("");
@@ -53,19 +53,19 @@ function TurnosManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("¿Seguro que desea eliminar este turno?")) return;
+    if (!confirm("¿Seguro que desea eliminar esta prioridad?")) return;
     setDeleteLoading(id);
     setError("");
     try {
-      const res = await turnoService.deleteTurno(id);
+      const res = await prioridadService.deletePrioridad(id);
       if (res && res.success) {
-        setSuccess("Turno eliminado correctamente");
-        await loadTurnos();
+        setSuccess("Prioridad eliminada correctamente");
+        await loadPrioridades();
       } else {
-        setError(res?.message || "Error al eliminar turno");
+        setError(res?.message || "Error al eliminar prioridad");
       }
     } catch (err) {
-      setError(err.message || "Error al eliminar turno");
+      setError(err.message || "Error al eliminar prioridad");
     } finally {
       setDeleteLoading(null);
     }
@@ -76,17 +76,22 @@ function TurnosManagement() {
     setError("");
     try {
       let res;
-      if (editingTurno && editingTurno.id_turno) {
-        res = await turnoService.updateTurno(editingTurno.id_turno, payload);
+      if (editingPrioridad && editingPrioridad.id_prioridad) {
+        res = await prioridadService.updatePrioridad(
+          editingPrioridad.id_prioridad,
+          payload
+        );
       } else {
-        res = await turnoService.createTurno(payload);
+        res = await prioridadService.createPrioridad(payload);
       }
 
       if (res && res.success) {
-        setSuccess(editingTurno ? "Turno actualizado" : "Turno creado");
+        setSuccess(
+          editingPrioridad ? "Prioridad actualizada" : "Prioridad creada"
+        );
         setIsModalOpen(false);
-        setEditingTurno(null);
-        await loadTurnos();
+        setEditingPrioridad(null);
+        await loadPrioridades();
       } else {
         setError(res?.message || "Error en la operación");
       }
@@ -97,8 +102,8 @@ function TurnosManagement() {
     }
   };
 
-  const filtered = turnos.filter((t) =>
-    (t.nombre || "").toLowerCase().includes(searchTerm.toLowerCase())
+  const filtered = prioridades.filter((p) =>
+    (p.nombre_prioridad || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -106,10 +111,10 @@ function TurnosManagement() {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[#1a4d2e] dark:text-green-400">
-            Gestión de Turnos
+            Gestión de Tipos de Prioridad
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Crear, editar y eliminar turnos del sistema
+            Crear, editar y eliminar tipos de prioridad
           </p>
         </div>
 
@@ -118,11 +123,11 @@ function TurnosManagement() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar turno..."
+            placeholder="Buscar prioridad..."
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-gray-200"
           />
           <button
-            onClick={() => loadTurnos()}
+            onClick={() => loadPrioridades()}
             disabled={loading}
             className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg disabled:opacity-50"
           >
@@ -132,7 +137,7 @@ function TurnosManagement() {
             onClick={handleCreate}
             className="bg-[#1a4d2e] hover:bg-[#2d7d4a] text-white px-4 py-2 rounded-lg"
           >
-            Crear Turno
+            Crear Prioridad
           </button>
         </div>
       </div>
@@ -164,7 +169,7 @@ function TurnosManagement() {
                     className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
                   >
                     <div className="animate-spin inline-block h-8 w-8 border-b-2 border-[#1a4d2e] rounded-full"></div>
-                    <p className="mt-3">Cargando turnos...</p>
+                    <p className="mt-3">Cargando prioridades...</p>
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
@@ -173,35 +178,37 @@ function TurnosManagement() {
                     colSpan="3"
                     className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
                   >
-                    <p>No hay turnos registrados</p>
+                    <p>No hay prioridades registradas</p>
                   </td>
                 </tr>
               ) : (
-                filtered.map((t) => (
+                filtered.map((p) => (
                   <tr
-                    key={t.id_turno}
+                    key={p.id_prioridad}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
                     <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                      {t.id_turno}
+                      {p.id_prioridad}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                      {t.nombre}
+                      {p.nombre_prioridad}
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <div className="flex gap-3">
                         <button
-                          onClick={() => handleEdit(t.id_turno)}
+                          onClick={() => handleEdit(p.id_prioridad)}
                           className="text-[#1a4d2e] dark:text-green-400 hover:underline"
                         >
                           Editar
                         </button>
                         <button
-                          onClick={() => handleDelete(t.id_turno)}
-                          disabled={deleteLoading === t.id_turno}
+                          onClick={() => handleDelete(p.id_prioridad)}
+                          disabled={deleteLoading === p.id_prioridad}
                           className="text-red-600 dark:text-red-400 hover:underline disabled:opacity-50"
                         >
-                          {deleteLoading === t.id_turno ? "..." : "Eliminar"}
+                          {deleteLoading === p.id_prioridad
+                            ? "..."
+                            : "Eliminar"}
                         </button>
                       </div>
                     </td>
@@ -213,20 +220,20 @@ function TurnosManagement() {
         </div>
       </div>
 
-      <TurnoForm
+      <PrioridadesForm
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false);
-          setEditingTurno(null);
+          setEditingPrioridad(null);
           setError("");
         }}
         onSubmit={handleSubmitForm}
-        initialData={editingTurno}
-        isEditing={!!editingTurno}
+        initialData={editingPrioridad}
+        isEditing={!!editingPrioridad}
         loading={formLoading}
       />
     </div>
   );
 }
 
-export default TurnosManagement;
+export default TiposDePrioridadManagement;

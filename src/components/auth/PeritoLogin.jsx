@@ -20,7 +20,6 @@ const PeritoLogin = () => {
       ...prev,
       [name]: value
     }));
-    // Limpiar error cuando el usuario empiece a escribir
     if (error) setError('');
   };
 
@@ -40,8 +39,7 @@ const PeritoLogin = () => {
       
       if (response.success) {
 
-        await loginPerito(response.data);  
-        // Redirigir al dashboard de perito
+        await loginPerito(response.data, response.token);  
         navigate('/perito/dashboard');
       } else {
         setError(response.message || 'Error en el login');

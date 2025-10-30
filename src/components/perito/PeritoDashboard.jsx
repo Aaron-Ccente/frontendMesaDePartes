@@ -1,16 +1,12 @@
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import ThemeToggle from '../ui/ThemeToggle';
-import { useEffect } from 'react';
+import Notification from './Notificaciones/Notificaciones';
 
 const PeritoDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logoutPerito } = useAuth();
-
-  useEffect(()=>{
-    console.log(user)
-  },[user])
 
   const handleNavigation = (path) => {
     navigate(`/perito/dashboard${path}`);
@@ -54,6 +50,10 @@ const PeritoDashboard = () => {
             </div>
           </div>
           <div className="flex items-center space-x-4">
+
+            {/* Sistema de alerta - notificaciones de oficio asignado */}
+            <Notification/>
+
             {/* Botón de cambio de tema */}
             <ThemeToggle size="md" />
             
