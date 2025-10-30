@@ -28,6 +28,22 @@ export class OficioAssignedPeritoService {
         }
     }
 
+    static async getCountNewOficios() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/oficios/alerts`, {
+                headers: getAuthHeaders()
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Error al obtener oficios asignados');
+            }
+            return data;
+        } catch (error) {
+            console.error('Error en getCountNewOficios:', error);
+            throw error;
+        }
+    }
+
     // Responder a un oficio
     static async respondToOficio(id_oficio, estado_nuevo, estado_anterior = null, comentario = null) {
         try {
