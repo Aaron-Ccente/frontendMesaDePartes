@@ -1,5 +1,3 @@
-import React from 'react';
-
 const SunIcon = ({ className = "w-6 h-6", ...props }) => (
   <svg
     className={className}
