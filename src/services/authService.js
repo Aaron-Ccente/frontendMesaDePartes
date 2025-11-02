@@ -33,6 +33,25 @@ export const authService = {
     }
   },
 
+  async logOutAdmin(){
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/admin/logout`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Error en el registro');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new Error('Error en el registro: ' + error.message);
+    }
+  },
+
   // Registro de administrador (ruta pública en tu backend)
   async registerAdmin(adminData) {
     try {
