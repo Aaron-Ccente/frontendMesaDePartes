@@ -2,6 +2,7 @@ import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import ThemeToggle from '../ui/ThemeToggle';
 import Notification from './Notificaciones/Notificaciones';
+import Politics from '../ui/Politics';
 
 const PeritoDashboard = () => {
   const navigate = useNavigate();
@@ -17,8 +18,6 @@ const PeritoDashboard = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("peritoData");
-    localStorage.removeItem("peritoToken");
     logoutPerito();
     navigate('/login');
   };
@@ -37,6 +36,9 @@ const PeritoDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-300 flex flex-col">
+      {/* Policias de uso del sistema */}
+      <Politics nombre_usuario={user.nombre_completo}/>
+
       {/* Header */}
       <header className="bg-gradient-to-r from-[#1a4d2e] to-[#1a4d2e] text-white shadow-lg dark:shadow-gray-900/50 sticky top-0 z-30">
         <div className="max-w-full mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
