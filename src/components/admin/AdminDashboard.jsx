@@ -8,6 +8,7 @@ import Configuracion from "../../assets/icons/Configuracion";
 import Politics from "../ui/Politics";
 import { useEffect, useState } from "react";
 import FlechaAbajo from "../../assets/icons/FlechaAbajo";
+import { authService } from "../../services/authService";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -49,16 +50,25 @@ const AdminDashboard = () => {
     return location.pathname.includes(path);
   };
 
-  const handleLogout = () => {
+const logOutAdminHandler = () => authService.logOutAdmin();
+
+const handleLogout = async () => {
+  try {
+    await logOutAdminHandler();
     localStorage.removeItem("adminData");
     localStorage.removeItem("adminToken");
     logout();
-    navigate("/admin/login");
-  };
+    navigate("/admin/login", { replace: true });
+  } catch (error) {
+    console.error("Error al cerrar sesión:", error);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-300 flex flex-col">
-      <Politics />
+      {/* Policias de uso del sistema */}
+      <Politics nombre_usuario={user.nombre_completo}/>
+
       {/* Header */}
       <header className="bg-gradient-to-r from-[#1a4d2e] to-[#1a4d2e] text-white shadow-lg dark:shadow-gray-900/50 sticky top-0 z-30">
         <div className="max-w-full mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
