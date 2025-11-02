@@ -3,6 +3,7 @@ import { useAuth } from '../../hooks/useAuth';
 import ThemeToggle from '../ui/ThemeToggle';
 import CreateOfficeIcon from '../../assets/icons/CreateOfficeIcon';
 import ReceiveOfficeIcon from '../../assets/icons/ReceiveOfficeIcon';
+import Politics from '../ui/Politics';
 
 const MesaDePartesDashboard = () => {
   const navigate = useNavigate();
@@ -19,8 +20,6 @@ const MesaDePartesDashboard = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("formDataCodigodeBarras");
-    localStorage.removeItem("mesadepartesData");
-    localStorage.removeItem("mesadepartesToken");
     loginMesaDePartes();
     navigate('/mesadepartes/login');
   };
@@ -38,6 +37,9 @@ const MesaDePartesDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-300 flex flex-col">
+      {/* Policias de uso del sistema */}
+      <Politics nombre_usuario={user.nombre_completo}/>
+
       {/* Header */}
       <header className="bg-gradient-to-r from-[#1a4d2e] to-[#1a4d2e] text-white shadow-lg dark:shadow-gray-900/50 sticky top-0 z-30">
         <div className="max-w-full mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
