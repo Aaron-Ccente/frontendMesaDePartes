@@ -2,22 +2,22 @@ import { authService } from './authService.js';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
 
-class PeritoService {
-  // Obtener headers con token de autenticación
-  getHeaders() {
+  const getHeaders = () => {
     const token = authService.getToken();
     return {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     };
   }
+export class PeritoService {
+  // Obtener headers con token de autenticación
 
   // Crear nuevo perito
-  async createPerito(peritoData) {
+  static async createPerito(peritoData) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/peritos`, {
         method: 'POST',
-        headers: this.getHeaders(),
+        headers: getHeaders(),
         body: JSON.stringify(peritoData)
       });
 
@@ -35,7 +35,7 @@ class PeritoService {
   }
 
   // Obtener todos los peritos
-  async getAllPeritos(page = 1, limit = 50, search = '') {
+  static async getAllPeritos(page = 1, limit = 50, search = '') {
     try {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -48,7 +48,7 @@ class PeritoService {
 
       const response = await fetch(`${API_BASE_URL}/api/peritos?${params}`, {
         method: 'GET',
-        headers: this.getHeaders()
+        headers: getHeaders()
       });
 
       const data = await response.json();
@@ -65,12 +65,12 @@ class PeritoService {
   }
 
   // Obtener perito por CIP
-  async getPeritoByCIP(cip) {
+  static async getPeritoByCIP(cip) {
     try {
       const url = `${API_BASE_URL}/api/peritos/${cip}`;
       const response = await fetch(url, {
         method: 'GET',
-        headers: this.getHeaders()
+        headers: getHeaders()
       });
       const data = await response.json();
       if (!response.ok) {
@@ -85,11 +85,11 @@ class PeritoService {
   }
 
   // Actualizar perito
-  async updatePerito(cip, updateData) {
+ static async updatePerito(cip, updateData) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/peritos/${cip}`, {
         method: 'PUT',
-        headers: this.getHeaders(),
+        headers: getHeaders(),
         body: JSON.stringify(updateData)
       });
 
@@ -107,11 +107,11 @@ class PeritoService {
   }
 
   // Eliminar perito
-  async deletePerito(cip) {
+  static async deletePerito(cip) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/peritos/${cip}`, {
         method: 'DELETE',
-        headers: this.getHeaders()
+        headers: getHeaders()
       });
 
       const data = await response.json();
@@ -128,11 +128,11 @@ class PeritoService {
   }
 
   // Cambiar contraseña de perito
-  async changePeritoPassword(cip, newPassword) {
+  static async changePeritoPassword(cip, newPassword) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/peritos/${cip}/password`, {
         method: 'PATCH',
-        headers: this.getHeaders(),
+        headers: getHeaders(),
         body: JSON.stringify({ newPassword })
       });
 
@@ -150,11 +150,12 @@ class PeritoService {
   }
 
   // Obtener estadísticas de peritos
-  async getPeritosStats() {
+  static async getPeritosStats() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/peritos/stats/overview`, {
         method: 'GET',
-        headers: this.getHeaders()
+
+        headers: getHeaders()
       });
 
       const data = await response.json();
@@ -171,7 +172,7 @@ class PeritoService {
   }
 
   // Login de perito (para futuras implementaciones)
-  async loginPerito(username, password) {
+  static async loginPerito(username, password) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/peritos/login`, {
         method: 'POST',
@@ -195,11 +196,11 @@ class PeritoService {
   }
 
   // Para obtener todas las relaciones con sus especialidades, grados, secciones y departamento
-  async getEspecialidades(){
+  static async getEspecialidades(){
     try {
       const response = await fetch(`${API_BASE_URL}/api/peritos/especialidades`, {
         method: 'GET',
-        headers: this.getHeaders()
+        headers: getHeaders()
       });
 
       const data = await response.json();
@@ -215,6 +216,27 @@ class PeritoService {
     }
   }
 
-}   
+  // Logout mesa de partes
+  static async logOutPerito(){
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/peritos/logout`, {
+        method: 'POST',
+        // enviar el token de autenticación de un usuario perito
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('peritoToken')}`
+        }
+      });
 
-export const peritoService = new PeritoService();
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Error en el registro');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new Error('Error en el registro: ' + error.message);
+    }
+  }
+
+}   
