@@ -4,6 +4,7 @@ import ThemeToggle from '../ui/ThemeToggle';
 import CreateOfficeIcon from '../../assets/icons/CreateOfficeIcon';
 import ReceiveOfficeIcon from '../../assets/icons/ReceiveOfficeIcon';
 import Politics from '../ui/Politics';
+import MesaDePartes from '../../services/mesadepartesService';
 
 const MesaDePartesDashboard = () => {
   const navigate = useNavigate();
@@ -18,10 +19,17 @@ const MesaDePartesDashboard = () => {
     return location.pathname.includes(path);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("formDataCodigodeBarras");
-    loginMesaDePartes();
-    navigate('/mesadepartes/login');
+  const handleLogout = () => MesaDePartes.logOutMesaDePartes();
+
+  const handleLogoutMesaDePartes = async () => {
+    try {
+      await handleLogout();
+      localStorage.removeItem("formDataCodigodeBarras");
+      loginMesaDePartes();
+      navigate('/mesadepartes/login');
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
   };
 
   if (!user) {
@@ -62,7 +70,7 @@ const MesaDePartesDashboard = () => {
               <p className="text-xs text-gray-200 dark:text-dark-text-secondary">CIP: {user.CIP}</p>
             </div>
             <button
-              onClick={handleLogout}
+              onClick={handleLogoutMesaDePartes}
               className="bg-white dark:bg-dark-surface text-[#1a4d2e] dark:text-dark-pnp-green px-4 py-2 rounded-lg shadow hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary transition-colors duration-200"
             >
               Cerrar Sesión
