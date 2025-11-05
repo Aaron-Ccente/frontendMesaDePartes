@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "../../hooks/useForm";
-import { peritoService } from "../../services/peritoService";
+import { PeritoService } from "../../services/peritoService";
 import { validateImageFile } from "../../utils/fileUtils";
 import { convertImageToWebPBase64 } from "../../utils/convertir64";
 import { ComplementServices } from "../../services/complementService";
@@ -73,10 +73,10 @@ const PeritoForm = () => {
             delete updateData.password_hash;
             delete updateData.confirmar_password;
           }
-          result = await peritoService.updatePerito(cip, updateData);
+          result = await PeritoService.updatePerito(cip, updateData);
         } else {
           const { confirmar_password: _cp, ...createData } = formData;
-          result = await peritoService.createPerito(createData);
+          result = await PeritoService.createPerito(createData);
         }
 
         if (result && result.error) {
@@ -164,7 +164,7 @@ const PeritoForm = () => {
         try {
           setLoading(true);
           setError("");
-          const response = await peritoService.getPeritoByCIP(cip);
+          const response = await PeritoService.getPeritoByCIP(cip);
 
           if (!response.success) {
             setError(response.message || "Error cargando perito");
