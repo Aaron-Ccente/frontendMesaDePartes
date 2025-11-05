@@ -131,7 +131,7 @@ const handleLogout = async () => {
                 </div>
               </button>
 
-              {/* Usuarios */}
+              {/* Peritos */}
               <button
                 onClick={() => handleNavigation("/usuarios")}
                 className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
@@ -144,7 +144,7 @@ const handleLogout = async () => {
                   <span>
                     <Usuarios />
                   </span>
-                  <span>Usuarios</span>
+                  <span>Peritos</span>
                 </div>
               </button>
 

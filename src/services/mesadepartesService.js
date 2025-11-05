@@ -127,6 +127,29 @@ class MesaDePartes {
     }
   }
 
+  // Logout mesa de partes
+  static async logOutMesaDePartes(){
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/mesadepartes/logout`, {
+        method: 'POST',
+        // enviar el token de autenticación de un usuario de mesa de partes
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('mesadepartesToken')}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Error en el registro');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new Error('Error en el registro: ' + error.message);
+    }
+  }
+
 }   
 
 export default MesaDePartes;
