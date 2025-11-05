@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { peritoService } from "../../services/peritoService";
+import { PeritoService } from "../../services/peritoService";
 import Usuarios from "../../assets/icons/Usuarios";
 import Documentos from "../../assets/icons/Documentos";
 import Configuracion from "../../assets/icons/Configuracion";
@@ -21,7 +21,7 @@ const DashboardStats = () => {
     const loadStats = async () => {
       try {
         setError("");
-        const response = await peritoService.getPeritosStats();
+        const response = await PeritoService.getPeritosStats();
         setStats(response.data);
       } catch (err) {
         console.error("Error cargando estadísticas:", err);
