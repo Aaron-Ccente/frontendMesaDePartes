@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { peritoService } from "../../services/peritoService";
+import { PeritoService } from "../../services/peritoService";
 import Usuarios from "../../assets/icons/Usuarios";
 import Error from "../../assets/icons/Error";
 
@@ -21,7 +21,7 @@ const UserManagement = () => {
       setLoading(true);
       setError("");
 
-      const response = await peritoService.getAllPeritos(page, 10, search);
+      const response = await PeritoService.getAllPeritos(page, 10, search);
 
       setPeritos(response.data);
       setTotalPages(response.pagination.pages);
@@ -75,7 +75,7 @@ const UserManagement = () => {
 
     try {
       setDeleteLoading(cip);
-      await peritoService.deletePerito(cip);
+      await PeritoService.deletePerito(cip);
       await loadPeritos(currentPage, searchTerm);
       alert("Perito eliminado exitosamente");
     } catch (error) {

@@ -3,6 +3,8 @@ import { useAuth } from '../../hooks/useAuth';
 import ThemeToggle from '../ui/ThemeToggle';
 import CreateOfficeIcon from '../../assets/icons/CreateOfficeIcon';
 import ReceiveOfficeIcon from '../../assets/icons/ReceiveOfficeIcon';
+import Politics from '../ui/Politics';
+import MesaDePartes from '../../services/mesadepartesService';
 
 const MesaDePartesDashboard = () => {
   const navigate = useNavigate();
@@ -17,12 +19,17 @@ const MesaDePartesDashboard = () => {
     return location.pathname.includes(path);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("formDataCodigodeBarras");
-    localStorage.removeItem("mesadepartesData");
-    localStorage.removeItem("mesadepartesToken");
-    loginMesaDePartes();
-    navigate('/mesadepartes/login');
+  const handleLogout = () => MesaDePartes.logOutMesaDePartes();
+
+  const handleLogoutMesaDePartes = async () => {
+    try {
+      await handleLogout();
+      localStorage.removeItem("formDataCodigodeBarras");
+      loginMesaDePartes();
+      navigate('/mesadepartes/login');
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
   };
 
   if (!user) {
@@ -38,6 +45,9 @@ const MesaDePartesDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-300 flex flex-col">
+      {/* Policias de uso del sistema */}
+      <Politics nombre_usuario={user.nombre_completo}/>
+
       {/* Header */}
       <header className="bg-gradient-to-r from-[#1a4d2e] to-[#1a4d2e] text-white shadow-lg dark:shadow-gray-900/50 sticky top-0 z-30">
         <div className="max-w-full mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
@@ -60,7 +70,7 @@ const MesaDePartesDashboard = () => {
               <p className="text-xs text-gray-200 dark:text-dark-text-secondary">CIP: {user.CIP}</p>
             </div>
             <button
-              onClick={handleLogout}
+              onClick={handleLogoutMesaDePartes}
               className="bg-white dark:bg-dark-surface text-[#1a4d2e] dark:text-dark-pnp-green px-4 py-2 rounded-lg shadow hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary transition-colors duration-200"
             >
               Cerrar Sesión

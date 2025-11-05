@@ -2,6 +2,8 @@ import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import ThemeToggle from '../ui/ThemeToggle';
 import Notification from './Notificaciones/Notificaciones';
+import Politics from '../ui/Politics';
+import { PeritoService } from '../../services/peritoService';
 
 const PeritoDashboard = () => {
   const navigate = useNavigate();
@@ -16,12 +18,20 @@ const PeritoDashboard = () => {
     return location.pathname.includes(path);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("peritoData");
-    localStorage.removeItem("peritoToken");
-    logoutPerito();
-    navigate('/login');
+
+  const handleLogout = () => PeritoService.logOutPerito();
+
+  const handleLogoutPerito = async () => {
+    try {
+      await handleLogout();
+      localStorage.removeItem("formDataCodigodeBarras");
+      logoutPerito();
+      navigate('/mesadepartes/login');
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
   };
+
 
   // El ProtectedRoute ya verifica la autenticación, así que aquí solo necesitamos el usuario
   if (!user) {
@@ -37,6 +47,9 @@ const PeritoDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-300 flex flex-col">
+      {/* Policias de uso del sistema */}
+      <Politics nombre_usuario={user.nombre_completo}/>
+
       {/* Header */}
       <header className="bg-gradient-to-r from-[#1a4d2e] to-[#1a4d2e] text-white shadow-lg dark:shadow-gray-900/50 sticky top-0 z-30">
         <div className="max-w-full mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
@@ -66,7 +79,7 @@ const PeritoDashboard = () => {
               <p className="text-xs text-gray-200 dark:text-dark-text-secondary">CIP: {user.CIP}</p>
             </div>
             <button
-              onClick={handleLogout}
+              onClick={handleLogoutPerito}
               className="bg-white dark:bg-dark-surface text-[#1a4d2e] dark:text-dark-pnp-green px-4 py-2 rounded-lg shadow hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary transition-colors duration-200"
             >
               Cerrar Sesión

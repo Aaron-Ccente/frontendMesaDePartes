@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 import { AuthContext } from './AuthContext.js';
-import { MesaDePartesAuthService } from '../services/mesadepartesAuthService'; // añadido
+import { MesaDePartesAuthService } from '../services/mesadepartesAuthService';
 
 // Añadir función para normalizar roles
 const normalizeRole = (role) => {
@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
       try {
         setLoading(true);
 
-        // 1. PRIMERO verificar token de administrador (más seguro/prioritario)
+        // 1. PRIMERO verificar token de administrador
         if (authService.getToken()) {
           try {
             const isValid = await authService.validateAndRefreshToken();
@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
                 setUser({...userData, role: 'admin'});
                 setIsAuthenticated(true);
                 setLoading(false);
-                return; // Terminar aquí si es admin válido
+                return;
               }
             }
             // Si no es válido, limpiar
@@ -47,7 +47,6 @@ export const AuthProvider = ({ children }) => {
         if (peritoToken && peritoData) {
           try {
             const parsedData = JSON.parse(peritoData);
-            // Validar que los datos del perito sean completos
             if (parsedData.CIP && parsedData.role === 'perito') {
               setUser(parsedData);
               setIsAuthenticated(true);
@@ -89,7 +88,7 @@ export const AuthProvider = ({ children }) => {
 
       } catch (error) {
         console.error('Error en initializeAuth:', error);
-        // Limpiar todo en caso de error
+        // Limpiar todo
         setUser(null);
         setIsAuthenticated(false);
       } finally {
@@ -100,7 +99,7 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
-  // cuando haces login o guardas user, usa normalizeRole
+  //  login de mesa de partes
   const loginMesaDePartes = async (mesadepartes) => {
     try {
       setLoading(true);
@@ -154,7 +153,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // cuando haces login o guardas user, usa normalizeRole
+  // login para administradores
   const login = async (credentials) => {
     try {
       setLoading(true);
@@ -183,6 +182,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Login para peritos
   const loginPerito = async (peritoData, token) => {
     try {
 
@@ -209,7 +209,6 @@ export const AuthProvider = ({ children }) => {
   const logoutMesaDePartes = () => {
     localStorage.removeItem('mesadepartesToken');
     localStorage.removeItem('mesadepartesData');
-    // Si el usuario actual es mesadepartes, limpiar contexto
     if (user?.role === 'mesadepartes') {
       setUser(null);
       setIsAuthenticated(false);
@@ -233,12 +232,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Cerrar sesion para administradores
   const logout = () => {
     authService.logout();
     setUser(null);
     setIsAuthenticated(false);
   };
 
+  // Cerrar sesion para peritos
   const logoutPerito = () => {
     localStorage.removeItem('peritoToken');
     localStorage.removeItem('peritoData');
@@ -261,7 +262,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Funciones helper mejoradas
+  // Funciones helpe
   const isAdmin = () => {
     const role = normalizeRole(user?.role);
     return role === 'admin';
@@ -274,7 +275,7 @@ export const AuthProvider = ({ children }) => {
 
   const isMesaDePartes = () => {
     const role = normalizeRole(user?.role);
-    return role === 'mesadepartes' || role.includes('mesa');
+    return role === 'mesadepartes';
   };
   const getUserRole = () => user?.role || null;
 
