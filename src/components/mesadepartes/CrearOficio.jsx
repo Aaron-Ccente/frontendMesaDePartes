@@ -310,7 +310,7 @@ function CrearOficio() {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Unidad Remitente:</label>
+          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Remitente:</label>
           <input
             type="text"
             name="fiscal_remitente"
