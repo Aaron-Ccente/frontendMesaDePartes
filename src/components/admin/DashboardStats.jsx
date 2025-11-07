@@ -6,13 +6,15 @@ import Usuarios from "../../assets/icons/Usuarios";
 import Documentos from "../../assets/icons/Documentos";
 import Configuracion from "../../assets/icons/Configuracion";
 import Error from "../../assets/icons/Error";
+import UserActiveIcon from "../../assets/icons/UserActiveIcon";
+import UsersPieChart from "./DashboardStats/PieChartGraphic";
 
 const DashboardStats = () => {
   const navigate = useNavigate();
   const { loading } = useAuth();
   const [stats, setStats] = useState({
     totalPeritos: 0,
-    peritosPorSeccion: [],
+    usuariosActivos: [],
     peritosPorGrado: [],
   });
   const [error, setError] = useState("");
@@ -91,13 +93,16 @@ const DashboardStats = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                Secciones Activas
+                Usuarios Activos
               </p>
               <p className="text-2xl font-bold text-green-600 dark:text-green-300">
-                {stats.peritosPorSeccion.length}
+                {stats.usuariosActivos.length}
               </p>
             </div>
-            <div className="text-3xl text-green-600 dark:text-green-300">a</div>
+            <div className="relative inline-block text-3xl text-green-600 dark:text-green-300">
+            <UserActiveIcon />
+            <span className="absolute bottom-0 left-0 block h-3 w-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+          </div>
           </div>
         </div>
 
@@ -159,62 +164,34 @@ const DashboardStats = () => {
       </div>
 
       {/* Statistics Details */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Peritos por Sección */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Usuarios activos e inactivos */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors duration-300">
           <h2 className="text-xl font-semibold text-green-800 dark:text-green-400 mb-4">
-            Peritos por Sección
+            Usuarios activos e inactivos
           </h2>
-          {stats.peritosPorSeccion.length > 0 ? (
-            <div className="space-y-3">
-              {stats.peritosPorSeccion.map((seccion, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300"
-                >
-                  <span className="font-medium text-gray-700 dark:text-gray-300">
-                    {seccion.Seccion}
-                  </span>
-                  <span className="text-lg font-bold text-green-800 dark:text-green-400">
-                    {seccion.count}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-              No hay datos de secciones disponibles
-            </p>
-          )}
+         <UsersPieChart 
+          usuariosActivos={stats.usuariosActivos} 
+          isAnimationActive={true}
+        />
         </div>
 
-        {/* Peritos por Grado */}
+        {/* Total de oficios vs tiempo */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors duration-300">
           <h2 className="text-xl font-semibold text-green-800 dark:text-green-400 mb-4">
-            Peritos por Grado
+            Total de oficios vs tiempo
           </h2>
-          {stats.peritosPorGrado.length > 0 ? (
-            <div className="space-y-3">
-              {stats.peritosPorGrado.map((grado, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300"
-                >
-                  <span className="font-medium text-gray-700 dark:text-gray-300">
-                    {grado.Grado}
-                  </span>
-                  <span className="text-lg font-bold text-green-800 dark:text-green-400">
-                    {grado.count}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-              No hay datos de grados disponibles
-            </p>
-          )}
+          
         </div>
+
+        {/* Cantidad de oficios por tipo de prioridad */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors duration-300">
+          <h2 className="text-xl font-semibold text-green-800 dark:text-green-400 mb-4">
+            Cantidad de oficios por tipo de prioridad
+          </h2>
+          
+        </div>
+
       </div>
 
       {/* Recent Activity */}
