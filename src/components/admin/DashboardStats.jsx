@@ -8,6 +8,7 @@ import Configuracion from "../../assets/icons/Configuracion";
 import Error from "../../assets/icons/Error";
 import UserActiveIcon from "../../assets/icons/UserActiveIcon";
 import UsersPieChart from "./DashboardStats/PieChartGraphic";
+import SimpleBarChart from "./DashboardStats/SimpleBarChart";
 
 const DashboardStats = () => {
   const navigate = useNavigate();
@@ -189,7 +190,9 @@ const DashboardStats = () => {
           <h2 className="text-xl font-semibold text-green-800 dark:text-green-400 mb-4">
             Cantidad de oficios por tipo de prioridad
           </h2>
-          
+
+          <SimpleBarChart />
+
         </div>
 
       </div>
