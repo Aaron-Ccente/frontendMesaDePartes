@@ -2,16 +2,11 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell 
 } from 'recharts';
 
-const data = [
-  { name: 'Alta', cantidad: 10, color: '#EF4444' },
-  { name: 'Media', cantidad: 8, color: '#F59E0B' },
-  { name: 'Baja', cantidad: 12, color: '#10B981' },
-  { name: 'Crítica', cantidad: 5, color: '#7C3AED' },
-];
+// Paleta de colores
+const COLORS = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#7C3AED', '#EC4899'];
 
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label, total }) => {
   if (active && payload && payload.length) {
-    const totalOficios = data.reduce((sum, item) => sum + item.cantidad, 0);
     return (
       <div className="bg-gray-900 dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-700">
         <p className="text-white font-semibold">{`Prioridad: ${label}`}</p>
@@ -19,7 +14,7 @@ const CustomTooltip = ({ active, payload, label }) => {
           {`Cantidad: ${payload[0].value} oficios`}
         </p>
         <p className="text-gray-300 text-sm">
-          {`${((payload[0].value / totalOficios) * 100).toFixed(1)}% del total`}
+          {`${((payload[0].value / total) * 100).toFixed(1)}% del total`}
         </p>
       </div>
     );
@@ -27,17 +22,23 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-const HorizontalBarChartPrioridades = ({ isAnimationActive = true }) => {
-  const totalOficios = data.reduce((sum, item) => sum + item.cantidad, 0);
+const SimpleBarChart = ({ data = [], isAnimationActive = true }) => {
+  // prepara los datos
+  const parsedData = data.map((item, index) => ({
+    name: item.nombre,
+    cantidad: Number(item.cantidad) || 0,
+    color: COLORS[index % COLORS.length],
+  }));
+
+  const totalOficios = parsedData.reduce((sum, item) => sum + item.cantidad, 0);
 
   return (
     <div className="flex flex-col items-center w-full">
-      {/* Contenedor con dimensiones FIJAS */}
       <div className="w-full h-96">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             layout="vertical"
-            data={data}
+            data={parsedData}
             margin={{
               top: 20,
               right: 30,
@@ -55,12 +56,12 @@ const HorizontalBarChartPrioridades = ({ isAnimationActive = true }) => {
             <YAxis 
               type="category" 
               dataKey="name" 
-              width={60}
+              width={100}
               axisLine={false}
               tickLine={false}
               tick={{ fontSize: 12, fontWeight: 'bold', fill: '#374151' }}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip total={totalOficios} />} />
             <Bar 
               dataKey="cantidad" 
               name="Oficios por Prioridad"
@@ -70,7 +71,7 @@ const HorizontalBarChartPrioridades = ({ isAnimationActive = true }) => {
               animationDuration={800}
               animationEasing="ease-in-out"
             >
-              {data.map((entry, index) => (
+              {parsedData.map((entry, index) => (
                 <Cell 
                   key={`cell-${index}`} 
                   fill={entry.color}
@@ -84,7 +85,7 @@ const HorizontalBarChartPrioridades = ({ isAnimationActive = true }) => {
 
       {/* Leyenda */}
       <div className="flex flex-wrap justify-center gap-4 mt-4">
-        {data.map((item, index) => (
+        {parsedData.map((item, index) => (
           <div key={index} className="flex items-center">
             <div 
               className="w-3 h-3 rounded-full mr-2" 
@@ -100,4 +101,4 @@ const HorizontalBarChartPrioridades = ({ isAnimationActive = true }) => {
   );
 };
 
-export default HorizontalBarChartPrioridades;
+export default SimpleBarChart;
