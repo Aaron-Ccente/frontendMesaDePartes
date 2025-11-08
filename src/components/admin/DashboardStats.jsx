@@ -16,7 +16,7 @@ const DashboardStats = () => {
   const [stats, setStats] = useState({
     totalPeritos: 0,
     usuariosActivos: [],
-    peritosPorGrado: [],
+    prioridadOficios: []
   });
   const [error, setError] = useState("");
 
@@ -106,7 +106,7 @@ const DashboardStats = () => {
           </div>
           </div>
         </div>
-
+{/* 
         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border-l-4 border-yellow-400 hover:shadow-xl transition-all duration-300">
           <div className="flex items-center justify-between">
             <div>
@@ -119,7 +119,7 @@ const DashboardStats = () => {
               a
             </div>
           </div>
-        </div>
+        </div> */}
 
         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border-l-4 border-green-500 hover:shadow-xl transition-all duration-300">
           <div className="flex items-center justify-between">
@@ -191,7 +191,10 @@ const DashboardStats = () => {
             Cantidad de oficios por tipo de prioridad
           </h2>
 
-          <SimpleBarChart />
+          <SimpleBarChart
+            data={stats.prioridadOficios}
+            isAnimationActive={true}
+          />
 
         </div>
 
