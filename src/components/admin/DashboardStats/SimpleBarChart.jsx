@@ -33,7 +33,7 @@ const SimpleBarChart = ({ data = [], isAnimationActive = true }) => {
   const totalOficios = parsedData.reduce((sum, item) => sum + item.cantidad, 0);
 
   return (
-    <div className="flex flex-col items-center w-full">
+    <div className="flex flex-col items-center w-full px-6">
       <div className="w-full h-96">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
