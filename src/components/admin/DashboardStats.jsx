@@ -183,10 +183,10 @@ const DashboardStats = () => {
           <h2 className="text-xl font-semibold text-green-800 dark:text-green-400 mb-4 p-6">
             Usuarios activos e inactivos
           </h2>
-         <UsersPieChart 
+          {(stats.usuariosActivos.length > 0 ) ? <UsersPieChart 
           usuariosActivos={stats.usuariosActivos} 
           isAnimationActive={true}
-        />
+        /> : <div className="dark:text-white">No hay datos disponibles</div>}
         <button 
           onClick={toggleUsersTable}
           className="w-full bg-amber-300 mt-4 cursor-pointer h-10 rounded-b-xl">{showUsersTable ? "Ocultar historial" : "Ver historial"}</button>
@@ -197,11 +197,10 @@ const DashboardStats = () => {
           <h2 className="text-xl font-semibold text-green-800 p-6 dark:text-green-400 mb-4">
             Total de oficios vs tiempo
           </h2>
-
-          <SimpleBarChart
+          {(stats.prioridadOficios.length > 0 ) ? <SimpleBarChart
             data={stats.prioridadOficios}
             isAnimationActive={true}
-          />
+          /> : <div className="dark:text-white">No hay datos disponibles</div>}
           <button 
           onClick={true}
           className="w-full bg-amber-300 mt-4 cursor-pointer h-10 rounded-b-xl">Ver historial</button>
@@ -212,14 +211,14 @@ const DashboardStats = () => {
           <h2 className="text-xl font-semibold text-green-800 p-6 dark:text-green-400 mb-4">
             Cantidad de oficios por tipo de prioridad
           </h2>
-
-          <SimpleBarChart
+          {(stats.prioridadOficios.length > 0 ) ? <SimpleBarChart
             data={stats.prioridadOficios}
             isAnimationActive={true}
-          />
+          /> : <div className="dark:text-white">No hay datos disponibles</div>}
+          
           <button 
           onClick={toggleOficiosTable}
-          className="w-full bg-amber-300 mt-4 cursor-pointer h-10 rounded-b-xl">Ver historial</button>
+          className="w-full bg-amber-300 mt-4 cursor-pointer h-10 rounded-b-xl">{showOficiosTable ? "Ocultar historial" : "Ver historial"}</button>
         </div>
 
       </div>
