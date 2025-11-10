@@ -37,7 +37,6 @@ import GradosManagement from './components/admin/SystemConfiguration/GradosManag
 import TurnosManagement from './components/admin/SystemConfiguration/TurnosManagement';
 import TiposExamenManagement from './components/admin/SystemConfiguration/TiposExamenManagement.jsx';
 import TiposDePrioridadManagement from './components/admin/SystemConfiguration/TiposDePrioridadManagement.jsx';
-
 function App() {
   return (
     <ThemeProvider>

@@ -18,8 +18,10 @@ const Notification = () => {
       setLoading(true);
       setError(null);
       const result = await OficioAssignedPeritoService.getCountNewOficios();
-      if (result.success) {
+      if (result && result.success) {
         setNotificationCount(parseInt(result.data) || 0);
+      } else {
+        setNotificationCount(0);
       }
     } catch (err) {
       console.error('Error loading notifications:', err);

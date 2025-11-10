@@ -77,7 +77,7 @@ const handleLogout = async () => {
               width={64}
               height={64}
               alt="Escudo de OFICRI"
-              src="/src/assets/images/fondo_oficri.webp"
+              src="/fondo_oficri.webp"
             />
             Panel de Administración
           </h1>
