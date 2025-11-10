@@ -13,7 +13,7 @@ import { authService } from "../../services/authService";
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, loading, logout, isAuthenticated } = useAuth();
+  const { user, loading, isAuthenticated } = useAuth();
   const [config, setConfig] = useState(false);
 
   useEffect(() => {
@@ -57,7 +57,6 @@ const handleLogout = async () => {
     await logOutAdminHandler();
     localStorage.removeItem("adminData");
     localStorage.removeItem("adminToken");
-    logout();
     navigate("/admin/login", { replace: true });
   } catch (error) {
     console.error("Error al cerrar sesión:", error);
