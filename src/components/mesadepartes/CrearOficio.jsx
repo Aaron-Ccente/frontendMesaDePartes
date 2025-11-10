@@ -487,7 +487,7 @@ function CrearOficio() {
             <option value="">Seleccione un perito</option>
             {peritos.map((perito) => (
               <option key={perito.id_usuario} value={perito.id_usuario}>
-                {perito.nombre_completo} - CIP: {perito.CIP}
+                {perito.nombre_completo} - CIP: {perito.CIP} - {perito.oficios_pendientes} oficio{perito.oficios_pendientes !== '1' ? 's' : ''} asignado{perito.oficios_pendientes !== '1' ? 's' : ''}
               </option>
             ))}
           </select>
