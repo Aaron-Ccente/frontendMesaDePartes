@@ -46,6 +46,7 @@ const PeritoForm = () => {
 
     // Campos de relación
     id_grado: "",
+    id_seccion: "",
     id_turno: "",
     id_tipo_departamento: "",
   };
