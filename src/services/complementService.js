@@ -1,25 +1,13 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
+import { fetchWithAuth } from './api';
 
-const tokenKeyMesaDePartes = 'mesadepartesToken';
-const tokenKeyAdmin = 'adminToken';
- // Para obtener el token de usuario
-const getAuthHeaders = (includeJson = true) => {
-  const token = localStorage.getItem(tokenKeyMesaDePartes) || localStorage.getItem(tokenKeyAdmin);
-  const headers = {};
-  if (includeJson) headers['Content-Type'] = 'application/json';
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  return headers;
-};
-
-class ComplementService{
+class ComplementService {
 
   // Obtener perito por seagun su especialidad
   async getAllPeritoAccordingToSpecialty(id_especialidad) {
     try {
-      const url = `${API_BASE_URL}/api/peritos/especialidad?id_especialidad=${id_especialidad}`;
-      const response = await fetch(url, {
+      const url = `/api/peritos/especialidad?id_especialidad=${id_especialidad}`;
+      const response = await fetchWithAuth(url, {
         method: 'GET',
-        headers: getAuthHeaders()
       });
       const data = await response.json();
       if (!response.ok) {
@@ -29,16 +17,18 @@ class ComplementService{
       return data;
     } catch (error) {
       console.error('Error en getAllPeritoAccordingToSpecialty:', error);
-      return { error: error.message || 'Error de red' };
+      // El error de sesión expirada ya lo maneja fetchWithAuth, solo capturamos otros errores
+      if (!error.message.includes('Sesión expirada')) {
+        return { error: error.message || 'Error de red' };
+      }
     }
   }
 
   // Obtiene todas los grados
   async getGrados() {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/grados`, {
+      const response = await fetchWithAuth(`/api/grados`, {
         method: 'GET',
-        headers: getAuthHeaders()
       });
       const data = await response.json();
       if (!response.ok) {
@@ -48,16 +38,17 @@ class ComplementService{
       return data;
     } catch (error) {
       console.error('Error al obtener grados:', error);
-      throw error;
+      if (!error.message.includes('Sesión expirada')) {
+        throw error;
+      }
     }
   }
 
  // Obtiene todas los tipos de departamentos
   async getTiposDepartamento() {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/tipodepartamentos`, {
+      const response = await fetchWithAuth(`/api/tipodepartamentos`, {
         method: 'GET',
-        headers: getAuthHeaders()
       });
       const data = await response.json();
       if (!response.ok) {
@@ -67,15 +58,16 @@ class ComplementService{
       return data;
     } catch (error) {
       console.error('Error al obtener los tipos de departamento:', error);
-      throw error;
+      if (!error.message.includes('Sesión expirada')) {
+        throw error;
+      }
     }
   }
     // Obtiene todas los grados
   async getTurnos() {
         try {
-        const response = await fetch(`${API_BASE_URL}/api/turnos`, {
+        const response = await fetchWithAuth(`/api/turnos`, {
             method: 'GET',
-            headers: getAuthHeaders()
         });
         const data = await response.json();
         if (!response.ok) {
@@ -85,15 +77,16 @@ class ComplementService{
         return data;
         } catch (error) {
         console.error('Error al obtener los turnos:', error);
-        throw error;
+        if (!error.message.includes('Sesión expirada')) {
+          throw error;
+        }
         }
     }
 
     async getSecciones(id){
       try {
-        const response = await fetch(`${API_BASE_URL}/api/secciones?id=${id}`, {
+        const response = await fetchWithAuth(`/api/secciones?id=${id}`, {
             method: 'GET',
-            headers: getAuthHeaders()
         });
         const data = await response.json();
         if (!response.ok) {
@@ -103,15 +96,16 @@ class ComplementService{
         return data;
         } catch (error) {
         console.error('Error al obtener los turnos:', error);
-        throw error;
+        if (!error.message.includes('Sesión expirada')) {
+          throw error;
+        }
         }
     }
 
     async getAllPriorities(){
       try {
-            const response = await fetch(`${API_BASE_URL}/api/prioridades`, {
+            const response = await fetchWithAuth(`/api/prioridades`, {
             method: 'GET',
-            headers: getAuthHeaders()
         })
         const data = await response.json();
         if (!response.ok) {
@@ -121,16 +115,17 @@ class ComplementService{
         return data;
       } catch (error) {
         console.error('Error al obtener los turnos:', error);
-        throw error;
+        if (!error.message.includes('Sesión expirada')) {
+          throw error;
+        }
       }
       }
 
     // Obtener tipos de examen por id de tipo de departamento
     async getTiposByDepartamento(id_departamento) {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/tiposdeexamen/departamento/${id_departamento}`, {
+            const response = await fetchWithAuth(`/api/tiposdeexamen/departamento/${id_departamento}`, {
                 method: 'GET',
-                headers: getAuthHeaders()
             });
             const data = await response.json();
             if (!response.ok) {
@@ -139,10 +134,12 @@ class ComplementService{
             return data;
         } catch (error) {
             console.error(error);
-            throw error;
+            if (!error.message.includes('Sesión expirada')) {
+              throw error;
+            }
         }
     }
 }
 
-
 export const ComplementServices = new ComplementService();
+

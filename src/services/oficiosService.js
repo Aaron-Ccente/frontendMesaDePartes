@@ -1,21 +1,10 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
-
-const tokenKeyMesaDePartes = 'mesadepartesToken';
-
-const getAuthHeaders = (includeJson = true) => {
-  const token = localStorage.getItem(tokenKeyMesaDePartes);
-  const headers = {};
-  if (includeJson) headers['Content-Type'] = 'application/json';
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  return headers;
-};
+import { fetchWithAuth } from './api';
 
 export class OficiosService {
   static async createOficio(oficioData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/oficios`, {
+      const response = await fetchWithAuth(`/api/oficios`, {
         method: 'POST',
-        headers: getAuthHeaders(),
         body: JSON.stringify(oficioData)
       });
 
@@ -31,15 +20,15 @@ export class OficiosService {
       return data;
     } catch (error) {
       console.error('Error en createOficio:', error);
-      return { success: false, message: error.message || 'Error en la petición' };
+      if (!error.message.includes('Sesión expirada')) {
+        return { success: false, message: error.message || 'Error en la petición' };
+      }
     }
   }
 
   static async getAllOficios() {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/oficios`, {
-        headers: getAuthHeaders()
-      });
+      const response = await fetchWithAuth(`/api/oficios`);
       const data = await response.json();
       if (!response.ok) {
         return { success: false, message: data.message || 'Error al obtener oficios' };
@@ -47,15 +36,15 @@ export class OficiosService {
       return data;
     } catch (error) {
       console.error('Error en getAllOficios:', error);
-      return { success: false, message: error.message || 'Error en la petición' };
+      if (!error.message.includes('Sesión expirada')) {
+        return { success: false, message: error.message || 'Error en la petición' };
+      }
     }
   }
 
   static async getOficioById(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/oficios/${id}`, {
-        headers: getAuthHeaders()
-      });
+      const response = await fetchWithAuth(`/api/oficios/${id}`);
       const data = await response.json();
       if (!response.ok) {
         return { success: false, message: data.message || 'Error al obtener el oficio' };
@@ -63,15 +52,15 @@ export class OficiosService {
       return data;
     } catch (error) {
       console.error('Error en getOficioById:', error);
-      return { success: false, message: error.message || 'Error en la petición' };
+      if (!error.message.includes('Sesión expirada')) {
+        return { success: false, message: error.message || 'Error en la petición' };
+      }
     }
   }
 
    static async checkNumero(numero) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/oficios/check/${encodeURIComponent(numero)}`, {
-        headers: getAuthHeaders(false)
-      });
+      const response = await fetchWithAuth(`/api/oficios/check/${encodeURIComponent(numero)}`);
       const contentType = response.headers.get('content-type') || '';
       if (contentType.includes('application/json')) {
         const data = await response.json();
@@ -81,15 +70,15 @@ export class OficiosService {
       return { success: response.ok, message: text };
     } catch (error) {
       console.error('Error en checkNumero:', error);
-      return { success: false, message: error.message || 'Error en la petición' };
+      if (!error.message.includes('Sesión expirada')) {
+        return { success: false, message: error.message || 'Error en la petición' };
+      }
     }
   }
 
   static async getSeguimientoOficio(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/oficios/${id}/seguimiento`, {
-        headers: getAuthHeaders()
-      });
+      const response = await fetchWithAuth(`/api/oficios/${id}/seguimiento`);
       const data = await response.json();
       if (!response.ok) {
         return { success: false, message: data.message || 'Error al obtener el seguimiento' };
@@ -97,7 +86,9 @@ export class OficiosService {
       return data;
     } catch (error) {
       console.error('Error en getSeguimientoOficio:', error);
-      return { success: false, message: error.message || 'Error en la petición' };
+      if (!error.message.includes('Sesión expirada')) {
+        return { success: false, message: error.message || 'Error en la petición' };
+      }
     }
   }
 }

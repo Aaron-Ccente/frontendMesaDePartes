@@ -24,6 +24,7 @@ import PeritoDashboard from './components/perito/PeritoDashboard';
 import PeritoResumen from './components/perito/PeritoResumen';
 import PeritoDocumentos from './components/perito/PeritoDocumentos';
 import PeritoCasos from './components/perito/PeritoCasos';
+import CasoDetail from './components/perito/CasoDetail';
 import PeritoPerfil from './components/perito/PeritoPerfil';
 import MesaDePartes from './components/admin/MesaDePartes';
 import MesaDePartesForm from './components/admin/MesaDePartesForm';
@@ -84,10 +85,11 @@ function App() {
               <Route index element={<PeritoResumen />} />
               <Route path="documentos" element={<PeritoDocumentos />} />
               <Route path="casos" element={<PeritoCasos />} />
+              <Route path="casos/:id" element={<CasoDetail />} />
               <Route path="perfil" element={<PeritoPerfil />} />
             </Route>
 
-            {/* Perito Dashboard Routes */}
+            {/* Mesa de Partes Dashboard Routes */}
             <Route path="/mesadepartes/dashboard" element={
               <ProtectedRoute requireUserMesaDePartes={true}>
                 <MesaDePartesDashboard />

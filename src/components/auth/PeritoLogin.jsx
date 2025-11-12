@@ -54,7 +54,7 @@ const PeritoLogin = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1a4d2e] to-[#2d7d4a] flex items-center justify-center p-4 relative">
       {/* Botón de cambio de tema en la esquina superior derecha */}
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 z-[60]">
         <ThemeToggle size="lg" />
       </div>
       {/* Fondo con elementos decorativos en verde */}
@@ -145,8 +145,8 @@ const PeritoLogin = () => {
         </div>
         <div className='w-96 flex flex-col justify-center gap-8 items-center'>
               <div className='flex justify-center gap-6'>
-                <img src='/src/assets/images/fondo_oficri.webp' width={140} height={140}/>
-                <img src='/src/assets/images/fondo_pnp.webp' width={140} height={140}/>
+                <img src='/fondo_oficri.webp' width={140} height={140}/>
+                <img src='/fondo_pnp.webp' width={140} height={140}/>
               </div>
               <h2 className='text-3xl text-light-gray font-bold'>Mesa De Partes OFICRI</h2>
               <p className='text-sm text-light-gray'>Sistema de Gestión de requisitos Forenses</p>
