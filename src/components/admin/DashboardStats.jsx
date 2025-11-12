@@ -6,14 +6,21 @@ import Usuarios from "../../assets/icons/Usuarios";
 import Documentos from "../../assets/icons/Documentos";
 import Configuracion from "../../assets/icons/Configuracion";
 import Error from "../../assets/icons/Error";
+import UserActiveIcon from "../../assets/icons/UserActiveIcon";
+import UsersPieChart from "./DashboardStats/PieChartGraphic";
+import SimpleBarChart from "./DashboardStats/SimpleBarChart";
+import UsersActive from "./DashboardStats/tables/UsersActive";
+import PrioridadOficios from "./DashboardStats/tables/PrioridadOficios";
 
 const DashboardStats = () => {
   const navigate = useNavigate();
   const { loading } = useAuth();
+  const [showUsersTable, setShowUsersTable] = useState(false);
+  const [showOficiosTable, setShowOficiosTable] = useState(false);
   const [stats, setStats] = useState({
     totalPeritos: 0,
-    peritosPorSeccion: [],
-    peritosPorGrado: [],
+    usuariosActivos: [],
+    prioridadOficios: []
   });
   const [error, setError] = useState("");
 
@@ -31,6 +38,14 @@ const DashboardStats = () => {
 
     loadStats();
   }, []);
+
+  const toggleUsersTable = () => {
+    setShowUsersTable(!showUsersTable);
+  };
+
+  const toggleOficiosTable = () => {
+    setShowOficiosTable(!showOficiosTable);
+  };
 
   const handleNavigation = (path) => {
     navigate(`/admin/dashboard${path}`);
@@ -54,10 +69,10 @@ const DashboardStats = () => {
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors duration-300">
         <h1 className="text-3xl font-bold text-green-800 dark:text-green-400 mb-4">
-          Panel de Administración
+          Panel de Estadísticas
         </h1>
         <p className="text-gray-600 dark:text-gray-300 text-lg">
-          Gestión del sistema Mesa de Partes OFICRI
+          Resumen de las estadísticas clave del sistema
         </p>
       </div>
 
@@ -91,16 +106,19 @@ const DashboardStats = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                Secciones Activas
+                Usuarios Activos
               </p>
               <p className="text-2xl font-bold text-green-600 dark:text-green-300">
-                {stats.peritosPorSeccion.length}
+                {stats.usuariosActivos.length}
               </p>
             </div>
-            <div className="text-3xl text-green-600 dark:text-green-300">a</div>
+            <div className="relative inline-block text-3xl text-green-600 dark:text-green-300">
+            <UserActiveIcon />
+            <span className="absolute bottom-0 left-0 block h-3 w-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+          </div>
           </div>
         </div>
-
+{/* 
         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border-l-4 border-yellow-400 hover:shadow-xl transition-all duration-300">
           <div className="flex items-center justify-between">
             <div>
@@ -113,7 +131,7 @@ const DashboardStats = () => {
               a
             </div>
           </div>
-        </div>
+        </div> */}
 
         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border-l-4 border-green-500 hover:shadow-xl transition-all duration-300">
           <div className="flex items-center justify-between">
@@ -159,81 +177,59 @@ const DashboardStats = () => {
       </div>
 
       {/* Statistics Details */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Peritos por Sección */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors duration-300">
-          <h2 className="text-xl font-semibold text-green-800 dark:text-green-400 mb-4">
-            Peritos por Sección
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Usuarios activos e inactivos */}
+        <div className=" bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-colors duration-300  flex flex-col items-center justify-between">
+          <h2 className="text-xl font-semibold text-green-800 dark:text-green-400 mb-4 p-6">
+            Usuarios activos e inactivos
           </h2>
-          {stats.peritosPorSeccion.length > 0 ? (
-            <div className="space-y-3">
-              {stats.peritosPorSeccion.map((seccion, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300"
-                >
-                  <span className="font-medium text-gray-700 dark:text-gray-300">
-                    {seccion.Seccion}
-                  </span>
-                  <span className="text-lg font-bold text-green-800 dark:text-green-400">
-                    {seccion.count}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-              No hay datos de secciones disponibles
-            </p>
-          )}
+          {(stats.usuariosActivos.length > 0 ) ? <UsersPieChart 
+          usuariosActivos={stats.usuariosActivos} 
+          isAnimationActive={true}
+        /> : <div className="dark:text-white">No hay datos disponibles</div>}
+        <button 
+          onClick={toggleUsersTable}
+          className="w-full bg-amber-300 mt-4 cursor-pointer h-10 rounded-b-xl">{showUsersTable ? "Ocultar historial" : "Ver historial"}</button>
         </div>
 
-        {/* Peritos por Grado */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors duration-300">
-          <h2 className="text-xl font-semibold text-green-800 dark:text-green-400 mb-4">
-            Peritos por Grado
+        {/* Total de oficios vs tiempo */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-colors duration-300  flex flex-col items-center justify-between">
+          <h2 className="text-xl font-semibold text-green-800 p-6 dark:text-green-400 mb-4">
+            Total de oficios vs tiempo
           </h2>
-          {stats.peritosPorGrado.length > 0 ? (
-            <div className="space-y-3">
-              {stats.peritosPorGrado.map((grado, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300"
-                >
-                  <span className="font-medium text-gray-700 dark:text-gray-300">
-                    {grado.Grado}
-                  </span>
-                  <span className="text-lg font-bold text-green-800 dark:text-green-400">
-                    {grado.count}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-              No hay datos de grados disponibles
-            </p>
-          )}
+          {(stats.prioridadOficios.length > 0 ) ? <SimpleBarChart
+            data={stats.prioridadOficios}
+            isAnimationActive={true}
+          /> : <div className="dark:text-white">No hay datos disponibles</div>}
+          <button 
+          onClick={true}
+          className="w-full bg-amber-300 mt-4 cursor-pointer h-10 rounded-b-xl">Ver historial</button>
         </div>
+
+        {/* Cantidad de oficios por tipo de prioridad */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-colors duration-300  flex flex-col items-center justify-between">
+          <h2 className="text-xl font-semibold text-green-800 p-6 dark:text-green-400 mb-4">
+            Cantidad de oficios por tipo de prioridad
+          </h2>
+          {(stats.prioridadOficios.length > 0 ) ? <SimpleBarChart
+            data={stats.prioridadOficios}
+            isAnimationActive={true}
+          /> : <div className="dark:text-white">No hay datos disponibles</div>}
+          
+          <button 
+          onClick={toggleOficiosTable}
+          className="w-full bg-amber-300 mt-4 cursor-pointer h-10 rounded-b-xl">{showOficiosTable ? "Ocultar historial" : "Ver historial"}</button>
+        </div>
+
       </div>
 
-      {/* Recent Activity */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors duration-300">
-        <h2 className="text-xl font-semibold text-green-800 dark:text-green-400 mb-4">
-          Actividad Reciente
-        </h2>
-        <div className="space-y-3">
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300">
-            <div className="flex-1">
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                {stats.totalPeritos > 0
-                  ? `Sistema funcionando con ${stats.totalPeritos} peritos registrados`
-                  : "No hay peritos registrados en el sistema"}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Tabla a mostrar segun click */}
+      {showUsersTable && (
+        <UsersActive usuariosActivos={stats.usuariosActivos} />
+      )}
+      {showOficiosTable && (
+        <PrioridadOficios prioridadOficios={stats.prioridadOficios} />
+      )}
     </div>
   );
 };

@@ -111,7 +111,7 @@ const UserManagement = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-[#1a4d2e] dark:text-green-400 mb-2">
-              Gestión de Usuarios
+              Gestión de Peritos
             </h1>
             <p className="text-gray-600 dark:text-gray-300">
               Administrar peritos del sistema ({totalPeritos} total)

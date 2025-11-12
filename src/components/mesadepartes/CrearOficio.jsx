@@ -1,565 +1,265 @@
 import { useState, useEffect } from "react";
-import Codigodebarras from "./Codigodebarras";
-import { ComplementServices } from '../../services/complementService';
-import { OficiosService } from '../../services/oficiosService';
-import ShowToast from '../ui/ShowToast';
+import { useAuth } from "../../hooks/useAuth";
+import { ComplementServices } from "../../services/complementService";
+import { OficiosService } from "../../services/oficiosService";
+import AsignacionPerito from "../ui/AsignacionPerito";
+import { FormInput, FormSelect, FormSection } from "../../utils/FormComponents";
+import ShowToast from "../ui/ShowToast";
+import DepartmentIcon from "../../assets/icons/DepartmentIcon";
+
+const initialFormData = {
+  numeroOficio: "",
+  fechaHora: "",
+  fiscalia: "", // Unidad Solicitante
+  regionSolicitante: "",
+  implicado: "",
+  dniImplicado: "",
+  fiscal_remitente: "",
+  id_tipos_examen: [],
+  tipos_examen: [],
+  muestra: "",
+  id_especialidad_requerida: "",
+  especialidad_requerida: "",
+  id_usuario_perito_asignado: "",
+  perito_asignado: "",
+  cip_perito_asignado: "",
+  estado: "CREACIÓN DE OFICIO",
+  id_prioridad: "",
+  asunto: "",
+  celular: "",
+  tipo_de_muestra: "", 
+};
+
+const flowTypes = {
+  TOMA_MUESTRA: {
+    key: 'TOMA_MUESTRA',
+    label: 'Con Oficio (Requiere Toma de Muestra)',
+    tipo_de_muestra: 'TOMA DE MUESTRAS',
+    conOficio: true,
+    color: 'border-info text-info dark:border-blue-400 dark:text-blue-400',
+    bgColor: 'hover:bg-blue-50 dark:hover:bg-blue-900/20',
+    selectedColor: 'bg-blue-50 dark:bg-blue-900/30'
+  },
+  MUESTRA_CON_OFICIO: {
+    key: 'MUESTRA_CON_OFICIO',
+    label: 'Con Oficio (Muestras Remitidas)',
+    tipo_de_muestra: 'MUESTRAS REMITIDAS',
+    conOficio: true,
+    color: 'border-pnp-green text-pnp-green dark:border-dark-pnp-green dark:text-dark-pnp-green',
+    bgColor: 'hover:bg-green-50 dark:hover:bg-green-900/20',
+    selectedColor: 'bg-green-50 dark:bg-green-900/30'
+  },
+  MUESTRA_SIN_OFICIO: {
+    key: 'MUESTRA_SIN_OFICIO',
+    label: 'Sin Oficio (Muestras Remitidas)',
+    tipo_de_muestra: 'MUESTRAS REMITIDAS',
+    conOficio: false,
+    color: 'border-warning text-warning dark:border-yellow-400 dark:text-yellow-400',
+    bgColor: 'hover:bg-yellow-50 dark:hover:bg-yellow-900/20',
+    selectedColor: 'bg-yellow-50 dark:bg-yellow-900/30'
+  }
+};
 
 function CrearOficio() {
-  const [formData, setFormData] = useState({
-    numeroOficio: "",
-    fechaHora: "",
-    fiscalia: "",
-    regionSolicitante: "",
-    implicado: "",
-    dniImplicado: "",
-    fiscal_remitente: "",
-    tipo_examen: "",
-    id_tipo_examen: "",
-    muestra: "",
-    id_especialidad: "",
-    nombre_especialidad: "",
-    id_usuario_perito: "",
-    nombre_perito: "",
-    cip_perito: "",
-    estado: "CREACIÓN DE OFICIO",
-    id_prioridad: "",
-    tipo_de_muestra: "",
-    asunto: ""
-  });
+  const { user } = useAuth();
+  const [step, setStep] = useState(1); // 1: Dept, 2: Dynamic Form
+  const [activeFlow, setActiveFlow] = useState(flowTypes.MUESTRA_CON_OFICIO.key);
+  const [formData, setFormData] = useState(initialFormData);
 
   const [codigo, setCodigo] = useState("");
   const [closeModal, setCloseModal] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
   const [especialidades, setEspecialidades] = useState([]);
   const [prioridades, setPrioridades] = useState([]);
-  const [peritos, setPeritos] = useState([]);
   const [tiposExamen, setTiposExamen] = useState([]);
-  const [tipoExamenDescripcion, setTipoExamenDescripcion] = useState("");
   const [feedback, setFeedback] = useState(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem("formDataCodigodeBarras");
-    if (saved) {
+    const loadInitialData = async () => {
       try {
-        const parsed = JSON.parse(saved);
-        setFormData((prev) => ({ ...prev, ...parsed }));
-      } catch (e) {
-        console.log(e);
-        localStorage.removeItem("formDataCodigodeBarras");
-      }
-    }
-    setIsInitialized(true);
-  }, []);
-
-  useEffect(() => {
-    if (isInitialized) {
-      localStorage.setItem("formDataCodigodeBarras", JSON.stringify(formData));
-    }
-  }, [formData, isInitialized]);
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const especialidadesRes = await ComplementServices.getTiposDepartamento();
-        const prioridadesRes = await ComplementServices.getAllPriorities();
+        const [especialidadesRes, prioridadesRes] = await Promise.all([
+          ComplementServices.getTiposDepartamento(),
+          ComplementServices.getAllPriorities()
+        ]);
         setPrioridades(Array.isArray(prioridadesRes?.data) ? prioridadesRes.data : []);
-        setEspecialidades(Array.isArray(especialidadesRes?.data) ? especialidadesRes.data : []);
+        const filtered = (especialidadesRes?.data || []).filter(e => ![11, 12, 13].includes(e.id_tipo_departamento));
+        setEspecialidades(filtered);
       } catch (error) {
-        console.log(error);
+        setFeedback("Error al cargar datos iniciales.");
       }
     };
-    loadData();
+    loadInitialData();
   }, []);
 
-  const handleChange = (eOrName, maybeValue) => {
-    if (typeof eOrName === "string") {
-      setFormData((prev) => ({ ...prev, [eOrName]: maybeValue }));
-    } else if (eOrName && eOrName.target) {
-      const { name, value } = eOrName.target;
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleAddPeritosAccordingToSpecialty = async (id_especialidad) => {
+  const handleDepartmentSelection = async (department) => {
+    setFormData(prev => ({ ...prev, id_especialidad_requerida: department.id_tipo_departamento, especialidad_requerida: department.nombre_departamento, id_tipos_examen: [], tipos_examen: [] }));
     try {
-      if (!id_especialidad) {
-        setPeritos([]);
-        setTiposExamen([]);
-        setTipoExamenDescripcion("");
-        return;
-      }
-
-      // cargar peritos
-      const resp = await ComplementServices.getAllPeritoAccordingToSpecialty(id_especialidad);
-      const payload = resp?.data ?? resp;
-      let items;
-      if (payload && typeof payload === 'object' && 'success' in payload && payload.success) {
-        items = payload.data;
-      } else {
-        items = payload;
-      }
-      if (Array.isArray(items)) {
-        setPeritos(items);
-      } else if (items && typeof items === 'object') {
-        setPeritos([items]);
-      } else {
-        setPeritos([]);
-      }
-
-      // cargar tipos de examen por departamento
-      try {
-        const tiposResp = await (ComplementServices.getTiposByDepartamento
-          ? ComplementServices.getTiposByDepartamento(id_especialidad)
-          : ComplementServices.getTiposByDepartamento?.call(ComplementServices, id_especialidad));
-        const tiposData = tiposResp?.data ?? tiposResp;
-        if (Array.isArray(tiposData)) {
-          setTiposExamen(tiposData);
-        } else {
-          setTiposExamen([]);
-        }
-        setTipoExamenDescripcion("");
-        setFormData((prev) => ({ ...prev, tipoExamen: "" }));
-      } catch (err) {
-        console.error("Error cargando tipos de examen:", err);
-        setTiposExamen([]);
-        setTipoExamenDescripcion("");
-      }
+      const tiposRes = await ComplementServices.getTiposByDepartamento(department.id_tipo_departamento);
+      setTiposExamen(tiposRes?.data || []);
     } catch (err) {
-      console.error('Error cargando peritos por especialidad:', err);
-      setPeritos([]);
+      setTiposExamen([]);
     }
+    setStep(2);
   };
 
-  const generarCodigo = async () => {
-    // validar que haya número de oficio
-    if (!formData.numeroOficio || String(formData.numeroOficio).trim() === "") {
-      setFeedback("El número de oficio es obligatorio");
+  const handleFlowChange = (flowKey) => {
+    setActiveFlow(flowKey);
+    const flow = flowTypes[flowKey];
+    setFormData(prev => ({ ...prev, tipo_de_muestra: flow.tipo_de_muestra }));
+  };
+
+  const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const handlePeritoSelect = (perito) => setFormData(prev => ({ ...prev, id_usuario_perito_asignado: perito.id_usuario, perito_asignado: perito.nombre_completo, cip_perito_asignado: perito.CIP }));
+  const handleTipoExamenChange = (e) => {
+    const { value, checked, name } = e.target;
+    const examenId = parseInt(value);
+    setFormData(prev => {
+      const new_ids = checked ? [...prev.id_tipos_examen, examenId] : prev.id_tipos_examen.filter(id => id !== examenId);
+      const new_names = checked ? [...prev.tipos_examen, name] : prev.tipos_examen.filter(n => n !== name);
+      return { ...prev, id_tipos_examen: new_ids, tipos_examen: new_names };
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.id_especialidad_requerida || !formData.id_usuario_perito_asignado || !formData.id_prioridad) {
+      setFeedback("Error: Debe seleccionar especialidad, perito y prioridad.");
       return;
     }
-
+    if (formData.id_tipos_examen.length === 0) {
+      setFeedback("Error: Debe seleccionar al menos un tipo de examen.");
+      return;
+    }
+    setFeedback("Procesando...");
     try {
-
-      const resp = await OficiosService.checkNumero(formData.numeroOficio);
-      if (!resp || !resp.success) {
-        setFeedback(resp?.message || "No se pudo verificar número de oficio");
-        return;
+      const currentFlow = flowTypes[activeFlow];
+      if (currentFlow.conOficio && formData.numeroOficio) {
+        const checkResp = await OficiosService.checkNumero(formData.numeroOficio);
+        if (checkResp.exists) {
+          setFeedback(`Error: Ya existe un oficio con el número ${formData.numeroOficio}`);
+          return;
+        }
       }
-      if (resp.exists) {
-        setFeedback(`Ya existe un oficio con el número ${formData.numeroOficio}`);
-        return;
+      const payload = { ...formData, mesadepartesData: { id_usuario: user.id_usuario, CIP: user.CIP, nombre_completo: user.nombre_completo } };
+      const createResp = await OficiosService.createOficio(payload);
+      if (createResp.success) {
+        setFeedback("¡Oficio creado y asignado exitosamente!");
+        setCodigo(createResp.data.numero_oficio || `ID-${createResp.data.id_oficio}`);
+        setCloseModal(true);
+      } else {
+        setFeedback(`Error del servidor: ${createResp.message}`);
       }
-
-      const nuevoCodigo = `${formData.numeroOficio || Date.now()}`;
-      setCodigo(nuevoCodigo);
-      setCloseModal(true);
-      setFeedback(null);
     } catch (err) {
-      console.error(err);
-      setFeedback(err?.message || "Error verificando número de oficio");
+      setFeedback(err?.message || "Error de conexión.");
     }
   };
 
-  const limpiarFormulario = () => {
-    const initial = {
-      numeroOficio: "",
-      fechaHora: "",
-      fiscalia: "",
-      regionSolicitante: "",
-      implicado: "",
-      dniImplicado: "",
-      fiscal_remitente: "",
-      tipoExamen: "",
-      muestra: "",
-      especialidad: "",
-      id_tipo_departamento: "",
-      id_usuario: "",
-      estado: "CREACIÓN DE OFICIO",
-      prioridad: "",
-      tipo_de_muestra: "",
-      asunto: ""
-    };
-    setFormData(initial);
-    localStorage.removeItem("formDataCodigodeBarras");
-    setCodigo("");
-    setPeritos([]);
-    setTiposExamen([]);
-    setTipoExamenDescripcion("");
+  const handleReset = () => {
+    setStep(1);
+    setActiveFlow(flowTypes.MUESTRA_CON_OFICIO.key);
+    setFormData(initialFormData);
   };
 
-  // tipo de muestra
-  const handleTipoDeMuestra = (tipo) => {
-    setFormData((prev) => ({ ...prev, tipo_de_muestra: prev.tipo_de_muestra === tipo ? "" : tipo }));
-  };
+  const renderDepartmentSelection = () => (
+    <div className="p-4">
+      <h2 className="text-2xl font-bold mb-8 text-center text-gray-800 dark:text-gray-100">Paso 1: Seleccione un Departamento</h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full max-w-6xl mx-auto">
+        {especialidades.map(dep => (
+          <button key={dep.id_tipo_departamento} onClick={() => handleDepartmentSelection(dep)} className="flex flex-col items-center p-4 bg-white dark:bg-dark-bg-secondary rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
+            <DepartmentIcon className="text-pnp-green-light dark:text-dark-pnp-green text-4xl mb-3 w-10 h-10" />
+            <span className="text-base font-semibold text-center text-gray-700 dark:text-dark-text-secondary">{dep.nombre_departamento}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 
-  const muestraLabel = () => {
-    if (formData.tipo_de_muestra === "toma") return "MUESTRA A EXTRAER";
-    if (formData.tipo_de_muestra === "remitidas") return "MUESTRA REMITIDA";
-    return "MUESTRA REMITIDA / A EXTRAER";
-  };
+  const renderDynamicForm = () => {
+    const currentFlow = flowTypes[activeFlow];
+    return (
+      <div className="p-4">
+        <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Paso 2: Registrar Ingreso</h2>
+            <button onClick={() => setStep(1)} className="px-4 py-2 text-sm rounded-lg bg-gray-200 dark:bg-dark-bg-tertiary hover:bg-gray-300 dark:hover:bg-gray-600">Cambiar Depto.</button>
+        </div>
+        
+        {/* Flow Type Selector */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {Object.values(flowTypes).map(flow => (
+            <button key={flow.key} onClick={() => handleFlowChange(flow.key)} className={`p-4 text-left rounded-lg border-2 transition-all duration-200 ${activeFlow === flow.key ? `${flow.color} ${flow.selectedColor}` : `border-gray-200 dark:border-dark-border ${flow.bgColor}`}`}>
+              <h3 className={`text-lg font-semibold ${activeFlow !== flow.key ? 'text-gray-700 dark:text-dark-text-secondary' : ''}`}>{flow.label}</h3>
+            </button>
+          ))}
+        </div>
 
-  const isImpDniRequired = formData.tipo_de_muestra === "toma";
+        <form onSubmit={handleSubmit}>
+          {currentFlow.conOficio && (
+            <FormSection title="Información de Encabezado">
+              <FormInput label="Número de Oficio" name="numeroOficio" value={formData.numeroOficio} onChange={handleChange} />
+              <FormInput label="Remitente" name="fiscal_remitente" value={formData.fiscal_remitente} onChange={handleChange} />
+            </FormSection>
+          )}
 
-  const handlePeritosChange = (e) => {
-    const peritoId = e.target.value;
-    const peritoSeleccionado = peritos.find(p => p.id_usuario === Number(peritoId));
-    
-    if (peritoSeleccionado) {
-      setFormData(prev => ({
-        ...prev,
-        id_usuario_perito: peritoSeleccionado.id_usuario,
-        nombre_perito: peritoSeleccionado.nombre_completo,
-        cip_perito: peritoSeleccionado.CIP
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        id_usuario_perito: "",
-        nombre_perito: "",
-        cip_perito: ""
-      }));
-    }
-  };
+          <FormSection title="Información General">
+            <FormInput label="Unidad Solicitante" name="fiscalia" value={formData.fiscalia} onChange={handleChange} required />
+            <FormInput label="Nombre Implicado" name="implicado" value={formData.implicado} onChange={handleChange} required />
+            <FormInput label="DNI Implicado" name="dniImplicado" value={formData.dniImplicado} onChange={handleChange} required />
+            <FormInput label="Celular de Contacto" name="celular" value={formData.celular} onChange={handleChange} />
+          </FormSection>
 
-  const handleEspecialidadChange = async (e) => {
-    const id = e.target.value;
-    const especialidadSeleccionada = especialidades.find(
-      esp => esp.id_tipo_departamento === Number(id)
+          <FormSection title="Exámenes y Derivación">
+            <div className="md:col-span-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-dark-text-secondary mb-2 block">Tipos de Examen</label>
+              <div className="p-4 border dark:border-dark-border rounded-lg max-h-48 overflow-y-auto bg-white dark:bg-dark-bg-primary">
+                {tiposExamen.length > 0 ? tiposExamen.map(examen => (
+                  <div key={examen.id_tipo_de_examen} className="flex items-center py-1">
+                    <input type="checkbox" id={`examen-${examen.id_tipo_de_examen}`} value={examen.id_tipo_de_examen} name={examen.nombre} checked={formData.id_tipos_examen.includes(examen.id_tipo_de_examen)} onChange={handleTipoExamenChange} className="h-4 w-4 rounded text-pnp-green focus:ring-pnp-green-light" />
+                    <label htmlFor={`examen-${examen.id_tipo_de_examen}`} className="ml-3 block text-sm text-gray-800 dark:text-dark-text-primary">{examen.nombre}</label>
+                  </div>
+                )) : <p className="text-gray-500 dark:text-dark-text-muted">No hay exámenes para este departamento.</p>}
+              </div>
+            </div>
+            <AsignacionPerito idEspecialidad={formData.id_especialidad_requerida} onPeritoSelect={handlePeritoSelect} selectedPerito={{nombre_completo: formData.perito_asignado}} />
+            <FormSelect label="Prioridad" name="id_prioridad" value={formData.id_prioridad} onChange={handleChange} required>
+              <option value="">Seleccione prioridad</option>
+              {prioridades.map(p => <option key={p.id_prioridad} value={p.id_prioridad}>{p.nombre_prioridad}</option>)}
+            </FormSelect>
+          </FormSection>
+
+          <FormSection title="Actas y Asunto">
+            <div className="flex items-center">
+                <button type="button" onClick={() => alert('Funcionalidad para Acta de Observaciones pendiente.')} disabled={activeFlow === 'TOMA_MUESTRA'} className="px-4 py-2 rounded-lg bg-blue-500 text-white disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed">
+                    Generar Acta de Observaciones
+                </button>
+            </div>
+            <div className="md:col-span-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-dark-text-secondary">Asunto</label>
+                <textarea name="asunto" value={formData.asunto} onChange={handleChange} rows="3" className="w-full border p-2 rounded-lg bg-white dark:bg-dark-bg-tertiary dark:border-dark-border"></textarea>
+            </div>
+          </FormSection>
+
+          <div className="flex justify-end gap-4 mt-8 border-t dark:border-dark-border pt-4">
+            <button type="submit" className="px-6 py-2 rounded-lg bg-pnp-green hover:bg-pnp-green-light text-white font-semibold">Crear y Generar Código</button>
+          </div>
+        </form>
+      </div>
     );
-
-    setFormData(prev => ({
-      ...prev,
-      id_especialidad: id,
-      nombre_especialidad: especialidadSeleccionada?.nombre_departamento || "",
-      id_usuario_perito: "",
-      nombre_perito: "",
-      cip_perito: "",
-      tipo_examen: "",
-      id_tipo_examen: ""
-    }));
-
-    if (id) {
-      await handleAddPeritosAccordingToSpecialty(id);
-    } else {
-      setPeritos([]);
-    }
-  };
-
-  const handleTipoExamenChange = (e) => {
-    const examenId = e.target.value;
-    const examenSeleccionado = tiposExamen.find(
-      t => t.id_tipo_de_examen === Number(examenId)
-    );
-
-    setFormData(prev => ({
-      ...prev,
-      id_tipo_examen: examenId,
-      tipo_examen: examenSeleccionado?.nombre || ""
-    }));
-
-    if (examenSeleccionado) {
-      setTipoExamenDescripcion(examenSeleccionado.descripcion || "");
-    } else {
-      setTipoExamenDescripcion("");
-    }
   };
 
   return (
-    <div className="flex flex-col items-center p-6 bg-gray-50 dark:bg-gray-800 rounded-2xl shadow-md w-full mx-auto">
-      {/* mostrar errores*/}
-      {feedback && (
-        <div className="w-full max-w-4xl mb-4">
-          <ShowToast
-            type={Array.isArray(feedback) ? "error" : (String(feedback).toLowerCase().includes('exitos') ? "success" : "error")}
-            message={feedback}
-            onClose={() => setFeedback(null)}
-          />
-        </div>
-      )}
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-extrabold text-center mb-8 text-gray-800 dark:text-gray-100">Crear Nuevo Oficio</h1>
+      {feedback && <ShowToast message={feedback} onClose={() => setFeedback(null)} />}
 
-      <h2 className="text-xl font-semibold mb-6 text-gray-700 dark:text-gray-100 text-center">
-        Formulario de Generación del Oficio y Código de Barras
-      </h2>
+      {step === 1 ? renderDepartmentSelection() : renderDynamicForm()}
 
-      <div className="w-full">
-        <h3 className="text-lg font-semibold text-[#1a4d2e] dark:text-green-400 mb-4 border-b pb-2 dark:border-gray-700">
-          Información de Encabezado
-        </h3>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Número de oficio:</label>
-          <input
-            type="text"
-            name="numeroOficio"
-            value={formData.numeroOficio}
-            onChange={handleChange}
-            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
-          />
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Unidad solicitante:</label>
-          <input
-            type="text"
-            name="fiscalia"
-            value={formData.fiscalia}
-            onChange={handleChange}
-            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
-          />
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Remitente:</label>
-          <input
-            type="text"
-            name="fiscal_remitente"
-            value={formData.fiscal_remitente}
-            onChange={handleChange}
-            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
-          />
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Región de la fiscalía:</label>
-          <input
-            type="text"
-            name="regionSolicitante"
-            value={formData.regionSolicitante}
-            onChange={handleChange}
-            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
-          />
-        </div>
-      </div>
-
-      <div className="w-full pt-2">
-        <h3 className="text-lg font-semibold text-[#1a4d2e] dark:text-green-400 mb-4 border-b pb-2 dark:border-gray-700">
-          Información general del implicado
-        </h3>
-      </div>
-
-      {/* Tipo de muestra: opciones excluyentes */}
-      <div className="flex gap-4 items-center w-full mb-3">
-        <p className="text-sm text-gray-500 dark:text-gray-300 ml-2">Seleccione uno:</p>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => handleTipoDeMuestra('remitidas')}
-            className={`px-4 py-2 rounded-lg border ${
-              formData.tipo_de_muestra === 'remitidas'
-                ? 'bg-[#1a4d2e] text-white border-transparent'
-                : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600'
-            }`}
-          >
-            MUESTRAS REMITIDAS
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => handleTipoDeMuestra('toma')}
-            className={`px-4 py-2 rounded-lg border ${
-              formData.tipo_de_muestra === 'toma'
-                ? 'bg-[#1a4d2e] text-white border-transparent'
-                : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600'
-            }`}
-          >
-            TOMA DE MUESTRAS
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
-            Examinado/Incriminado {isImpDniRequired && <span className="text-red-500">*</span>}
-          </label>
-          <input
-            type="text"
-            name="implicado"
-            value={formData.implicado}
-            onChange={handleChange}
-            className="border p-2 rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white"
-            required={isImpDniRequired}
-          />
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
-            DNI del Examinado/Incriminado: {isImpDniRequired && <span className="text-red-500">*</span>}
-          </label>
-          <input
-            type="text"
-            name="dniImplicado"
-            value={formData.dniImplicado}
-            onChange={handleChange}
-            className="border p-2 rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white"
-            required={isImpDniRequired}
-          />
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Fecha y hora del incidente:</label>
-          <input
-            type="text"
-            name="fechaHora"
-            value={formData.fechaHora}
-            onChange={handleChange}
-            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white p-2 rounded-lg"
-          />
-        </div>
-      </div>
-
-      <div className="w-full pt-2">
-        <h3 className="text-lg font-semibold text-[#1a4d2e] dark:text-green-400 mb-4 border-b pb-2 dark:border-gray-700">
-          Información para derivar documento
-        </h3>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-        <div className="flex flex-col">
-          <label htmlFor="id_especialidad" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Especialidad requerida:
-          </label>
-          <select
-            id="id_especialidad"
-            name="id_especialidad"
-            value={formData.id_especialidad}
-            onChange={handleEspecialidadChange}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
-          >
-            <option value="">Seleccione la especialidad</option>
-            {especialidades.map((esp) => (
-              <option key={esp.id_tipo_departamento} value={esp.id_tipo_departamento}>
-                {esp.nombre_departamento}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Tipo de examen:</label>
-          <select
-            id="id_tipo_examen"
-            name="id_tipo_examen"
-            value={formData.id_tipo_examen}
-            onChange={handleTipoExamenChange}
-            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white p-2 rounded-lg"
-          >
-            <option value="">Seleccione el tipo de examen</option>
-            {tiposExamen.map((examen) => (
-              <option key={examen.id_tipo_de_examen} value={examen.id_tipo_de_examen}>
-                {examen.nombre}
-              </option>
-            ))}
-          </select>
-
-          {/* descripción del tipo de examen */}
-          {tipoExamenDescripcion ? (
-            <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-700 rounded text-sm text-gray-700 dark:text-gray-200 border border-gray-100 dark:border-gray-600">
-              {tipoExamenDescripcion}
-            </div>
-          ) : null}
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">{muestraLabel()}:</label>
-          <input
-            type="text"
-            name="muestra"
-            value={formData.muestra}
-            onChange={handleChange}
-            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white p-2 rounded-lg"
-          />
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Asignar a perito:</label>
-          <select
-            id="id_usuario_perito"
-            name="id_usuario_perito"
-            value={formData.id_usuario_perito}
-            onChange={handlePeritosChange}
-            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white p-2 rounded-lg"
-          >
-            <option value="">Seleccione un perito</option>
-            {peritos.map((perito) => (
-              <option key={perito.id_usuario} value={perito.id_usuario}>
-                {perito.nombre_completo} - CIP: {perito.CIP}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Prioridad:</label>
-          <select
-            id="id_prioridad"
-            name="id_prioridad"
-            value={formData.id_prioridad}
-            onChange={(e) => { handleChange('id_prioridad', e.target.value); }}
-            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white p-2 rounded-lg"
-          >
-            <option value="">Seleccione la prioridad</option>
-            {prioridades.map((prioridad) => (
-              <option key={prioridad.id_prioridad} value={prioridad.id_prioridad}>
-                {prioridad.nombre_prioridad}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Estado del oficio:</label>
-          <input
-            type="text"
-            name="estado"
-            value={formData.estado}
-            onChange={handleChange}
-            disabled
-            className="border border-gray-300 dark:border-gray-600 p-2 rounded-lg cursor-not-allowed bg-gray-100 dark:bg-gray-700 dark:text-gray-200"
-          />
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Asunto:</label>
-          <textarea
-            name="asunto"
-            value={formData.asunto}
-            onChange={handleChange}
-            className="border border-gray-300 dark:border-gray-600 p-2 rounded-lg bg-white dark:bg-gray-700 dark:text-white"
-            rows={3}
-            placeholder="Breve descripción o asunto del oficio"
-          />
-        </div>
-
-      </div>
-
-      <div className="flex gap-4 mt-6 w-full justify-center ">
-        <button
-          onClick={limpiarFormulario}
-          className="bg-gray-500 text-white py-2 px-6 rounded-lg hover:bg-gray-600 transition-colors"
-        >
-          Limpiar
-        </button>
-
-        <button
-          type="button"
-          onClick={generarCodigo}
-          className=" bg-gradient-to-r from-[#1a4d2e] to-[#2d7d4a] text-white py-2 px-4 rounded-xl font-semibold text-base transition-all duration-300 hover:shadow-lg"
-        >
-          Generar código de barras
-        </button>
-      </div>
-      {codigo && closeModal && (
-        <div className="mt-6 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm w-full flex justify-center">
-          <Codigodebarras 
-            codigo={codigo} 
-            onClose={() => setCloseModal(false)}
-            oficioData={formData}
-          />
+      {closeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-dark-bg-secondary p-8 rounded-lg text-center shadow-2xl">
+            <h3 className="text-2xl font-bold text-success dark:text-dark-pnp-green mb-4">¡Oficio Creado y Asignado!</h3>
+            <p className="text-gray-700 dark:text-dark-text-secondary mb-6">El código para seguimiento es:</p>
+            <p className="text-4xl font-extrabold text-gray-900 dark:text-white mb-8">{codigo}</p>
+            <button onClick={handleReset} className="bg-pnp-green hover:bg-pnp-green-light text-white font-bold py-3 px-8 rounded-lg">Aceptar y Crear Nuevo</button>
+          </div>
         </div>
       )}
     </div>
