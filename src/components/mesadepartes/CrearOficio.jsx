@@ -27,43 +27,12 @@ const initialFormData = {
   id_prioridad: "",
   asunto: "",
   celular: "",
-  tipo_de_muestra: "", 
-};
-
-const flowTypes = {
-  TOMA_MUESTRA: {
-    key: 'TOMA_MUESTRA',
-    label: 'Con Oficio (Requiere Toma de Muestra)',
-    tipo_de_muestra: 'TOMA DE MUESTRAS',
-    conOficio: true,
-    color: 'border-info text-info dark:border-blue-400 dark:text-blue-400',
-    bgColor: 'hover:bg-blue-50 dark:hover:bg-blue-900/20',
-    selectedColor: 'bg-blue-50 dark:bg-blue-900/30'
-  },
-  MUESTRA_CON_OFICIO: {
-    key: 'MUESTRA_CON_OFICIO',
-    label: 'Con Oficio (Muestras Remitidas)',
-    tipo_de_muestra: 'MUESTRAS REMITIDAS',
-    conOficio: true,
-    color: 'border-pnp-green text-pnp-green dark:border-dark-pnp-green dark:text-dark-pnp-green',
-    bgColor: 'hover:bg-green-50 dark:hover:bg-green-900/20',
-    selectedColor: 'bg-green-50 dark:bg-green-900/30'
-  },
-  MUESTRA_SIN_OFICIO: {
-    key: 'MUESTRA_SIN_OFICIO',
-    label: 'Sin Oficio (Muestras Remitidas)',
-    tipo_de_muestra: 'MUESTRAS REMITIDAS',
-    conOficio: false,
-    color: 'border-warning text-warning dark:border-yellow-400 dark:text-yellow-400',
-    bgColor: 'hover:bg-yellow-50 dark:hover:bg-yellow-900/20',
-    selectedColor: 'bg-yellow-50 dark:bg-yellow-900/30'
-  }
+  tipo_de_muestra: "TOMA DE MUESTRAS", 
 };
 
 function CrearOficio() {
   const { user } = useAuth();
-  const [step, setStep] = useState(1); // 1: Dept, 2: Dynamic Form
-  const [activeFlow, setActiveFlow] = useState(flowTypes.MUESTRA_CON_OFICIO.key);
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState(initialFormData);
 
   const [codigo, setCodigo] = useState("");
@@ -91,7 +60,11 @@ function CrearOficio() {
   }, []);
 
   const handleDepartmentSelection = async (department) => {
-    setFormData(prev => ({ ...prev, id_especialidad_requerida: department.id_tipo_departamento, especialidad_requerida: department.nombre_departamento, id_tipos_examen: [], tipos_examen: [] }));
+    setFormData(prev => ({ 
+      ...initialFormData,
+      id_especialidad_requerida: department.id_tipo_departamento, 
+      especialidad_requerida: department.nombre_departamento 
+    }));
     try {
       const tiposRes = await ComplementServices.getTiposByDepartamento(department.id_tipo_departamento);
       setTiposExamen(tiposRes?.data || []);
@@ -101,10 +74,8 @@ function CrearOficio() {
     setStep(2);
   };
 
-  const handleFlowChange = (flowKey) => {
-    setActiveFlow(flowKey);
-    const flow = flowTypes[flowKey];
-    setFormData(prev => ({ ...prev, tipo_de_muestra: flow.tipo_de_muestra }));
+  const handleTipoMuestraChange = (tipo) => {
+    setFormData(prev => ({ ...prev, tipo_de_muestra: tipo }));
   };
 
   const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -131,8 +102,7 @@ function CrearOficio() {
     }
     setFeedback("Procesando...");
     try {
-      const currentFlow = flowTypes[activeFlow];
-      if (currentFlow.conOficio && formData.numeroOficio) {
+      if (formData.numeroOficio) {
         const checkResp = await OficiosService.checkNumero(formData.numeroOficio);
         if (checkResp.exists) {
           setFeedback(`Error: Ya existe un oficio con el número ${formData.numeroOficio}`);
@@ -155,7 +125,6 @@ function CrearOficio() {
 
   const handleReset = () => {
     setStep(1);
-    setActiveFlow(flowTypes.MUESTRA_CON_OFICIO.key);
     setFormData(initialFormData);
   };
 
@@ -174,7 +143,9 @@ function CrearOficio() {
   );
 
   const renderDynamicForm = () => {
-    const currentFlow = flowTypes[activeFlow];
+    const isTomaMuestra = formData.tipo_de_muestra === 'TOMA DE MUESTRAS';
+    const isRemitido = formData.tipo_de_muestra === 'MUESTRAS REMITIDAS';
+
     return (
       <div className="p-4">
         <div className="flex justify-between items-center mb-6">
@@ -182,22 +153,21 @@ function CrearOficio() {
             <button onClick={() => setStep(1)} className="px-4 py-2 text-sm rounded-lg bg-gray-200 dark:bg-dark-bg-tertiary hover:bg-gray-300 dark:hover:bg-gray-600">Cambiar Depto.</button>
         </div>
         
-        {/* Flow Type Selector */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {Object.values(flowTypes).map(flow => (
-            <button key={flow.key} onClick={() => handleFlowChange(flow.key)} className={`p-4 text-left rounded-lg border-2 transition-all duration-200 ${activeFlow === flow.key ? `${flow.color} ${flow.selectedColor}` : `border-gray-200 dark:border-dark-border ${flow.bgColor}`}`}>
-              <h3 className={`text-lg font-semibold ${activeFlow !== flow.key ? 'text-gray-700 dark:text-dark-text-secondary' : ''}`}>{flow.label}</h3>
-            </button>
-          ))}
+        {/* Tipo de Muestra Selector */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <button onClick={() => handleTipoMuestraChange('TOMA DE MUESTRAS')} className={`p-4 text-left rounded-lg border-2 transition-all duration-200 ${isTomaMuestra ? 'border-info text-info dark:border-blue-400 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-200 dark:border-dark-border hover:bg-blue-50 dark:hover:bg-blue-900/20'}`}>
+            <h3 className={`text-lg font-semibold ${!isTomaMuestra ? 'text-gray-700 dark:text-dark-text-secondary' : ''}`}>REQUIERE TOMA DE MUESTRA</h3>
+          </button>
+          <button onClick={() => handleTipoMuestraChange('MUESTRAS REMITIDAS')} className={`p-4 text-left rounded-lg border-2 transition-all duration-200 ${isRemitido ? 'border-pnp-green text-pnp-green dark:border-dark-pnp-green dark:text-dark-pnp-green bg-green-50 dark:bg-green-900/30' : 'border-gray-200 dark:border-dark-border hover:bg-green-50 dark:hover:bg-green-900/20'}`}>
+            <h3 className={`text-lg font-semibold ${!isRemitido ? 'text-gray-700 dark:text-dark-text-secondary' : ''}`}>MUESTRA REMITIDA</h3>
+          </button>
         </div>
 
         <form onSubmit={handleSubmit}>
-          {currentFlow.conOficio && (
-            <FormSection title="Información de Encabezado">
-              <FormInput label="Número de Oficio" name="numeroOficio" value={formData.numeroOficio} onChange={handleChange} />
-              <FormInput label="Remitente" name="fiscal_remitente" value={formData.fiscal_remitente} onChange={handleChange} />
-            </FormSection>
-          )}
+          <FormSection title="Información de Encabezado">
+            <FormInput label="Número de Oficio" name="numeroOficio" value={formData.numeroOficio} onChange={handleChange} />
+            <FormInput label="Remitente" name="fiscal_remitente" value={formData.fiscal_remitente} onChange={handleChange} />
+          </FormSection>
 
           <FormSection title="Información General">
             <FormInput label="Unidad Solicitante" name="fiscalia" value={formData.fiscalia} onChange={handleChange} required />
@@ -227,7 +197,7 @@ function CrearOficio() {
 
           <FormSection title="Actas y Asunto">
             <div className="flex items-center">
-                <button type="button" onClick={() => alert('Funcionalidad para Acta de Observaciones pendiente.')} disabled={activeFlow === 'TOMA_MUESTRA'} className="px-4 py-2 rounded-lg bg-blue-500 text-white disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed">
+                <button type="button" onClick={() => alert('Funcionalidad para Acta de Observaciones pendiente.')} disabled={isTomaMuestra} className="px-4 py-2 rounded-lg bg-blue-500 text-white disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed">
                     Generar Acta de Observaciones
                 </button>
             </div>
