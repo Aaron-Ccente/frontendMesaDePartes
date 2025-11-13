@@ -14,10 +14,18 @@ const initialFormData = {
   regionSolicitante: "",
   implicado: "",
   dniImplicado: "",
+  direccionImplicado: "",
+  delito: "",
+  celular: "",
+  referencia: "",
+  fechaIncidente: "",
+  horaIncidente: "",
   fiscal_remitente: "",
   id_tipos_examen: [],
   tipos_examen: [],
-  muestra: "",
+  descripcionMuestra: "",
+  cantidadMuestras: "",
+  tipoEnvase: "",
   id_especialidad_requerida: "",
   especialidad_requerida: "",
   id_usuario_perito_asignado: "",
@@ -26,11 +34,9 @@ const initialFormData = {
   estado: "CREACIÓN DE OFICIO",
   id_prioridad: "",
   asunto: "",
-  celular: "",
+  folios: "",
   tipo_de_muestra: "TOMA DE MUESTRAS", 
-};
-
-function CrearOficio() {
+};function CrearOficio() {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState(initialFormData);
@@ -78,14 +84,41 @@ function CrearOficio() {
     setFormData(prev => ({ ...prev, tipo_de_muestra: tipo }));
   };
 
-  const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "folios") {
+      const numValue = parseInt(value, 10);
+      // Asegurarse de que el valor sea un número, no sea 0, y sea menor que 100.
+      // Si no es un número válido o está fuera de rango, no actualizar el estado.
+      if (isNaN(numValue) || numValue < 1 || numValue >= 100) {
+        // Opcional: se podría mostrar un feedback al usuario aquí si el valor es inválido.
+        return; // No actualizar el estado si el valor es inválido.
+      }
+      setFormData(prev => ({ ...prev, [name]: numValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleClearForm = () => {
+    setFormData(prev => ({
+      ...initialFormData, // Reset all fields to their initial state
+      id_especialidad_requerida: prev.id_especialidad_requerida, // Keep the selected department ID
+      especialidad_requerida: prev.especialidad_requerida, // Keep the selected department name
+      // Also keep the tipo_de_muestra selection
+      tipo_de_muestra: prev.tipo_de_muestra,
+    }));
+  };
   const handlePeritoSelect = (perito) => setFormData(prev => ({ ...prev, id_usuario_perito_asignado: perito.id_usuario, perito_asignado: perito.nombre_completo, cip_perito_asignado: perito.CIP }));
-  const handleTipoExamenChange = (e) => {
-    const { value, checked, name } = e.target;
-    const examenId = parseInt(value);
+  const handleTipoExamenToggle = (examenId, examenName) => {
     setFormData(prev => {
-      const new_ids = checked ? [...prev.id_tipos_examen, examenId] : prev.id_tipos_examen.filter(id => id !== examenId);
-      const new_names = checked ? [...prev.tipos_examen, name] : prev.tipos_examen.filter(n => n !== name);
+      const isSelected = prev.id_tipos_examen.includes(examenId);
+      const new_ids = isSelected
+        ? prev.id_tipos_examen.filter(id => id !== examenId)
+        : [...prev.id_tipos_examen, examenId];
+      const new_names = isSelected
+        ? prev.tipos_examen.filter(n => n !== examenName)
+        : [...prev.tipos_examen, examenName];
       return { ...prev, id_tipos_examen: new_ids, tipos_examen: new_names };
     });
   };
@@ -157,34 +190,63 @@ function CrearOficio() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <button onClick={() => handleTipoMuestraChange('TOMA DE MUESTRAS')} className={`p-4 text-left rounded-lg border-2 transition-all duration-200 ${isTomaMuestra ? 'border-info text-info dark:border-blue-400 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-200 dark:border-dark-border hover:bg-blue-50 dark:hover:bg-blue-900/20'}`}>
             <h3 className={`text-lg font-semibold ${!isTomaMuestra ? 'text-gray-700 dark:text-dark-text-secondary' : ''}`}>REQUIERE TOMA DE MUESTRA</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">El perito asignado se encargará de recolectar la muestra.</p>
           </button>
           <button onClick={() => handleTipoMuestraChange('MUESTRAS REMITIDAS')} className={`p-4 text-left rounded-lg border-2 transition-all duration-200 ${isRemitido ? 'border-pnp-green text-pnp-green dark:border-dark-pnp-green dark:text-dark-pnp-green bg-green-50 dark:bg-green-900/30' : 'border-gray-200 dark:border-dark-border hover:bg-green-50 dark:hover:bg-green-900/20'}`}>
             <h3 className={`text-lg font-semibold ${!isRemitido ? 'text-gray-700 dark:text-dark-text-secondary' : ''}`}>MUESTRA REMITIDA</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">La muestra física se entrega junto con el oficio.</p>
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <FormSection title="Información de Encabezado">
+          <FormSection title="1. Información del Registro">
             <FormInput label="Número de Oficio" name="numeroOficio" value={formData.numeroOficio} onChange={handleChange} />
-            <FormInput label="Remitente" name="fiscal_remitente" value={formData.fiscal_remitente} onChange={handleChange} />
-          </FormSection>
-
-          <FormSection title="Información General">
+            <FormInput label="Número de Folios" name="folios" type="number" value={formData.folios} onChange={handleChange} min="1" max="99" />
+            <FormInput label="Referencia (Opcional)" name="referencia" value={formData.referencia} onChange={handleChange} />
             <FormInput label="Unidad Solicitante" name="fiscalia" value={formData.fiscalia} onChange={handleChange} required />
-            <FormInput label="Nombre Implicado" name="implicado" value={formData.implicado} onChange={handleChange} required />
-            <FormInput label="DNI Implicado" name="dniImplicado" value={formData.dniImplicado} onChange={handleChange} required />
-            <FormInput label="Celular de Contacto" name="celular" value={formData.celular} onChange={handleChange} />
+            <FormInput label="Remitente" name="fiscal_remitente" value={formData.fiscal_remitente} onChange={handleChange} />
+            <div className="grid grid-cols-2 gap-4">
+              <FormInput label="Fecha del Incidente" name="fechaIncidente" type="date" value={formData.fechaIncidente} onChange={handleChange} />
+              <FormInput label="Hora del Incidente" name="horaIncidente" type="time" value={formData.horaIncidente} onChange={handleChange} />
+            </div>
           </FormSection>
 
-          <FormSection title="Exámenes y Derivación">
+          <FormSection title="2. Información del Implicado">
+            <FormInput label="Nombre Completo" name="implicado" value={formData.implicado} onChange={handleChange} required />
+            <FormInput label="Documento de Identidad (DNI)" name="dniImplicado" value={formData.dniImplicado} onChange={handleChange} required />
+            <FormInput label="Dirección" name="direccionImplicado" value={formData.direccionImplicado} onChange={handleChange} />
+            <FormInput label="Celular de Contacto" name="celular" value={formData.celular} onChange={handleChange} />
+            <FormInput label="Delito" name="delito" value={formData.delito} onChange={handleChange} required />
+          </FormSection>
+
+          {isRemitido && (
+            <FormSection title="3. Información de la Muestra Remitida">
+              <FormInput label="Descripción de Muestras" name="descripcionMuestra" value={formData.descripcionMuestra} onChange={handleChange} placeholder="Ej: 2 tubos de sangre tapa lila, 1 frasco de orina" />
+              <FormInput label="Cantidad de Muestras" name="cantidadMuestras" type="number" value={formData.cantidadMuestras} onChange={handleChange} min="1" />
+              <FormInput label="Tipo de Envase" name="tipoEnvase" value={formData.tipoEnvase} onChange={handleChange} placeholder="Ej: Caja de cartón sellada" />
+            </FormSection>
+          )}
+          
+          {isTomaMuestra && (
+            <FormSection title="3. Información de la Muestra a Extraer">
+              <FormInput label="Muestras a Extraer" name="descripcionMuestra" value={formData.descripcionMuestra} onChange={handleChange} placeholder="Ej: Muestra de sangre y orina" />
+            </FormSection>
+          )}
+
+          <FormSection title="4. Exámenes y Derivación">
             <div className="md:col-span-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-dark-text-secondary mb-2 block">Tipos de Examen</label>
-              <div className="p-4 border dark:border-dark-border rounded-lg max-h-48 overflow-y-auto bg-white dark:bg-dark-bg-primary">
+              <label className="text-sm font-medium text-gray-700 dark:text-dark-text-secondary mb-2 block">Tipos de Examen Requeridos</label>
+              <div className="p-4 border dark:border-dark-border rounded-lg flex flex-wrap gap-3 bg-white dark:bg-dark-bg-primary">
                 {tiposExamen.length > 0 ? tiposExamen.map(examen => (
-                  <div key={examen.id_tipo_de_examen} className="flex items-center py-1">
-                    <input type="checkbox" id={`examen-${examen.id_tipo_de_examen}`} value={examen.id_tipo_de_examen} name={examen.nombre} checked={formData.id_tipos_examen.includes(examen.id_tipo_de_examen)} onChange={handleTipoExamenChange} className="h-4 w-4 rounded text-pnp-green focus:ring-pnp-green-light" />
-                    <label htmlFor={`examen-${examen.id_tipo_de_examen}`} className="ml-3 block text-sm text-gray-800 dark:text-dark-text-primary">{examen.nombre}</label>
-                  </div>
+                  <button type="button" key={examen.id_tipo_de_examen} onClick={() => handleTipoExamenToggle(examen.id_tipo_de_examen, examen.nombre)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                      formData.id_tipos_examen.includes(examen.id_tipo_de_examen)
+                        ? 'bg-pnp-green text-white shadow-md'
+                        : 'bg-gray-200 dark:bg-dark-bg-tertiary text-gray-700 dark:text-dark-text-secondary hover:bg-gray-300 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    {examen.nombre}
+                  </button>
                 )) : <p className="text-gray-500 dark:text-dark-text-muted">No hay exámenes para este departamento.</p>}
               </div>
             </div>
@@ -195,7 +257,7 @@ function CrearOficio() {
             </FormSelect>
           </FormSection>
 
-          <FormSection title="Actas y Asunto">
+          <FormSection title="5. Actas y Asunto">
             <div className="flex items-center">
                 <button type="button" onClick={() => alert('Funcionalidad para Acta de Observaciones pendiente.')} disabled={isTomaMuestra} className="px-4 py-2 rounded-lg bg-blue-500 text-white disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed">
                     Generar Acta de Observaciones
@@ -208,6 +270,7 @@ function CrearOficio() {
           </FormSection>
 
           <div className="flex justify-end gap-4 mt-8 border-t dark:border-dark-border pt-4">
+            <button type="button" onClick={handleClearForm} className="px-6 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-dark-bg-tertiary dark:text-gray-200 dark:hover:bg-gray-600 font-semibold">Limpiar Formulario</button>
             <button type="submit" className="px-6 py-2 rounded-lg bg-pnp-green hover:bg-pnp-green-light text-white font-semibold">Crear y Generar Código</button>
           </div>
         </form>
@@ -223,8 +286,8 @@ function CrearOficio() {
       {step === 1 ? renderDepartmentSelection() : renderDynamicForm()}
 
       {closeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-dark-bg-secondary p-8 rounded-lg text-center shadow-2xl">
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-dark-bg-secondary p-8 rounded-lg text-center shadow-2xl transform transition-all duration-300 ease-out scale-95 opacity-0 animate-scale-in"> {/* Added backdrop-blur-sm and animation classes */}
             <h3 className="text-2xl font-bold text-success dark:text-dark-pnp-green mb-4">¡Oficio Creado y Asignado!</h3>
             <p className="text-gray-700 dark:text-dark-text-secondary mb-6">El código para seguimiento es:</p>
             <p className="text-4xl font-extrabold text-gray-900 dark:text-white mb-8">{codigo}</p>

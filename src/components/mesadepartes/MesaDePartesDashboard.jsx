@@ -3,6 +3,7 @@ import { useAuth } from '../../hooks/useAuth';
 import ThemeToggle from '../ui/ThemeToggle';
 import CreateOfficeIcon from '../../assets/icons/CreateOfficeIcon';
 import ReceiveOfficeIcon from '../../assets/icons/ReceiveOfficeIcon';
+import Estadistica from '../../assets/icons/Estadistica';
 import Politics from '../ui/Politics';
 import MesaDePartes from '../../services/mesadepartesService';
 
@@ -150,14 +151,14 @@ const MesaDePartesDashboard = () => {
               <button 
                 onClick={() => handleNavigation('')} 
                 className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
-                  isActiveRoute('/mesadepartes/dashboard') && !isActiveRoute('/crear/oficio') && !isActiveRoute('/respuestas/oficio')
+                  isActiveRoute('/mesadepartes/dashboard') && !isActiveRoute('/crear/oficio') && !isActiveRoute('/seguimiento/casos')
                     ? 'bg-[#1a4d2e] to-[#2d7d4a] text-white shadow-md' 
                     : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  
-                  <span>Resumen</span>
+                  <Estadistica />
+                  <span>Panel Principal</span>
                 </div>
               </button>
 
@@ -176,16 +177,16 @@ const MesaDePartesDashboard = () => {
               </button>
 
               <button 
-                onClick={() => handleNavigation('/respuestas/oficio')} 
+                onClick={() => handleNavigation('/seguimiento/casos')} 
                 className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
-                  isActiveRoute('/respuestas/oficio') 
+                  isActiveRoute('/seguimiento/casos') 
                     ? 'bg-[#1a4d2e] dark:bg-dark-pnp-green text-white shadow-md' 
                     : 'text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary'
                 }`}
               >
                 <div className="flex items-center space-x-3">
                   <ReceiveOfficeIcon/>
-                  <span>Respuestas de Oficio</span>
+                  <span>Seguimiento de Casos</span>
                 </div>
               </button>
             </div>
