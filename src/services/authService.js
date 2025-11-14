@@ -159,6 +159,27 @@ export const authService = {
     }
   },
 
+  // Habilitar o deshabilitar usuario - protegido
+  async enableDisableUser({ id_estado, id_usuario, motivo }) {
+    try {
+      const resp = await fetch(`${API_BASE_URL}/api/auth/enable-disable-user`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ id_estado, id_usuario, motivo }),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.message || 'Error habilitando/deshabilitando usuario');
+      }
+
+      const data = await resp.json();
+      return data;
+    } catch (error) {
+      throw new Error('Error en enableDisableUser: ' + error.message);
+    }
+  },
+
   // Verificar token - protegido
   async verifyToken(token) {
     try {
