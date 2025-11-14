@@ -248,7 +248,8 @@ const initialFormData = {
             </div>
             <AsignacionPerito 
               idEspecialidad={formData.id_especialidad_requerida} 
-              idTipoExamen={formData.id_tipos_examen[0]} // Pasar el primer examen seleccionado para la lógica de sección
+              idTiposExamen={formData.id_tipos_examen} // Pasar el array completo de exámenes para la lógica de asignación
+              tipoDeIngreso={formData.tipo_de_muestra} // Pasar el tipo de ingreso para la lógica de filtrado
               onPeritoSelect={handlePeritoSelect} 
               selectedPerito={{nombre_completo: formData.perito_asignado}} 
             />
@@ -265,8 +266,8 @@ const initialFormData = {
                 </button>
             </div>
             <div className="md:col-span-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-dark-text-secondary">Asunto</label>
-                <textarea name="asunto" value={formData.asunto} onChange={handleChange} rows="3" className="w-full border p-2 rounded-lg bg-white dark:bg-dark-bg-tertiary dark:border-dark-border"></textarea>
+                <label className="text-sm font-medium text-gray-700 dark:text-dark-text-secondary">Asunto <span className="text-red-500">*</span></label>
+                <textarea name="asunto" value={formData.asunto} onChange={handleChange} rows="3" className="w-full border p-2 rounded-lg bg-white dark:bg-dark-bg-tertiary dark:border-dark-border" required></textarea>
             </div>
           </FormSection>
 

@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import MesaDePartesService from '../../services/mesadepartesService';
 import { useNavigate } from 'react-router-dom';
+import FlechaAbajo from '../../assets/icons/FlechaAbajo';
 
-// Componente para el badge de estado
+// Componente para el badge de estado (sin cambios, ya es robusto)
 const EstadoBadge = ({ estado }) => {
   let colorClasses = 'bg-gray-200 text-gray-800';
   let text = estado || 'SIN ESTADO';
@@ -45,18 +46,17 @@ const SeguimientoCasos = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showClosed, setShowClosed] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('pendiente'); // Nuevo filtro de estado
   const navigate = useNavigate();
 
   const fetchCasos = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const params = {
-        estado: showClosed ? 'todos' : 'pendiente',
-        search: searchTerm,
-      };
-      const response = await MesaDePartesService.getCasos(params);
+      // El backend espera 'pendiente' o 'todos', mapeamos nuestro filtro a eso.
+      const backendStatus = statusFilter === 'finalizado' ? 'todos' : 'pendiente';
+      
+      const response = await MesaDePartesService.getCasos({ estado: backendStatus });
       if (response.error) {
         throw new Error(response.error);
       }
@@ -67,96 +67,150 @@ const SeguimientoCasos = () => {
     } finally {
       setLoading(false);
     }
-  }, [showClosed, searchTerm]);
+  }, [statusFilter]); // Solo depende del filtro de estado para la llamada API
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchCasos();
-    }, 500); // Debounce para no llamar a la API en cada tecleo
-
-    return () => clearTimeout(timer);
+    fetchCasos();
   }, [fetchCasos]);
+
+  const filteredCasos = useMemo(() => {
+    let filtered = casos;
+
+    // Filtrado por estado en el frontend para mayor granularidad
+    if (statusFilter !== 'todos') {
+      if (statusFilter === 'pendiente') {
+        filtered = filtered.filter(c => !['COMPLETADO', 'CERRADO'].includes(c.estado_actual?.toUpperCase()));
+      } else if (statusFilter === 'finalizado') {
+         filtered = filtered.filter(c => ['COMPLETADO', 'CERRADO'].includes(c.estado_actual?.toUpperCase()));
+      }
+    }
+
+    // Filtrado por término de búsqueda
+    if (searchTerm) {
+      filtered = filtered.filter(caso =>
+        caso.numero_oficio?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        caso.administrado?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        caso.asunto?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    return filtered;
+  }, [casos, searchTerm, statusFilter]);
+
 
   const handleRowClick = (id_oficio) => {
     navigate(`/mesadepartes/dashboard/seguimiento/casos/${id_oficio}`);
   };
 
   return (
-    <div className="bg-white dark:bg-dark-surface p-6 rounded-lg shadow-lg">
-      <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Seguimiento de Casos</h1>
+    <div className="bg-white dark:bg-dark-surface p-4 sm:p-6 rounded-2xl shadow-lg">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Seguimiento de Casos</h1>
+        <p className="text-gray-500 dark:text-dark-text-secondary mt-1">Busca y filtra los registros de oficios.</p>
+      </div>
       
       {/* Filtros y Búsqueda */}
-      <div className="flex justify-between items-center mb-4 gap-4">
-        <input
-          type="text"
-          placeholder="Buscar por N° de Oficio o Administrado..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full md:w-1/3 px-4 py-2 border border-gray-300 rounded-lg dark:bg-dark-bg-secondary dark:border-dark-border focus:outline-none focus:ring-2 focus:ring-pnp-green"
-        />
-        <div className="flex items-center">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 dark:bg-dark-bg-secondary rounded-xl border dark:border-dark-border">
+        <div className="md:col-span-2">
+          <label htmlFor="search" className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-1">Buscar</label>
           <input
-            type="checkbox"
-            id="showClosed"
-            checked={showClosed}
-            onChange={(e) => setShowClosed(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-pnp-green focus:ring-pnp-green"
+            id="search"
+            type="text"
+            placeholder="Por N° de Oficio, Asunto o Administrado..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg dark:bg-dark-bg-tertiary dark:border-dark-border focus:outline-none focus:ring-2 focus:ring-pnp-green-light"
           />
-          <label htmlFor="showClosed" className="ml-2 text-sm font-medium text-gray-700 dark:text-dark-text-secondary">
-            Mostrar casos cerrados
-          </label>
+        </div>
+        <div>
+          <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-1">Estado</label>
+          <div className="relative">
+            <select
+              id="status"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full appearance-none px-4 py-2 border border-gray-300 rounded-lg dark:bg-dark-bg-tertiary dark:border-dark-border focus:outline-none focus:ring-2 focus:ring-pnp-green-light"
+            >
+              <option value="todos">Todos</option>
+              <option value="pendiente">Pendientes</option>
+              <option value="finalizado">Finalizados</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-400">
+              <FlechaAbajo className="w-4 h-4" />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Tabla de Casos */}
-      <div className="overflow-x-auto">
+      {/* Vista de Tabla para Desktop */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-dark-bg-tertiary dark:text-gray-300">
+          <thead className="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-dark-bg-tertiary dark:text-gray-300">
             <tr>
-              <th scope="col" className="px-6 py-3">N° Oficio</th>
-              <th scope="col" className="px-6 py-3">Fecha Creación</th>
-              <th scope="col" className="px-6 py-3">Administrado</th>
-              <th scope="col" className="px-6 py-3">Perito Asignado</th>
-              <th scope="col" className="px-6 py-3">Estado Actual</th>
+              <th scope="col" className="px-6 py-4 rounded-l-lg">N° Oficio</th>
+              <th scope="col" className="px-6 py-4">Asunto</th>
+              <th scope="col" className="px-6 py-4">Administrado</th>
+              <th scope="col" className="px-6 py-4">Perito Asignado</th>
+              <th scope="col" className="px-6 py-4">Fecha Creación</th>
+              <th scope="col" className="px-6 py-4 rounded-r-lg">Estado</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan="5" className="text-center p-6">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pnp-green mx-auto"></div>
-                  <p className="mt-2">Cargando casos...</p>
-                </td>
-              </tr>
+              <tr><td colSpan="6" className="text-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pnp-green mx-auto"></div></td></tr>
             ) : error ? (
-              <tr>
-                <td colSpan="5" className="text-center p-6 text-red-500">{error}</td>
-              </tr>
-            ) : casos.length > 0 ? (
-              casos.map((caso) => (
+              <tr><td colSpan="6" className="text-center p-8 text-red-500">{error}</td></tr>
+            ) : filteredCasos.length > 0 ? (
+              filteredCasos.map((caso) => (
                 <tr 
                   key={caso.id_oficio} 
-                  className="bg-white border-b dark:bg-dark-surface dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-bg-secondary cursor-pointer"
+                  className="bg-white border-b dark:bg-dark-surface dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-bg-secondary cursor-pointer transition-colors"
                   onClick={() => handleRowClick(caso.id_oficio)}
                 >
-                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{caso.numero_oficio}</td>
-                  <td className="px-6 py-4">{new Date(caso.fecha_creacion).toLocaleDateString()}</td>
+                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">{caso.numero_oficio}</td>
+                  <td className="px-6 py-4 max-w-xs truncate" title={caso.asunto}>{caso.asunto}</td>
                   <td className="px-6 py-4">{caso.administrado}</td>
                   <td className="px-6 py-4">{caso.perito_asignado}</td>
-                  <td className="px-6 py-4">
-                    <EstadoBadge estado={caso.estado_actual} />
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">{new Date(caso.fecha_creacion).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                  <td className="px-6 py-4"><EstadoBadge estado={caso.estado_actual} /></td>
                 </tr>
               ))
             ) : (
-              <tr>
-                <td colSpan="5" className="text-center p-6">No se encontraron casos.</td>
-              </tr>
+              <tr><td colSpan="6" className="text-center p-8 text-gray-500">No se encontraron casos que coincidan con los filtros.</td></tr>
             )}
           </tbody>
         </table>
       </div>
-      {/* Aquí se podría añadir la paginación en el futuro */}
+
+      {/* Vista de Tarjetas para Móvil */}
+      <div className="md:hidden grid grid-cols-1 gap-4">
+        {loading ? (
+          <div className="text-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pnp-green mx-auto"></div></div>
+        ) : error ? (
+          <div className="text-center p-8 text-red-500">{error}</div>
+        ) : filteredCasos.length > 0 ? (
+          filteredCasos.map((caso) => (
+            <div 
+              key={caso.id_oficio}
+              onClick={() => handleRowClick(caso.id_oficio)}
+              className="bg-white dark:bg-dark-bg-secondary p-4 rounded-lg shadow border dark:border-dark-border active:bg-gray-100 dark:active:bg-dark-bg-tertiary cursor-pointer"
+            >
+              <div className="flex justify-between items-start mb-2">
+                <span className="font-bold text-gray-800 dark:text-white">{caso.numero_oficio}</span>
+                <EstadoBadge estado={caso.estado_actual} />
+              </div>
+              <p className="text-sm text-gray-700 dark:text-dark-text-primary truncate mb-2" title={caso.asunto}>{caso.asunto}</p>
+              <div className="text-xs text-gray-500 dark:text-dark-text-secondary space-y-1">
+                <p><span className="font-medium">Administrado:</span> {caso.administrado}</p>
+                <p><span className="font-medium">Perito:</span> {caso.perito_asignado}</p>
+                <p><span className="font-medium">Fecha:</span> {new Date(caso.fecha_creacion).toLocaleDateString('es-ES')}</p>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center p-8 text-gray-500">No se encontraron casos.</div>
+        )}
+      </div>
     </div>
   );
 };

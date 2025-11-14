@@ -3,14 +3,15 @@ import { fetchWithAuth } from './api';
 class ComplementService {
 
   // Obtener peritos disponibles (lógica inteligente)
-  async getPeritosDisponibles({ idEspecialidad, idTipoExamen }) {
+  async getPeritosDisponibles({ idEspecialidad, idTiposExamen }) {
     try {
       const params = new URLSearchParams();
       if (idEspecialidad) {
         params.append('idEspecialidad', idEspecialidad);
       }
-      if (idTipoExamen) {
-        params.append('idTipoExamen', idTipoExamen);
+      // Aceptar un array de IDs de examen y añadirlos a los parámetros
+      if (idTiposExamen && idTiposExamen.length > 0) {
+        idTiposExamen.forEach(id => params.append('idTiposExamen', id));
       }
 
       const url = `/api/peritos/disponibles?${params.toString()}`;
@@ -22,6 +23,24 @@ class ComplementService {
       return data;
     } catch (error) {
       console.error('Error en getPeritosDisponibles:', error);
+      if (!error.message.includes('Sesión expirada')) {
+        return { error: error.message || 'Error de red' };
+      }
+    }
+  }
+
+  // Obtener peritos por ID de sección
+  async getPeritosPorSeccion(idSeccion) {
+    try {
+      const url = `/api/peritos/carga_por_seccion?seccion=${idSeccion}`;
+      const response = await fetchWithAuth(url, { method: 'GET' });
+      const data = await response.json();
+      if (!response.ok) {
+        return { error: data.error || data.message || 'Error obteniendo peritos por sección.' };
+      }
+      return data;
+    } catch (error) {
+      console.error('Error en getPeritosPorSeccion:', error);
       if (!error.message.includes('Sesión expirada')) {
         return { error: error.message || 'Error de red' };
       }

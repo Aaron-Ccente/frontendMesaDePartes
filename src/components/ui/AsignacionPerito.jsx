@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ComplementServices } from '../../services/complementService';
 
-const AsignacionPerito = ({ idEspecialidad, idTipoExamen, onPeritoSelect, selectedPerito }) => {
+const AsignacionPerito = ({ idEspecialidad, idTiposExamen, tipoDeIngreso, onPeritoSelect, selectedPerito }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [peritos, setPeritos] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -9,16 +9,26 @@ const AsignacionPerito = ({ idEspecialidad, idTipoExamen, onPeritoSelect, select
 
   useEffect(() => {
     const fetchPeritos = async () => {
-      // No hacer nada si no hay ni especialidad ni tipo de examen
-      if (!idEspecialidad && !idTipoExamen) {
+      // No hacer nada si no es TM y no se han seleccionado exámenes
+      if (tipoDeIngreso !== 'TOMA DE MUESTRAS' && (!idTiposExamen || idTiposExamen.length === 0)) {
         setPeritos([]);
         return;
       }
+      
       setLoading(true);
       setError(null);
       try {
-        // Llamar al nuevo servicio inteligente
-        const res = await ComplementServices.getPeritosDisponibles({ idEspecialidad, idTipoExamen });
+        let res;
+        // Lógica de negocio para asignación inicial
+        if (tipoDeIngreso === 'TOMA DE MUESTRAS') {
+          // Si es Toma de Muestra, siempre buscar peritos de la sección TM (ID 1)
+          const TOMA_DE_MUESTRA_SECTION_ID = 1;
+          res = await ComplementServices.getPeritosPorSeccion(TOMA_DE_MUESTRA_SECTION_ID);
+        } else {
+          // Si es Muestra Remitida, pasar el array de exámenes para la lógica inteligente
+          res = await ComplementServices.getPeritosDisponibles({ idEspecialidad, idTiposExamen });
+        }
+        
         const peritosData = res?.data || [];
         setPeritos(Array.isArray(peritosData) ? peritosData : [peritosData]);
       } catch (err) {
@@ -32,7 +42,7 @@ const AsignacionPerito = ({ idEspecialidad, idTipoExamen, onPeritoSelect, select
     if (isModalOpen) {
       fetchPeritos();
     }
-  }, [idEspecialidad, idTipoExamen, isModalOpen]);
+  }, [idEspecialidad, idTiposExamen, isModalOpen, tipoDeIngreso]);
 
   const handleSelect = (perito) => {
     onPeritoSelect(perito);
@@ -55,7 +65,7 @@ const AsignacionPerito = ({ idEspecialidad, idTipoExamen, onPeritoSelect, select
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
-          disabled={!idEspecialidad || loading}
+          disabled={(tipoDeIngreso !== 'TOMA DE MUESTRAS' && (!idTiposExamen || idTiposExamen.length === 0)) || loading}
           className="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
         >
           {loading ? 'Cargando...' : 'Seleccionar'}

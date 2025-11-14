@@ -200,6 +200,42 @@ class MesaDePartes {
     }
   }
 
+  // Obtener estadísticas para el dashboard de Mesa de Partes
+  static async getDashboardStats() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/mesadepartes-dashboard/stats`, {
+        method: 'GET',
+        headers: this.getHeaders()
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        return { error: data.error || data.message || 'Error obteniendo estadísticas' };
+      }
+      return data;
+    } catch (error) {
+      console.error('Error en getDashboardStats:', error);
+      return { error: error.message || 'Error de red' };
+    }
+  }
+
+  // Obtener casos recientes para el dashboard de Mesa de Partes
+  static async getRecentCases() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/mesadepartes-dashboard/casos-recientes`, {
+        method: 'GET',
+        headers: this.getHeaders()
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        return { error: data.error || data.message || 'Error obteniendo casos recientes' };
+      }
+      return data;
+    } catch (error) {
+      console.error('Error en getRecentCases:', error);
+      return { error: error.message || 'Error de red' };
+    }
+  }
+
 }   
 
 export default MesaDePartes;
