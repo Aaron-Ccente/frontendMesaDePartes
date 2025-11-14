@@ -3,11 +3,18 @@ import { useNavigate } from "react-router-dom";
 import MesaDePartesService from "../../services/mesadepartesService";
 import Usuarios from "../../assets/icons/Usuarios";
 import Error from "../../assets/icons/Error";
+import EditIcon from "../../assets/icons/EditIcon";
+import DeleteIcon from "../../assets/icons/DeleteIcon";
+import EnableIcon from "../../assets/icons/EnableIcon";
+import DisableIcon from "../../assets/icons/DisableIcon";
+import EnableAndDesableUser from "../ui/EnableAndDesableUser";
 
 const MesaDePartes = () => {
   const navigate = useNavigate();
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [updateComponent, setUpdateComponent] = useState(false);
+  const [enableOption, setEnableOption] = useState({open: false, id_usuario: null, id_estado: null});
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -61,13 +68,14 @@ const MesaDePartes = () => {
 
   useEffect(() => {
     isMountedRef.current = true;
+    setUpdateComponent(false);
     loadUsuarios();
 
     return () => {
       isMountedRef.current = false;
       if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     };
-  }, [loadUsuarios]);
+  }, [loadUsuarios, updateComponent]);
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -80,6 +88,10 @@ const MesaDePartes = () => {
       loadUsuarios(1, value);
     }, 500);
   };
+
+  const handleEnableOption = ({ id_usuario, motivo_anterior, fecha_anterior, id_estado }) => {
+    setEnableOption({open: !enableOption.open, id_usuario, motivo_anterior, fecha_anterior, id_estado, update: false});
+  }
 
   const handlePageChange = (page) => {
     if (page < 1 || page > totalPages) return;
@@ -263,26 +275,49 @@ const MesaDePartes = () => {
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleEdit(u.CIP || u.nombre_usuario)}
-                          className="text-[#1a4d2e] dark:text-green-400 hover:text-[#2d7d4a] dark:hover:text-green-300 transition-colors duration-200"
+                          className="transition-colors duration-200 dark:text-green-500 dark:hover:text-green-400 flex bg-[#1a4d2e] px-2 py-1 gap-2 items-center rounded-lg text-white cursor-pointer transform hover:scale-105"
                           disabled={
                             deleteLoading === (u.CIP || u.nombre_usuario)
                           }
                         >
+                          <EditIcon size={5} />
                           Editar
                         </button>
                         <button
                           onClick={() =>
                             handleDelete(u.CIP || u.nombre_usuario)
                           }
-                          className="text-red-600 dark:text-red-400 hover:text-red-800 transition-colors duration-200 disabled:opacity-50"
+                          className="bg-red-600 dark:hover:text-red-300 transition-colors text-white duration-200 disabled:opacity-50 px-2 flex py-1 gap-2 items-center rounded-lg cursor-pointer transform hover:scale-105"
                           disabled={
                             deleteLoading === (u.CIP || u.nombre_usuario)
                           }
                         >
+                          <DeleteIcon size={5} />
                           {deleteLoading === (u.CIP || u.nombre_usuario) ? (
                             <span className="animate-spin">⏳</span>
                           ) : (
                             "Eliminar"
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 cursor-pointer transform hover:scale-105
+                            ${u.id_estado === 1
+                              ? "bg-amber-100 hover:bg-amber-200 text-amber-700"
+                              : "bg-blue-100 hover:bg-blue-200 text-blue-700"
+                            }`}
+                          onClick={() => handleEnableOption({ id_usuario: u.id_usuario, id_estado: u.id_estado })}
+                        >
+                          {u.id_estado === 1 ? (
+                            <>
+                              <DisableIcon size={5} />
+                              <span>Deshabilitar</span>
+                            </>
+                          ) : (
+                            <>
+                              <EnableIcon size={5} />
+                              <span>Habilitar</span>
+                            </>
                           )}
                         </button>
                       </div>
@@ -293,6 +328,14 @@ const MesaDePartes = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Componente para Habilitar y Deshabilitar */}
+        {enableOption.open && <EnableAndDesableUser 
+        id_estado={enableOption.id_estado} 
+        id_usuario={enableOption.id_usuario} 
+        update={setUpdateComponent}
+        onClose={() => setEnableOption({open: false, id_usuario: null, id_estado: null})}/>}
+
       </div>
 
       {/* Pagination */}
