@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ComplementServices } from '../../services/complementService';
 
-const AsignacionPerito = ({ idEspecialidad, onPeritoSelect, selectedPerito }) => {
+const AsignacionPerito = ({ idEspecialidad, idTipoExamen, onPeritoSelect, selectedPerito }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [peritos, setPeritos] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -9,15 +9,17 @@ const AsignacionPerito = ({ idEspecialidad, onPeritoSelect, selectedPerito }) =>
 
   useEffect(() => {
     const fetchPeritos = async () => {
-      if (!idEspecialidad) {
+      // No hacer nada si no hay ni especialidad ni tipo de examen
+      if (!idEspecialidad && !idTipoExamen) {
         setPeritos([]);
         return;
       }
       setLoading(true);
       setError(null);
       try {
-        const res = await ComplementServices.getAllPeritoAccordingToSpecialty(idEspecialidad);
-        const peritosData = res?.data?.data || res?.data || [];
+        // Llamar al nuevo servicio inteligente
+        const res = await ComplementServices.getPeritosDisponibles({ idEspecialidad, idTipoExamen });
+        const peritosData = res?.data || [];
         setPeritos(Array.isArray(peritosData) ? peritosData : [peritosData]);
       } catch (err) {
         setError('No se pudieron cargar los peritos.');
@@ -26,8 +28,11 @@ const AsignacionPerito = ({ idEspecialidad, onPeritoSelect, selectedPerito }) =>
       setLoading(false);
     };
 
-    fetchPeritos();
-  }, [idEspecialidad]);
+    // Solo buscar si el modal está abierto para optimizar
+    if (isModalOpen) {
+      fetchPeritos();
+    }
+  }, [idEspecialidad, idTipoExamen, isModalOpen]);
 
   const handleSelect = (perito) => {
     onPeritoSelect(perito);

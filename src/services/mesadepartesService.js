@@ -5,7 +5,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081
 class MesaDePartes {
   // Obtener headers con token de autenticación
   static getHeaders() {
-    const token = authService.getToken();
+    const token = localStorage.getItem('mesadepartesToken'); // Usar el token específico de Mesa de Partes
     return {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
@@ -147,6 +147,56 @@ class MesaDePartes {
       return data;
     } catch (error) {
       throw new Error('Error en el registro: ' + error.message);
+    }
+  }
+
+  // Obtener casos para la vista de seguimiento
+  static async getCasos({ estado = 'pendiente', search = '' }) {
+    try {
+      const params = new URLSearchParams({
+        estado,
+      });
+
+      if (search) {
+        params.append('search', search);
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/seguimiento/casos?${params}`, {
+        method: 'GET',
+        headers: this.getHeaders()
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { error: data.error || data.message || 'Error obteniendo los casos' };
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error en getCasos:', error);
+      return { error: error.message || 'Error de red' };
+    }
+  }
+
+  // Obtener el detalle de un caso específico
+  static async getDetalleCaso(id_oficio) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/seguimiento/casos/${id_oficio}`, {
+        method: 'GET',
+        headers: this.getHeaders()
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { error: data.error || data.message || 'Error obteniendo el detalle del caso' };
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error en getDetalleCaso:', error);
+      return { error: error.message || 'Error de red' };
     }
   }
 

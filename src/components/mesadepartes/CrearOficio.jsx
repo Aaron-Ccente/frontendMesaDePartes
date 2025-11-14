@@ -23,9 +23,7 @@ const initialFormData = {
   fiscal_remitente: "",
   id_tipos_examen: [],
   tipos_examen: [],
-  descripcionMuestra: "",
-  cantidadMuestras: "",
-  tipoEnvase: "",
+  muestra: "N/A", // Campo corregido y con valor por defecto
   id_especialidad_requerida: "",
   especialidad_requerida: "",
   id_usuario_perito_asignado: "",
@@ -147,7 +145,7 @@ const initialFormData = {
       if (createResp.success) {
         setFeedback("¡Oficio creado y asignado exitosamente!");
         setCodigo(createResp.data.numero_oficio || `ID-${createResp.data.id_oficio}`);
-        setCloseModal(true);
+        // setCloseModal(true); // Comentado para no limpiar el formulario y facilitar pruebas
       } else {
         setFeedback(`Error del servidor: ${createResp.message}`);
       }
@@ -221,15 +219,13 @@ const initialFormData = {
 
           {isRemitido && (
             <FormSection title="3. Información de la Muestra Remitida">
-              <FormInput label="Descripción de Muestras" name="descripcionMuestra" value={formData.descripcionMuestra} onChange={handleChange} placeholder="Ej: 2 tubos de sangre tapa lila, 1 frasco de orina" />
-              <FormInput label="Cantidad de Muestras" name="cantidadMuestras" type="number" value={formData.cantidadMuestras} onChange={handleChange} min="1" />
-              <FormInput label="Tipo de Envase" name="tipoEnvase" value={formData.tipoEnvase} onChange={handleChange} placeholder="Ej: Caja de cartón sellada" />
+              {/* Campos de la Parte 3 de Muestra Remitida eliminados temporalmente */}
             </FormSection>
           )}
           
           {isTomaMuestra && (
             <FormSection title="3. Información de la Muestra a Extraer">
-              <FormInput label="Muestras a Extraer" name="descripcionMuestra" value={formData.descripcionMuestra} onChange={handleChange} placeholder="Ej: Muestra de sangre y orina" />
+              {/* Campos de la Parte 3 de Muestra a Extraer eliminados temporalmente */}
             </FormSection>
           )}
 
@@ -250,7 +246,12 @@ const initialFormData = {
                 )) : <p className="text-gray-500 dark:text-dark-text-muted">No hay exámenes para este departamento.</p>}
               </div>
             </div>
-            <AsignacionPerito idEspecialidad={formData.id_especialidad_requerida} onPeritoSelect={handlePeritoSelect} selectedPerito={{nombre_completo: formData.perito_asignado}} />
+            <AsignacionPerito 
+              idEspecialidad={formData.id_especialidad_requerida} 
+              idTipoExamen={formData.id_tipos_examen[0]} // Pasar el primer examen seleccionado para la lógica de sección
+              onPeritoSelect={handlePeritoSelect} 
+              selectedPerito={{nombre_completo: formData.perito_asignado}} 
+            />
             <FormSelect label="Prioridad" name="id_prioridad" value={formData.id_prioridad} onChange={handleChange} required>
               <option value="">Seleccione prioridad</option>
               {prioridades.map(p => <option key={p.id_prioridad} value={p.id_prioridad}>{p.nombre_prioridad}</option>)}

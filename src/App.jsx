@@ -33,6 +33,7 @@ import MesaDePartesDashboard from './components/mesadepartes/MesaDePartesDashboa
 import CrearOficio from './components/mesadepartes/CrearOficio';
 import RespuestaOficio from './components/mesadepartes/RespuestaOficio';
 import SeguimientoCasos from './components/mesadepartes/SeguimientoCasos';
+import SeguimientoDetalle from './components/mesadepartes/SeguimientoDetalle';
 import MesaDePartesResumen from './components/mesadepartes/MesaDePartesResumen';
 import EspecialidadesManagement from './components/admin/SystemConfiguration/EspecialidadesManagement';
 import GradosManagement from './components/admin/SystemConfiguration/GradosManagement';
@@ -99,6 +100,7 @@ function App() {
               <Route index element={<MesaDePartesResumen />} />
               <Route path="crear/oficio" element={<CrearOficio />} />
               <Route path="seguimiento/casos" element={<SeguimientoCasos />} />
+              <Route path="seguimiento/casos/:id" element={<SeguimientoDetalle />} />
             </Route>
 
             {/* Redirects */}
