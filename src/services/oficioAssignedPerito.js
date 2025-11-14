@@ -66,4 +66,40 @@ export class OficioAssignedPeritoService {
             throw error;
         }
     }
+
+    // Actualizar el estado de un caso
+    static async actualizarEstadoCaso(id_oficio, nuevo_estado) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/seguimiento/casos/${id_oficio}/estado`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ nuevo_estado })
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Error al actualizar el estado del caso');
+            }
+            return data;
+        } catch (error) {
+            console.error('Error en actualizarEstadoCaso:', error);
+            throw error;
+        }
+    }
+
+    // Obtener peritos para derivación
+    static async getPeritosParaDerivacion(id_oficio) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/seguimiento/peritos-derivacion?casoId=${id_oficio}`, {
+                headers: getAuthHeaders()
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Error al obtener peritos para derivación');
+            }
+            return data;
+        } catch (error) {
+            console.error('Error en getPeritosParaDerivacion:', error);
+            throw error;
+        }
+    }
 }

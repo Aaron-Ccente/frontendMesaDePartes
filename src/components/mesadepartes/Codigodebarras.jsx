@@ -196,89 +196,94 @@ function Codigodebarras({ codigo, width = 2, height = 60, displayValue = false, 
 
   return (
     <div
-      className="w-full bg-black/40 z-50 min-h-screen fixed top-0 left-0 flex justify-center items-center"
-      role="dialog"
-      aria-modal="true"
-      onClick={(e) => { 
-        if (e.target === e.currentTarget) onClose && onClose(false); 
-      }}
+      className="fixed inset-0 z-40 bg-black/60"
+      aria-hidden="true"
     >
-      <div className="w-[420px] bg-white dark:bg-gray-800 min-h-[320px] flex flex-col rounded-2xl relative p-6 shadow-xl">
-        {feedback && (
-          <div className="absolute top-2 left-4 right-4 z-10">
-            <ShowToast
-              type={Array.isArray(feedback) ? "error" : (feedback && feedback.includes("exitos") ? "success" : "error")}
-              message={feedback}
-              onClose={() => setFeedback(null)}
-            />
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={() => onClose && onClose(false)}
-          aria-label="Cerrar"
-          className="absolute top-3 right-3 bg-red-500 hover:bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
-        >
-          x
-        </button>
-
-        <div className="text-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Código de Barras</h3>
-        </div>
-
-        <div className="flex-1 flex items-center justify-center py-4">
-          <div ref={barcodeRef} className="flex justify-center bg-white dark:bg-gray-700 p-4 rounded-lg">
-            <Barcode 
-              value={String(codigo)} 
-              width={width} 
-              height={height} 
-              displayValue={displayValue} 
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-3 mt-4">
-          <button
-            type="button"
-            onClick={handlePrintOnly}
-            disabled={printLoading}
-            className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-semibold text-base transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {printLoading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Imprimiendo...
-              </>
-            ) : (
-              "Imprimir solo código de barras"
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleCreateAndPrint}
-            disabled={loading}
-            className="bg-gradient-to-r from-[#1a4d2e] to-[#2d7d4a] text-white py-3 px-4 rounded-xl font-semibold text-base transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Procesando...
-              </>
-            ) : (
-              "Asignar a perito e imprimir"
-            )}
-          </button>
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center"
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => { 
+          if (e.target === e.currentTarget) onClose && onClose(false); 
+        }}
+      >
+        <div className="w-[420px] bg-white dark:bg-gray-800 min-h-[320px] flex flex-col rounded-2xl relative p-6 shadow-xl">
+          {feedback && (
+            <div className="absolute top-2 left-4 right-4 z-10">
+              <ShowToast
+                type={Array.isArray(feedback) ? "error" : (feedback && feedback.includes("exitos") ? "success" : "error")}
+                message={feedback}
+                onClose={() => setFeedback(null)}
+              />
+            </div>
+          )}
 
           <button
             type="button"
             onClick={() => onClose && onClose(false)}
-            className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-xl font-semibold text-base transition-all duration-300 hover:shadow-sm"
-            disabled={loading || printLoading}
+            aria-label="Cerrar"
+            className="absolute top-3 right-3 bg-red-500 hover:bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
           >
-            Cancelar
+            x
           </button>
+
+          <div className="text-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Código de Barras</h3>
+          </div>
+
+          <div className="flex-1 flex items-center justify-center py-4">
+            <div ref={barcodeRef} className="flex justify-center bg-white dark:bg-gray-700 p-4 rounded-lg">
+              <Barcode 
+                value={String(codigo)} 
+                width={width} 
+                height={height} 
+                displayValue={displayValue} 
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 mt-4">
+            <button
+              type="button"
+              onClick={handlePrintOnly}
+              disabled={printLoading}
+              className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-semibold text-base transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {printLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Imprimiendo...
+                </>
+              ) : (
+                "Imprimir solo código de barras"
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleCreateAndPrint}
+              disabled={loading}
+              className="bg-gradient-to-r from-[#1a4d2e] to-[#2d7d4a] text-white py-3 px-4 rounded-xl font-semibold text-base transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Procesando...
+                </>
+              ) : (
+                "Asignar a perito e imprimir"
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onClose && onClose(false)}
+              className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-xl font-semibold text-base transition-all duration-300 hover:shadow-sm"
+              disabled={loading || printLoading}
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
       </div>
     </div>
