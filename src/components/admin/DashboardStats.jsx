@@ -11,6 +11,8 @@ import UsersPieChart from "./DashboardStats/PieChartGraphic";
 import SimpleBarChart from "./DashboardStats/SimpleBarChart";
 import UsersActive from "./DashboardStats/tables/UsersActive";
 import PrioridadOficios from "./DashboardStats/tables/PrioridadOficios";
+import EnableIcon from "../../assets/icons/EnableIcon";
+import DisableIcon from "../../assets/icons/DisableIcon";
 
 const DashboardStats = () => {
   const navigate = useNavigate();
@@ -118,30 +120,32 @@ const DashboardStats = () => {
           </div>
           </div>
         </div>
-{/* 
+
         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border-l-4 border-yellow-400 hover:shadow-xl transition-all duration-300">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-300">Grados</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Usuarios Habilitados</p>
               <p className="text-2xl font-bold text-yellow-400 dark:text-yellow-300">
-                {stats.peritosPorGrado.length}
+               2
               </p>
             </div>
-            <div className="text-3xl text-yellow-400 dark:text-yellow-300">
-              a
-            </div>
+            <span className=" text-yellow-400 dark:text-yellow-300">
+            <EnableIcon size={10} />
+            </span>
           </div>
-        </div> */}
+        </div>
 
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border-l-4 border-green-500 hover:shadow-xl transition-all duration-300">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border-l-4 border-red-500 hover:shadow-xl transition-all duration-300">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-300">algo</p>
-              <p className="text-2xl font-bold text-green-500 dark:text-green-300">
+              <p className="text-sm text-gray-600 dark:text-gray-300">Usuarios Deshabilitados</p>
+              <p className="text-2xl font-bold text-red-500 dark:text-red-300">
                 algo
               </p>
             </div>
-            <div className="text-3xl text-green-500 dark:text-green-300">a</div>
+            <div className="text-red-500 dark:text-red-300">
+              <DisableIcon size={10} />
+            </div>
           </div>
         </div>
       </div>
