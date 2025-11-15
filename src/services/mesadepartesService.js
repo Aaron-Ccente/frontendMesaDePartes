@@ -1,11 +1,16 @@
-import { authService } from './authService.js';
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
 
 class MesaDePartes {
   // Obtener headers con token de autenticación
   static getHeaders() {
-    const token = localStorage.getItem('mesadepartesToken'); // Usar el token específico de Mesa de Partes
+    const adminToken = localStorage.getItem('adminToken');
+    const mesadepartesToken = localStorage.getItem('mesadepartesToken');
+    const token = adminToken || mesadepartesToken;
+
+    if (!token) {
+      console.warn('No se encontró token de autenticación');
+    }
+    
     return {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
