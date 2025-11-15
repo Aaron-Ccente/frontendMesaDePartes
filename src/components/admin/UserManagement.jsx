@@ -1,13 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { PeritoService } from "../../services/peritoService";
 import Usuarios from "../../assets/icons/Usuarios";
 import Error from "../../assets/icons/Error";
+import EditIcon from "../../assets/icons/EditIcon";
+import DeleteIcon from "../../assets/icons/DeleteIcon";
+import DisableIcon from "../../assets/icons/DisableIcon";
+import EnableIcon from "../../assets/icons/EnableIcon";
+import EnableAndDesableUser from "../ui/EnableAndDesableUser";
 
 const UserManagement = () => {
   const navigate = useNavigate();
   const [peritos, setPeritos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [updateComponent, setUpdateComponent] = useState(false);
+  const [enableOption, setEnableOption] = useState({ open: false, id_usuario: null, id_estado: null });
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -15,61 +22,82 @@ const UserManagement = () => {
   const [error, setError] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(null);
 
-  // Cargar peritos
-  const loadPeritos = async (page = 1, search = "") => {
-    try {
-      setLoading(true);
-      setError("");
+  const isMountedRef = useRef(false);
+  const searchTimeoutRef = useRef(null);
 
-      const response = await PeritoService.getAllPeritos(page, 10, search);
+  const loadPeritos = useCallback(
+    async (page = 1, search = "") => {
+      try {
+        if (isMountedRef.current) setLoading(true);
+        setError("");
 
-      setPeritos(response.data);
-      setTotalPages(response.pagination.pages);
-      setTotalPeritos(response.pagination.total);
-      setCurrentPage(response.pagination.page);
-    } catch (error) {
-      console.error("Error cargando peritos:", error);
-      setError(error.message || "Error cargando peritos");
-    } finally {
-      setLoading(false);
-    }
-  };
+        const response = await PeritoService.getAllPeritos(page, 10, search);
 
-  // Cargar peritos al montar
+        if (!isMountedRef.current) return;
+
+        setPeritos(response.data);
+        setTotalPages(response.pagination.pages);
+        setTotalPeritos(response.pagination.total);
+        setCurrentPage(response.pagination.page);
+      } catch (error) {
+        if (!isMountedRef.current) return;
+        console.error("Error cargando peritos:", error);
+        setError(error.message || "Error cargando peritos");
+      } finally {
+        if (isMountedRef.current) setLoading(false);
+      }
+    },
+    []
+  );
+
   useEffect(() => {
+    isMountedRef.current = true;
+    setUpdateComponent(false);
     loadPeritos();
-  }, []);
 
-  // Buscar
+    return () => {
+      isMountedRef.current = false;
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    };
+  }, [loadPeritos, updateComponent]);
+
   const handleSearch = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
     setCurrentPage(1);
 
-    const timeoutId = setTimeout(() => {
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+    searchTimeoutRef.current = setTimeout(() => {
       loadPeritos(1, value);
     }, 500);
-
-    return () => clearTimeout(timeoutId);
   };
 
-  // Cambiar página
+  const handleEnableOption = ({ id_usuario, motivo_anterior, fecha_anterior, id_estado }) => {
+    setEnableOption({
+      open: !enableOption.open,
+      id_usuario,
+      motivo_anterior,
+      fecha_anterior,
+      id_estado,
+      update: false,
+    });
+  };
+
   const handlePageChange = (page) => {
+    if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
     loadPeritos(page, searchTerm);
   };
 
-  // Crear nuevo perito
   const handleCreatePerito = () => {
     navigate("/admin/dashboard/usuarios/crear");
   };
 
-  // Editar
   const handleEditPerito = (cip) => {
     navigate(`/admin/dashboard/usuarios/editar/${cip}`);
   };
 
-  // Eliminar
   const handleDeletePerito = async (cip) => {
     if (!window.confirm(`¿Eliminar al perito con CIP ${cip}?`)) return;
 
@@ -82,14 +110,11 @@ const UserManagement = () => {
       console.error("Error eliminando perito:", error);
       alert(`Error eliminando perito: ${error.message}`);
     } finally {
-      setDeleteLoading(null);
+      if (isMountedRef.current) setDeleteLoading(null);
     }
   };
 
-  // Refrescar
-  const handleRefresh = () => {
-    loadPeritos(currentPage, searchTerm);
-  };
+  const handleRefresh = () => loadPeritos(currentPage, searchTerm);
 
   if (loading) {
     return (
@@ -246,20 +271,48 @@ const UserManagement = () => {
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleEditPerito(perito.CIP)}
-                          className="text-[#1a4d2e] hover:text-[#2d7d4a] transition-colors duration-200 dark:text-green-500 dark:hover:text-green-400"
+                          className="transition-colors duration-200 dark:text-green-500 dark:hover:text-green-400 flex bg-[#1a4d2e] px-2 py-1 items-center gap-2 rounded-lg text-white cursor-pointer transform hover:scale-105"
                           disabled={deleteLoading === perito.CIP}
                         >
+                          <EditIcon size={5} />
                           Editar
                         </button>
                         <button
                           onClick={() => handleDeletePerito(perito.CIP)}
-                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors duration-200 disabled:opacity-50"
+                          className="bg-red-600 dark:hover:text-red-300 transition-colors text-white duration-200 disabled:opacity-50 px-2 flex items-center gap-2 py-1 rounded-lg cursor-pointer transform hover:scale-105"
                           disabled={deleteLoading === perito.CIP}
                         >
+                          <DeleteIcon size={5} />
                           {deleteLoading === perito.CIP ? (
                             <span className="animate-spin">⏳</span>
                           ) : (
                             "Eliminar"
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 cursor-pointer transform hover:scale-105
+                            ${perito.id_estado === 1
+                              ? "bg-amber-100 hover:bg-amber-200 text-amber-700"
+                              : "bg-blue-100 hover:bg-blue-200 text-blue-700"
+                            }`}
+                          onClick={() =>
+                            handleEnableOption({
+                              id_usuario: perito.id_usuario,
+                              id_estado: perito.id_estado,
+                            })
+                          }
+                        >
+                          {perito.id_estado === 1 ? (
+                            <>
+                              <DisableIcon size={5} />
+                              <span>Deshabilitar</span>
+                            </>
+                          ) : (
+                            <>
+                              <EnableIcon size={5} />
+                              <span>Habilitar</span>
+                            </>
                           )}
                         </button>
                       </div>
@@ -270,6 +323,22 @@ const UserManagement = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Componente para Habilitar y Deshabilitar */}
+        {enableOption.open && (
+          <EnableAndDesableUser
+            id_estado={enableOption.id_estado}
+            id_usuario={enableOption.id_usuario}
+            update={setUpdateComponent}
+            onClose={() =>
+              setEnableOption({
+                open: false,
+                id_usuario: null,
+                id_estado: null,
+              })
+            }
+          />
+        )}
       </div>
 
       {/* Pagination */}

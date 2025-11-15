@@ -23,7 +23,7 @@ export const authService = {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Error en el login');
+        throw new Error(errorData.error || errorData.message || 'Error en el login');
       }
 
       const data = await response.json();
@@ -156,6 +156,27 @@ export const authService = {
       return data;
     } catch (error) {
       throw new Error('Error en deleteAdmin: ' + error.message);
+    }
+  },
+
+  // Habilitar o deshabilitar usuario - protegido
+  async enableDisableUser({ id_estado, id_usuario, motivo }) {
+    try {
+      const resp = await fetch(`${API_BASE_URL}/api/auth/enable-disable-user`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ id_estado, id_usuario, motivo }),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.message || 'Error habilitando/deshabilitando usuario');
+      }
+
+      const data = await resp.json();
+      return data;
+    } catch (error) {
+      throw new Error('Error en enableDisableUser: ' + error.message);
     }
   },
 
