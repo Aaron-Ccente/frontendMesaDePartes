@@ -23,7 +23,7 @@ export const authService = {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Error en el login');
+        throw new Error(errorData.error || errorData.message || 'Error en el login');
       }
 
       const data = await response.json();
