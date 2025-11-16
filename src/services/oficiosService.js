@@ -108,6 +108,7 @@ export class OficiosService {
     }
   }
 
+<<<<<<< HEAD
   static async getAllSeguimientoOficios(){
     try {
       const response = await fetchWithAuth(`/api/oficios/all/seguimiento`);
@@ -140,6 +141,8 @@ export class OficiosService {
     }
   }
 
+=======
+>>>>>>> 46696a9 (refactor + implementacion de casos diferenciados por funcionalidad)
   static async derivarOficio(id_oficio, id_nuevo_perito, nombre_seccion_destino) {
     try {
       const response = await fetchWithAuth(`/api/oficios/${id_oficio}/derivar`, {
