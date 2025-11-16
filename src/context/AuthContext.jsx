@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 import { AuthContext } from './AuthContext.js';
 import { MesaDePartesAuthService } from '../services/mesadepartesAuthService';
+import { clearAllSessions } from '../services/api.js'; // Import the function
 
 // Añadir función para normalizar roles
 const normalizeRole = (role) => {
@@ -103,6 +104,7 @@ export const AuthProvider = ({ children }) => {
   const loginMesaDePartes = async (mesadepartes) => {
     try {
       setLoading(true);
+      clearAllSessions(); // Clean slate before login
 
       // Si ya viene la respuesta del servicio
       if (mesadepartes && (mesadepartes.token || mesadepartes.CIP) && !mesadepartes.password_hash) {
@@ -157,6 +159,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       setLoading(true);
+      clearAllSessions(); // Clean slate before login
       setUser(null);
       setIsAuthenticated(false);
       const response = await authService.loginAdmin(credentials);
@@ -185,8 +188,8 @@ export const AuthProvider = ({ children }) => {
   // Login para peritos
   const loginPerito = async (peritoData, token) => {
     try {
-
       setLoading(true);
+      clearAllSessions(); // Clean slate before login
       setUser(null);
       setIsAuthenticated(false);
       const peritoWithRole = {
@@ -207,12 +210,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logoutMesaDePartes = () => {
-    localStorage.removeItem('mesadepartesToken');
-    localStorage.removeItem('mesadepartesData');
-    if (user?.role === 'mesadepartes') {
-      setUser(null);
-      setIsAuthenticated(false);
-    }
+    clearAllSessions(); // Use the global clearer
+    setUser(null);
+    setIsAuthenticated(false);
   };
 
   const register = async (adminData) => {
@@ -234,15 +234,14 @@ export const AuthProvider = ({ children }) => {
 
   // Cerrar sesion para administradores
   const logout = () => {
-    authService.logout();
+    clearAllSessions(); // Use the global clearer
     setUser(null);
     setIsAuthenticated(false);
   };
 
   // Cerrar sesion para peritos
   const logoutPerito = () => {
-    localStorage.removeItem('peritoToken');
-    localStorage.removeItem('peritoData');
+    clearAllSessions(); // Use the global clearer
     setUser(null);
     setIsAuthenticated(false);
   };

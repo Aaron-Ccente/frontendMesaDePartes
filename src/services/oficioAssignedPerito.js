@@ -28,6 +28,26 @@ export class OficioAssignedPeritoService {
         }
     }
 
+    // Obtener casos asignados al perito según su función específica
+    static async getCasosPorFuncion(funcion) {
+        try {
+            if (!funcion) {
+                throw new Error('La función es requerida para filtrar los casos.');
+            }
+            const response = await fetch(`${API_BASE_URL}/api/oficios/casos-asignados?funcion=${funcion}`, {
+                headers: getAuthHeaders()
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || `Error al obtener casos para la función: ${funcion}`);
+            }
+            return data;
+        } catch (error) {
+            console.error(`Error en getCasosPorFuncion (${funcion}):`, error);
+            throw error;
+        }
+    }
+
     static async getCountNewOficios() {
         try {
             const response = await fetch(`${API_BASE_URL}/api/oficios/alerts`, {
