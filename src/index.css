@@ -38,3 +38,12 @@
   --color-dark-pnp-green-dark: #16a34a;  /* Verde PNP oscuro para modo oscuro */
   --color-dark-accent: #3b82f6;         /* Azul acento para modo oscuro */
 }
+
+/* Clase de utilidad para ocultar el scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

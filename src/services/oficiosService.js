@@ -91,4 +91,22 @@ export class OficiosService {
       }
     }
   }
+
+  static async derivarOficio(id_oficio, id_nuevo_perito, nombre_seccion_destino) {
+    try {
+      const response = await fetchWithAuth(`/api/oficios/${id_oficio}/derivar`, {
+        method: 'POST',
+        body: JSON.stringify({ id_nuevo_perito, nombre_seccion_destino })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al derivar el oficio');
+      }
+      return data;
+    } catch (error) {
+      console.error('Error en derivarOficio:', error);
+      // No retornamos un objeto, lanzamos el error para que el llamador lo capture
+      throw error;
+    }
+  }
 }
