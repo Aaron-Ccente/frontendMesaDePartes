@@ -5,7 +5,7 @@ import { useAuth } from '../../../hooks/useAuth';
 // Asumiendo que los iconos están en un solo archivo para simplicidad
 import { VerDetalleIcon, IniciarProcedimientoIcon, DerivarIcon, ConsolidarIcon, GenerarReporteIcon } from '../../../assets/icons/Actions';
 
-const CasoCard = ({ caso, onDerivarClick }) => {
+const CasoCard = ({ caso, onDerivarClick, isDeriving }) => {
   const navigate = useNavigate();
   const { user } = useAuth(); // Obtener el usuario actual para saber su sección
 
@@ -65,9 +65,9 @@ const CasoCard = ({ caso, onDerivarClick }) => {
           }
         } else {
           primaryButton = (
-            <button key="derivar" onClick={() => onDerivarClick(caso.id_oficio)} className="btn-primary">
+            <button key="derivar" onClick={() => onDerivarClick(caso.id_oficio)} className="btn-primary" disabled={isDeriving}>
               <DerivarIcon />
-              <span>Derivar</span>
+              <span>{isDeriving ? 'Derivando...' : 'Derivar'}</span>
             </button>
           );
         }

@@ -1,29 +1,70 @@
-import { fetchWithAuth } from './api';
+import { authService } from './authService.js';
 
-export const ProcedimientoService = {
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
+
+export class ProcedimientoService {
   /**
-   * Registra el resultado de una extracción de muestras.
-   * @param {number | string} id_oficio - El ID del oficio.
-   * @param {object} payload - Los datos del formulario de extracción.
-   * @param {boolean} payload.fue_exitosa
-   * @param {string} payload.observaciones
-   * @param {Array<object>} payload.muestras
-   * @returns {Promise<object>}
+   * Método privado para obtener los headers de autenticación.
+   * @returns {HeadersInit}
    */
-  registrarExtraccion: async (id_oficio, payload) => {
+  static #getHeaders() {
+    const token = authService.getToken();
+    if (!token) {
+      console.error("No se encontró token de autenticación.");
+      throw new Error("Token de autenticación no encontrado. Inicie sesión de nuevo.");
+    }
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
+  }
+
+  /**
+   * Llama al endpoint del backend para obtener la sección de destino y la lista de peritos.
+   * @param {number} idOficio - El ID del oficio.
+   * @returns {Promise<object>} La respuesta del servidor con los datos para el modal.
+   */
+  static async getSiguientePaso(idOficio) {
     try {
-      const response = await fetchWithAuth(`/api/procedimientos/${id_oficio}/registrar-extraccion`, {
-        method: 'POST',
-        body: JSON.stringify(payload),
+      const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/siguiente-paso`, {
+        method: 'GET',
+        headers: this.#getHeaders(),
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.message || 'Error al registrar la extracción');
+        throw new Error(data.message || 'Error al obtener los datos de derivación.');
       }
       return data;
     } catch (error) {
-      console.error('Error en registrarExtraccion:', error);
+      console.error('Error en ProcedimientoService.getSiguientePaso:', error);
       throw error;
     }
-  },
-};
+  }
+
+  /**
+   * Llama al endpoint del backend para derivar un caso a un perito específico.
+   * @param {number} idOficio - El ID del oficio a derivar.
+   * @param {number} idNuevoPerito - El ID del perito seleccionado para la asignación.
+   * @returns {Promise<object>} La respuesta del servidor.
+   */
+  static async derivar(idOficio, idNuevoPerito) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/derivar`, {
+        method: 'POST',
+        headers: this.#getHeaders(),
+        body: JSON.stringify({ id_nuevo_perito: idNuevoPerito }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al derivar el caso.');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error en ProcedimientoService.derivar:', error);
+      throw error;
+    }
+  }
+}
