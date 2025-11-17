@@ -9,6 +9,14 @@ import PDFPreviewModal from '../../documentos/PDFPreviewModal';
 import DeleteIcon from '../../../assets/icons/DeleteIcon';
 import { LimpiarIcon, PreviewIcon, GuardarIcon, CancelarIcon } from '../../../assets/icons/Actions';
 
+// --- Constantes para la lógica de negocio ---
+const TIPOS_DE_MUESTRA = ['Sangre', 'Orina', 'Hisopo Ungueal', 'Visceras', 'Cabello', 'Otro'];
+const EXAMEN_A_TIPO_MUESTRA = {
+  'Dosaje Etilico': 'Sangre',
+  'Toxicologico': 'Orina',
+  'Sarro Ungueal': 'Hisopo Ungueal',
+};
+// -----------------------------------------
 
 const ProcedimientoExtraccion = () => {
   const { id: id_oficio } = useParams();
@@ -23,12 +31,13 @@ const ProcedimientoExtraccion = () => {
   // Estados del formulario
   const [fueExitosa, setFueExitosa] = useState(true);
   const [observaciones, setObservaciones] = useState('');
-  const [muestras, setMuestras] = useState([{ id: Date.now(), descripcion: '', cantidad: '' }]);
+  const [muestras, setMuestras] = useState([]);
 
   // Estados del modal de vista previa
   const [pdfUrl, setPdfUrl] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Carga inicial de datos del oficio
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
@@ -50,6 +59,33 @@ const ProcedimientoExtraccion = () => {
     loadData();
   }, [loadData]);
 
+  // Efecto para pre-poblar las muestras basadas en los tipos de examen
+  useEffect(() => {
+    if (oficio && oficio.tipos_de_examen) {
+      const muestrasSugeridas = new Set();
+      oficio.tipos_de_examen.forEach(examen => {
+        const tipoMuestraSugerido = EXAMEN_A_TIPO_MUESTRA[examen];
+        if (tipoMuestraSugerido) {
+          muestrasSugeridas.add(tipoMuestraSugerido);
+        }
+      });
+
+      if (muestrasSugeridas.size > 0) {
+        const nuevasMuestras = [...muestrasSugeridas].map(tipo => ({
+          id: Date.now() + Math.random(),
+          tipo_muestra: tipo,
+          descripcion: '',
+          cantidad: '',
+        }));
+        setMuestras(nuevasMuestras);
+      } else {
+        // Si no hay sugerencias, empezar con una muestra vacía
+        setMuestras([{ id: Date.now(), tipo_muestra: '', descripcion: '', cantidad: '' }]);
+      }
+    }
+  }, [oficio]);
+
+
   const handleMuestraChange = (index, field, value) => {
     const newMuestras = [...muestras];
     newMuestras[index][field] = value;
@@ -57,7 +93,7 @@ const ProcedimientoExtraccion = () => {
   };
 
   const addMuestra = () => {
-    setMuestras([...muestras, { id: Date.now(), descripcion: '', cantidad: '' }]);
+    setMuestras([...muestras, { id: Date.now(), tipo_muestra: '', descripcion: '', cantidad: '' }]);
   };
 
   const removeMuestra = (index) => {
@@ -73,7 +109,8 @@ const ProcedimientoExtraccion = () => {
     if (window.confirm('¿Estás seguro de que deseas limpiar todos los campos del formulario?')) {
       setFueExitosa(true);
       setObservaciones('');
-      setMuestras([{ id: Date.now(), descripcion: '', cantidad: '' }]);
+      // Reiniciar a una muestra vacía en lugar de las sugeridas
+      setMuestras([{ id: Date.now(), tipo_muestra: '', descripcion: '', cantidad: '' }]);
       toast.success('Formulario limpiado.');
     }
   };
@@ -93,7 +130,7 @@ const ProcedimientoExtraccion = () => {
     };
 
     try {
-      toast.info('Generando vista previa...');
+      toast.info('Generando vista previa del Acta de Extracción...');
       const url = await generarActaExtraccion(datosParaActa);
       setPdfUrl(url);
       setIsModalOpen(true);
@@ -111,11 +148,11 @@ const ProcedimientoExtraccion = () => {
     const payload = {
       fue_exitosa: fueExitosa,
       observaciones,
-      muestras: fueExitosa ? muestras.filter(m => m.descripcion && m.cantidad) : [],
+      muestras: fueExitosa ? muestras.filter(m => m.tipo_muestra && m.cantidad) : [],
     };
 
     if (fueExitosa && payload.muestras.length === 0) {
-        toast.error('Debe registrar al menos una muestra válida para una extracción exitosa.');
+        toast.error('Debe registrar al menos una muestra válida (con tipo y cantidad) para una extracción exitosa.');
         setIsSubmitting(false);
         return;
     }
@@ -123,10 +160,12 @@ const ProcedimientoExtraccion = () => {
     try {
       const res = await ProcedimientoService.registrarExtraccion(id_oficio, payload);
       if (res.success) {
-        toast.success(res.message);
+        const codigos = res.data?.codigos_generados || [];
+        const mensajeExito = `${res.message} Códigos generados: ${codigos.join(', ')}`;
+        toast.success(mensajeExito);
         navigate('/perito/dashboard/mis-casos/extraccion');
       } else {
-        throw new Error(res.message);
+        throw new Error(res.message || 'Ocurrió un error desconocido.');
       }
     } catch (error) {
       toast.error(`Error al registrar: ${error.message}`);
@@ -185,11 +224,11 @@ const ProcedimientoExtraccion = () => {
                 <h4 className="text-lg font-semibold text-gray-700 dark:text-dark-text-primary mb-4">1. Resultado del Procedimiento</h4>
                 <div className="flex items-center space-x-6">
                     <label className="flex items-center space-x-2 cursor-pointer p-2 rounded-md hover:bg-green-50 dark:hover:bg-green-900/20">
-                        <input type="radio" name="resultado" checked={fueExitosa} onChange={() => setFueExitosa(true)} className="h-5 w-5 text-pnp-green-dark focus:ring-pnp-green-light" />
+                        <input type="radio" name="resultado" checked={fueExitosa} onChange={() => setFueExitosa(true)} className="h-5 w-5 text-pnp-green-dark dark:text-dark-pnp-green focus:ring-pnp-green-light dark:focus:ring-dark-pnp-green dark:bg-dark-surface" />
                         <span className="text-base font-medium text-gray-700 dark:text-dark-text-primary">Extracción Exitosa</span>
                     </label>
                     <label className="flex items-center space-x-2 cursor-pointer p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20">
-                        <input type="radio" name="resultado" checked={!fueExitosa} onChange={() => setFueExitosa(false)} className="h-5 w-5 text-red-600 focus:ring-red-500" />
+                        <input type="radio" name="resultado" checked={!fueExitosa} onChange={() => setFueExitosa(false)} className="h-5 w-5 text-red-600 dark:text-red-500 focus:ring-red-500 dark:focus:ring-red-400 dark:bg-dark-surface" />
                         <span className="text-base font-medium text-gray-700 dark:text-dark-text-primary">Extracción Fallida</span>
                     </label>
                 </div>
@@ -203,17 +242,26 @@ const ProcedimientoExtraccion = () => {
                         {muestras.map((muestra, index) => (
                         <div key={muestra.id} className="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-dark-bg-tertiary rounded-lg border dark:border-dark-border">
                             <span className="text-pnp-green-dark dark:text-dark-pnp-green font-bold text-lg pt-2">{index + 1}</span>
-                            <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary">Descripción de la Muestra</label>
-                                <input type="text" value={muestra.descripcion} onChange={(e) => handleMuestraChange(index, 'descripcion', e.target.value)} placeholder="Ej: Frasco de plástico con orina" className="mt-1 form-input" required />
+                                <label className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary">Tipo de Muestra</label>
+                                <select value={muestra.tipo_muestra} onChange={(e) => handleMuestraChange(index, 'tipo_muestra', e.target.value)} className="mt-1 form-select" required>
+                                    <option value="">Seleccione un tipo...</option>
+                                    {TIPOS_DE_MUESTRA.map(tipo => (
+                                        <option key={tipo} value={tipo}>{tipo}</option>
+                                    ))}
+                                </select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary">Cantidad / Volumen</label>
                                 <input type="text" value={muestra.cantidad} onChange={(e) => handleMuestraChange(index, 'cantidad', e.target.value)} placeholder="Ej: 50 ml aprox." className="mt-1 form-input" required />
                             </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary">Descripción Adicional (Opcional)</label>
+                                <input type="text" value={muestra.descripcion} onChange={(e) => handleMuestraChange(index, 'descripcion', e.target.value)} placeholder="Ej: Frasco de plástico tapa azul" className="mt-1 form-input" />
                             </div>
-                            <button type="button" onClick={() => removeMuestra(index)} className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors" title="Eliminar muestra">
+                            </div>
+                            <button type="button" onClick={() => removeMuestra(index)} className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20" title="Eliminar muestra">
                             <DeleteIcon />
                             </button>
                         </div>
@@ -277,4 +325,3 @@ const ProcedimientoExtraccion = () => {
 };
 
 export default ProcedimientoExtraccion;
-

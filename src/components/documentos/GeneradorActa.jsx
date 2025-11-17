@@ -1,14 +1,14 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-const MARGIN = { top: 20, right: 25, bottom: 50, left: 25 };
+const MARGIN = { top: 15, right: 15, bottom: 15, left: 15 };
 const PAGE_WIDTH = 210;
 const PAGE_HEIGHT = 297;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN.left - MARGIN.right;
 const FONT_SIZE = 11;
 const LINE_HEIGHT = 6;
 
-class DocManager {
+export class DocManager {
     constructor(datos) {
         this.doc = new jsPDF('portrait', 'mm', 'a4');
         this.yPos = 0;
@@ -146,17 +146,20 @@ class DocManager {
             fontStyle = 'normal',
             fontSize = FONT_SIZE,
             x = MARGIN.left,
-            maxWidth = CONTENT_WIDTH
+            maxWidth = CONTENT_WIDTH,
+            indent = 0
         } = options;
         
+        const finalX = x + indent;
+
         this.doc.setFontSize(fontSize);
         this.doc.setFont('helvetica', fontStyle);
         
-        const lines = this.doc.splitTextToSize(text, maxWidth);
+        const lines = this.doc.splitTextToSize(text, maxWidth - indent);
         
         lines.forEach(line => {
             this._checkPageBreak(LINE_HEIGHT);
-            this.doc.text(line, x, this.yPos, { align });
+            this.doc.text(line, finalX, this.yPos, { align });
             this.yPos += LINE_HEIGHT;
         });
         
@@ -224,89 +227,74 @@ class DocManager {
         this.yPos += height;
     }
 
-    drawSignatures() {
+    drawSignatures(types = ['perito', 'examinado']) {
         const { perito, oficio } = this.datos;
         const numPages = this.doc.internal.getNumberOfPages();
         this.doc.setPage(numPages);
         
-        const signatureHeight = 40; // Altura necesaria para las firmas
-        const minSpaceAbove = 15; // Espacio mínimo antes de las firmas
-        
-        // SOLUCIÓN: Calcular si hay espacio suficiente
-        const spaceNeeded = minSpaceAbove + signatureHeight;
+        const signatureHeight = 30; // Altura estimada para el bloque de firmas
+        const spaceNeeded = signatureHeight + 5; // Espacio total requerido
         const spaceAvailable = PAGE_HEIGHT - MARGIN.bottom - this.yPos;
         
         let signatureY;
-        
         if (spaceAvailable < spaceNeeded) {
-            // No hay suficiente espacio, crear nueva página
             this._addPage();
-            signatureY = this.yPos + 15;
-        } else if (spaceAvailable > spaceNeeded + 30) {
-            // Hay mucho espacio, poner firmas al final de la página
-            signatureY = PAGE_HEIGHT - MARGIN.bottom - signatureHeight + 10;
+            signatureY = this.yPos + 15; // Margen superior en la nueva página
         } else {
-            // Espacio justo, poner firmas después del contenido
-            signatureY = this.yPos + minSpaceAbove;
+            // Siempre empujar las firmas al fondo del área imprimible
+            signatureY = PAGE_HEIGHT - MARGIN.bottom - signatureHeight;
         }
         
-        const firmaWidth = 70;
-        const startXPerito = MARGIN.left + 5;
-        const startXExaminado = PAGE_WIDTH - MARGIN.right - firmaWidth - 5;
-        
-        // Línea de firma - Perito
+        const firmaWidth = 65;
         this.doc.setLineWidth(0.3);
-        this.doc.line(startXPerito, signatureY, startXPerito + firmaWidth, signatureY);
-        
         this.doc.setFontSize(9);
-        this.doc.setFont('helvetica', 'bold');
-        this.doc.text(
-            perito.nombre_completo,
-            startXPerito + firmaWidth / 2,
-            signatureY + 5,
-            { align: 'center' }
-        );
+
+        // --- Lógica de renderizado condicional ---
+        const startXLeft = MARGIN.left + 5;
+        const startXRight = PAGE_WIDTH - MARGIN.right - firmaWidth - 5;
+        const startXCenter = (PAGE_WIDTH / 2) - (firmaWidth / 2);
+
+        if (types.length === 1) {
+            // --- Layout para una sola firma (centrada) ---
+            const type = types[0];
+            if (type === 'perito') {
+                this.doc.line(startXCenter, signatureY, startXCenter + firmaWidth, signatureY);
+                this.doc.setFont('helvetica', 'bold');
+                this.doc.text(perito.nombre_completo || '[NOMBRE PERITO]', startXCenter + firmaWidth / 2, signatureY + 5, { align: 'center' });
+                this.doc.setFont('helvetica', 'normal');
+                this.doc.text(perito.CIP ? `CIP: ${perito.CIP}`: '[CIP PERITO]', startXCenter + firmaWidth / 2, signatureY + 9, { align: 'center' });
+                this.doc.text('PERITO CRIMINALÍSTICO', startXCenter + firmaWidth / 2, signatureY + 13, { align: 'center' });
+            }
+        } else {
+            // --- Layout para dos firmas (lado a lado) ---
+            if (types.includes('perito')) {
+                this.doc.line(startXLeft, signatureY, startXLeft + firmaWidth, signatureY);
+                this.doc.setFont('helvetica', 'bold');
+                this.doc.text(perito.nombre_completo || '[NOMBRE PERITO]', startXLeft + firmaWidth / 2, signatureY + 5, { align: 'center' });
+                this.doc.setFont('helvetica', 'normal');
+                this.doc.text(perito.CIP ? `CIP: ${perito.CIP}`: '[CIP PERITO]', startXLeft + firmaWidth / 2, signatureY + 9, { align: 'center' });
+                this.doc.text('PERITO CRIMINALÍSTICO', startXLeft + firmaWidth / 2, signatureY + 13, { align: 'center' });
+            }
+
+            if (types.includes('examinado')) {
+                this.doc.line(startXRight, signatureY, startXRight + firmaWidth, signatureY);
+                this.doc.setFont('helvetica', 'bold');
+                this.doc.text(oficio.examinado_incriminado || '[NOMBRE EXAMINADO]', startXRight + firmaWidth / 2, signatureY + 5, { align: 'center' });
+                this.doc.setFont('helvetica', 'normal');
+                this.doc.text(oficio.dni_examinado_incriminado ? `DNI: ${oficio.dni_examinado_incriminado}` : 'DNI: [NO ESPECIFICADO]', startXRight + firmaWidth / 2, signatureY + 9, { align: 'center' });
+                this.doc.text('EL EXAMINADO', startXRight + firmaWidth / 2, signatureY + 13, { align: 'center' });
+            }
+
+            if (types.includes('testigo')) {
+                this.doc.line(startXRight, signatureY, startXRight + firmaWidth, signatureY);
+                this.doc.setFont('helvetica', 'bold');
+                this.doc.text('[NOMBRE DEL TESTIGO]', startXRight + firmaWidth / 2, signatureY + 5, { align: 'center' });
+                this.doc.setFont('helvetica', 'normal');
+                this.doc.text('DNI: [DNI DEL TESTIGO]', startXRight + firmaWidth / 2, signatureY + 9, { align: 'center' });
+                this.doc.text('EL TESTIGO', startXRight + firmaWidth / 2, signatureY + 13, { align: 'center' });
+            }
+        }
         
-        this.doc.setFont('helvetica', 'normal');
-        this.doc.text(
-            `CIP: ${perito.CIP}`,
-            startXPerito + firmaWidth / 2,
-            signatureY + 9,
-            { align: 'center' }
-        );
-        this.doc.text(
-            'PERITO CRIMINALÍSTICO',
-            startXPerito + firmaWidth / 2,
-            signatureY + 13,
-            { align: 'center' }
-        );
-        
-        // Línea de firma - Examinado
-        this.doc.line(startXExaminado, signatureY, startXExaminado + firmaWidth, signatureY);
-        
-        this.doc.setFont('helvetica', 'bold');
-        this.doc.text(
-            oficio.examinado_incriminado,
-            startXExaminado + firmaWidth / 2,
-            signatureY + 5,
-            { align: 'center' }
-        );
-        
-        this.doc.setFont('helvetica', 'normal');
-        this.doc.text(
-            `DNI: ${oficio.dni_examinado_incriminado}`,
-            startXExaminado + firmaWidth / 2,
-            signatureY + 9,
-            { align: 'center' }
-        );
-        this.doc.text(
-            'EL EXAMINADO',
-            startXExaminado + firmaWidth / 2,
-            signatureY + 13,
-            { align: 'center' }
-        );
-        
-        // Actualizar yPos final
         this.yPos = signatureY + 20;
     }
 
@@ -327,7 +315,12 @@ export const generarActaExtraccion = async (datosProcedimiento) => {
     manager.addTitle(titulo);
 
     const now = new Date();
-    const introText = `En la ciudad de Huancayo, siendo las ${now.toLocaleTimeString('es-ES')} del día ${now.toLocaleDateString('es-ES')}, en las instalaciones de la Oficina de Criminalística PNP Huancayo, presente el Perito Criminalístico S.O.S PNP ${perito.nombre_completo}, con CIP N° ${perito.CIP}; se procede a realizar la presente diligencia de extracción de muestra biológica (orina), solicitada mediante Oficio N° ${oficio.numero_oficio}, a la persona de:`;
+    
+    // Hacer el texto de introducción dinámico basado en los tipos de muestra
+    const tiposDeMuestraUnicos = [...new Set(muestras.map(m => m.tipo_muestra.toLowerCase()))].filter(Boolean);
+    const tiposTexto = tiposDeMuestraUnicos.length > 0 ? `(${tiposDeMuestraUnicos.join(', ')})` : '';
+
+    const introText = `En la ciudad de Huancayo, siendo las ${now.toLocaleTimeString('es-ES')} del día ${now.toLocaleDateString('es-ES')}, en las instalaciones de la Oficina de Criminalística PNP Huancayo, presente el Perito Criminalístico S.O.S PNP ${perito.nombre_completo}, con CIP N° ${perito.CIP}; se procede a realizar la presente diligencia de extracción de muestra(s) biológica(s) ${tiposTexto}, solicitada mediante Oficio N° ${oficio.numero_oficio}, a la persona de:`;
     manager.addParagraph(introText, { align: 'justify' });
     manager.addSpace(8);
 
@@ -341,8 +334,13 @@ export const generarActaExtraccion = async (datosProcedimiento) => {
         manager.addSpace(5);
         
         manager.addTable(
-            [['#', 'Descripción de la Muestra', 'Cantidad / Volumen']],
-            muestras.map((m, i) => [i + 1, m.descripcion, m.cantidad])
+            [['#', 'Tipo de Muestra', 'Descripción Adicional', 'Cantidad / Volumen']],
+            muestras.map((m, i) => [
+                i + 1, 
+                m.tipo_muestra || 'No especificado', 
+                m.descripcion || 'N/A', 
+                m.cantidad
+            ])
         );
         
         manager.addSpace(10);
