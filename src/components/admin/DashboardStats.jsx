@@ -22,6 +22,8 @@ const DashboardStats = () => {
   const [stats, setStats] = useState({
     totalPeritos: 0,
     usuariosActivos: [],
+    usersEnable: [],
+    usersDisable: [],
     prioridadOficios: []
   });
   const [error, setError] = useState("");
@@ -126,7 +128,7 @@ const DashboardStats = () => {
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-300">Usuarios Habilitados</p>
               <p className="text-2xl font-bold text-yellow-400 dark:text-yellow-300">
-               2
+                { stats?.usersEnable?.[0]?.cantidad ?? 0 }
               </p>
             </div>
             <span className=" text-yellow-400 dark:text-yellow-300">
@@ -140,7 +142,7 @@ const DashboardStats = () => {
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-300">Usuarios Deshabilitados</p>
               <p className="text-2xl font-bold text-red-500 dark:text-red-300">
-                algo
+                { stats?.usersDisable?.[0]?.cantidad ?? 0 }
               </p>
             </div>
             <div className="text-red-500 dark:text-red-300">
