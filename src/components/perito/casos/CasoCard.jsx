@@ -13,10 +13,17 @@ const CasoCard = ({ caso, onDerivarClick }) => {
     navigate(`/perito/dashboard/casos/${caso.id_oficio}`);
   };
 
-  const handleIniciarProcedimiento = () => {
-    // Futura navegación a la vista de procedimiento específico
-    console.log(`Iniciando procedimiento para el caso ${caso.id_oficio}`);
-    // navigate(`/perito/dashboard/procedimiento/${caso.id_oficio}`);
+  const handleIniciarProcedimiento = (tipo) => {
+    if (tipo === 'extraccion') {
+      navigate(`/perito/dashboard/procedimiento/extraccion/${caso.id_oficio}`);
+    } else if (tipo === 'analisis-tm') {
+      navigate(`/perito/dashboard/procedimiento/analisis-tm/${caso.id_oficio}`);
+    } else {
+      // Fallback o ruta genérica para otros análisis (INST, LAB)
+      // Por ahora, podemos apuntar a una vista en desarrollo o simplemente loguear
+      console.log(`Iniciando procedimiento de tipo ${tipo} para el caso ${caso.id_oficio}`);
+      // navigate(`/perito/dashboard/procedimiento/analisis/${caso.id_oficio}`);
+    }
   };
 
   // Normaliza un string: quita acentos, espacios y convierte a mayúsculas.
@@ -30,18 +37,32 @@ const CasoCard = ({ caso, onDerivarClick }) => {
     const seccionPerito = normalizeString(user?.seccion_nombre);
     const estadoCaso = caso.ultimo_estado?.toUpperCase() || 'CREACION DEL OFICIO';
 
-    // Botón principal de acción (el más importante, con color)
     let primaryButton = null;
+
+    const secondaryClasses = "flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm text-gray-700 bg-gray-100 border border-gray-300 hover:bg-gray-200 dark:text-dark-text-secondary dark:bg-dark-bg-tertiary dark:border-dark-border dark:hover:bg-dark-border transition-colors duration-200";
+
 
     switch (seccionPerito) {
       case 'TOMA DE MUESTRA':
+        // El botón de "iniciar" depende del tipo de caso.
+        // Si el tipo de muestra es TOMA DE MUESTRAS, es extracción.
+        // Si es MUESTRAS REMITIDAS, es análisis (Sarro Ungueal).
         if (estadoCaso === 'CREACION DEL OFICIO') {
-          primaryButton = (
-            <button key="iniciar" onClick={handleIniciarProcedimiento} className="btn-primary">
-              <IniciarProcedimientoIcon />
-              <span>Registrar Muestra</span>
-            </button>
-          );
+          if (caso.tipo_de_muestra === 'TOMA DE MUESTRAS') {
+            primaryButton = (
+              <button key="iniciar" onClick={() => handleIniciarProcedimiento('extraccion')} className="btn-primary">
+                <IniciarProcedimientoIcon />
+                <span>Registrar Muestra</span>
+              </button>
+            );
+          } else { // Asumimos MUESTRAS REMITIDAS
+            primaryButton = (
+              <button key="iniciar" onClick={() => handleIniciarProcedimiento('analisis-tm')} className="btn-primary">
+                <IniciarProcedimientoIcon />
+                <span>Iniciar Análisis</span>
+              </button>
+            );
+          }
         } else {
           primaryButton = (
             <button key="derivar" onClick={() => onDerivarClick(caso.id_oficio)} className="btn-primary">
@@ -55,7 +76,7 @@ const CasoCard = ({ caso, onDerivarClick }) => {
       case 'INSTRUMENTALIZACION':
         if (!estadoCaso.startsWith('DERIVADO')) {
            primaryButton = (
-            <button key="iniciar" onClick={handleIniciarProcedimiento} className="btn-primary">
+            <button key="iniciar" onClick={() => handleIniciarProcedimiento('analisis-inst')} className="btn-primary">
               <IniciarProcedimientoIcon />
               <span>Realizar Análisis</span>
             </button>
@@ -73,14 +94,14 @@ const CasoCard = ({ caso, onDerivarClick }) => {
       case 'LABORATORIO':
         if (estadoCaso.startsWith('DERIVADO A: LABORATORIO')) {
           primaryButton = (
-            <button key="consolidar" onClick={handleIniciarProcedimiento} className="btn-primary">
+            <button key="consolidar" onClick={() => handleIniciarProcedimiento('consolidar')} className="btn-primary">
               <ConsolidarIcon />
               <span>Consolidar</span>
             </button>
           );
         } else if (estadoCaso === 'CREACION DEL OFICIO') {
            primaryButton = (
-            <button key="iniciar" onClick={handleIniciarProcedimiento} className="btn-primary">
+            <button key="iniciar" onClick={() => handleIniciarProcedimiento('analisis-lab')} className="btn-primary">
               <IniciarProcedimientoIcon />
               <span>Iniciar Análisis</span>
             </button>
@@ -88,7 +109,7 @@ const CasoCard = ({ caso, onDerivarClick }) => {
         } else {
           // Asumimos que si no es para consolidar, es para generar el reporte final
            primaryButton = (
-            <button key="reporte" onClick={handleIniciarProcedimiento} className="btn-primary">
+            <button key="reporte" onClick={() => handleIniciarProcedimiento('reporte')} className="btn-primary">
               <GenerarReporteIcon />
               <span>Generar Reporte</span>
             </button>
@@ -104,7 +125,7 @@ const CasoCard = ({ caso, onDerivarClick }) => {
 
     // Botón secundario "Ver Detalles"
     buttons.push(
-      <button key="detalles" onClick={handleVerDetalles} className="btn-secondary">
+      <button key="detalles" onClick={handleVerDetalles} className={secondaryClasses}>
         <VerDetalleIcon />
         <span>Ver Detalles</span>
       </button>
@@ -152,48 +173,6 @@ const CasoCard = ({ caso, onDerivarClick }) => {
         </div>
       </div>
       
-      {/* Estilos para los botones (se pueden mover a index.css) */}
-      <style jsx>{`
-        .btn-primary {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.5rem 1rem;
-          border-radius: 0.5rem;
-          font-weight: 500;
-          font-size: 0.875rem;
-          color: white;
-          background-color: #1a4d2e; /* pnp-green-dark */
-          transition: background-color 0.2s;
-        }
-        .btn-primary:hover {
-          background-color: #2d7d4a; /* pnp-green-light */
-        }
-        .btn-secondary {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.5rem 1rem;
-          border-radius: 0.5rem;
-          font-weight: 500;
-          font-size: 0.875rem;
-          color: #374151; /* gray-700 */
-          background-color: #f3f4f6; /* gray-100 */
-          border: 1px solid #d1d5db; /* gray-300 */
-          transition: background-color 0.2s;
-        }
-        .btn-secondary:hover {
-          background-color: #e5e7eb; /* gray-200 */
-        }
-        .dark .btn-secondary {
-          color: #d1d5db; /* dark-text-secondary */
-          background-color: #334155; /* dark-bg-tertiary */
-          border-color: #475569; /* dark-border */
-        }
-        .dark .btn-secondary:hover {
-          background-color: #475569;
-        }
-      `}</style>
     </div>
   );
 };
