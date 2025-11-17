@@ -92,6 +92,38 @@ export class OficiosService {
     }
   }
 
+  static async getAllSeguimientoOficios(){
+    try {
+      const response = await fetchWithAuth(`/api/oficios/all/seguimiento`);
+      const data = await response.json();
+      if (!response.ok) {
+        return { success: false, message: data.message || 'Error al obtener todos los seguimientos' };
+      }
+      return data;
+    } catch (error) {
+      console.error('Error en getAllSeguimientoOficios:', error);
+      if (!error.message.includes('Sesión expirada')) {
+        return { success: false, message: error.message || 'Error en la petición' };
+      }
+    }
+  }
+
+  static async getAllSeguimientoOficiosById(id){
+    try {
+      const response = await fetchWithAuth(`/api/oficios/all/seguimiento/${id}`);
+      const data = await response.json();
+      if (!response.ok) {
+        return { success: false, message: data.message || 'Error al obtener todos los seguimientos' };
+      }
+      return data;
+    } catch (error) {
+      console.error('Error en getAllSeguimientoOficios:', error);
+      if (!error.message.includes('Sesión expirada')) {
+        return { success: false, message: error.message || 'Error en la petición' };
+      }
+    }
+  }
+
   static async derivarOficio(id_oficio, id_nuevo_perito, nombre_seccion_destino) {
     try {
       const response = await fetchWithAuth(`/api/oficios/${id_oficio}/derivar`, {
