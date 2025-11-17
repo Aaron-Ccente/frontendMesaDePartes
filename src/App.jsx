@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { ThemeProvider } from './context/ThemeContext.jsx';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import { Toaster } from 'sonner';
 
 // Auth Components
 import AdminLogin from './components/auth/AdminLogin';
@@ -23,9 +24,16 @@ import AdminForm from './components/admin/AdminForm';
 import PeritoDashboard from './components/perito/PeritoDashboard';
 import PeritoResumen from './components/perito/PeritoResumen';
 import PeritoDocumentos from './components/perito/PeritoDocumentos';
-import PeritoCasos from './components/perito/PeritoCasos';
 import CasoDetail from './components/perito/CasoDetail';
 import PeritoPerfil from './components/perito/PeritoPerfil';
+import CasosExtraccion from './components/perito/casos/CasosExtraccion';
+import CasosAnalisisTM from './components/perito/casos/CasosAnalisisTM';
+import CasosExtraccionAnalisis from './components/perito/casos/CasosExtraccionAnalisis';
+import CasosAnalisisINST from './components/perito/casos/CasosAnalisisINST';
+import CasosAnalisisLAB from './components/perito/casos/CasosAnalisisLAB';
+import CasosConsolidacion from './components/perito/casos/CasosConsolidacion';
+
+
 import MesaDePartes from './components/admin/MesaDePartes';
 import MesaDePartesForm from './components/admin/MesaDePartesForm';
 import MesaDePartesLogin from './components/auth/MesaDePartesLogin';
@@ -46,6 +54,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
+          <Toaster richColors position="top-center" />
           <Routes>
             {/* Auth Routes */}
             <Route path="/admin/login" element={<AdminLogin />} />
@@ -86,7 +95,12 @@ function App() {
             }>
               <Route index element={<PeritoResumen />} />
               <Route path="documentos" element={<PeritoDocumentos />} />
-              <Route path="casos" element={<PeritoCasos />} />
+              <Route path="mis-casos/extraccion" element={<CasosExtraccion />} />
+              <Route path="mis-casos/analisis-tm" element={<CasosAnalisisTM />} />
+              <Route path="mis-casos/extraccion-y-analisis" element={<CasosExtraccionAnalisis />} />
+              <Route path="mis-casos/analisis-inst" element={<CasosAnalisisINST />} />
+              <Route path="mis-casos/analisis-lab" element={<CasosAnalisisLAB />} />
+              <Route path="mis-casos/consolidacion" element={<CasosConsolidacion />} />
               <Route path="casos/:id" element={<CasoDetail />} />
               <Route path="perfil" element={<PeritoPerfil />} />
             </Route>

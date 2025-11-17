@@ -94,7 +94,7 @@ const AsignacionPerito = ({ idEspecialidad, idTiposExamen, tipoDeIngreso, onPeri
                       <tr key={perito.id_usuario} className="border-b border-gray-200 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-bg-tertiary">
                         <td className="p-3 text-gray-700 dark:text-gray-200">{perito.nombre_completo}</td>
                         <td className="p-3 text-gray-700 dark:text-gray-200">{perito.CIP}</td>
-                        <td className="p-3 text-center text-gray-700 dark:text-gray-200">{perito.casos_asignados ?? 0}</td>
+                        <td className="p-3 text-center text-gray-700 dark:text-gray-200">{perito.casos_activos ?? 0}</td>
                         <td className="p-3">
                           <button
                             onClick={() => handleSelect(perito)}

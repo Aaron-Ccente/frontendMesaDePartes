@@ -18,7 +18,7 @@ const getActiveToken = () => {
 };
 
 // Función para limpiar todos los datos de sesión
-const clearAllSessions = () => {
+export const clearAllSessions = () => {
     localStorage.removeItem('mesadepartesToken');
     localStorage.removeItem('mesadepartesData');
     localStorage.removeItem('adminToken');
