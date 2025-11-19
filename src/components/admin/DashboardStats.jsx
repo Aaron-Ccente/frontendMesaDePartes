@@ -13,18 +13,22 @@ import UsersActive from "./DashboardStats/tables/UsersActive";
 import PrioridadOficios from "./DashboardStats/tables/PrioridadOficios";
 import EnableIcon from "../../assets/icons/EnableIcon";
 import DisableIcon from "../../assets/icons/DisableIcon";
+import BarChartOficios from "./DashboardStats/BarChartOficios";
+import CountOficiosTable from "./DashboardStats/tables/CountOficiosTable";
 
 const DashboardStats = () => {
   const navigate = useNavigate();
   const { loading } = useAuth();
   const [showUsersTable, setShowUsersTable] = useState(false);
   const [showOficiosTable, setShowOficiosTable] = useState(false);
+  const [showCantidadOficiosTable, setShowCantidadOficiosTable] = useState(false);
   const [stats, setStats] = useState({
     totalPeritos: 0,
     usuariosActivos: [],
     usersEnable: [],
     usersDisable: [],
-    prioridadOficios: []
+    prioridadOficios: [],
+    oficiosDeLaSemana: []
   });
   const [error, setError] = useState("");
 
@@ -47,6 +51,9 @@ const DashboardStats = () => {
     setShowUsersTable(!showUsersTable);
   };
 
+  const toggleCantidadOficiosTable = () =>{
+    setShowCantidadOficiosTable(!showCantidadOficiosTable)
+  }
   const toggleOficiosTable = () => {
     setShowOficiosTable(!showOficiosTable);
   };
@@ -198,17 +205,16 @@ const DashboardStats = () => {
           className="w-full bg-amber-300 mt-4 cursor-pointer h-10 rounded-b-xl">{showUsersTable ? "Ocultar historial" : "Ver historial"}</button>
         </div>
 
-        {/* Total de oficios vs tiempo */}
+        {/* Total de oficios de la semana*/}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-colors duration-300  flex flex-col items-center justify-between">
           <h2 className="text-xl font-semibold text-green-800 p-6 dark:text-green-400 mb-4">
-            Total de oficios vs tiempo
+            Total de oficios en la semana
           </h2>
-          {(stats.prioridadOficios.length > 0 ) ? <SimpleBarChart
-            data={stats.prioridadOficios}
-            isAnimationActive={true}
+          {(stats.oficiosDeLaSemana.length > 0 ) ? <BarChartOficios
+            data={stats.oficiosDeLaSemana}
           /> : <div className="dark:text-white">No hay datos disponibles</div>}
           <button 
-          onClick={true}
+          onClick={toggleCantidadOficiosTable}
           className="w-full bg-amber-300 mt-4 cursor-pointer h-10 rounded-b-xl">Ver historial</button>
         </div>
 
@@ -232,6 +238,9 @@ const DashboardStats = () => {
       {/* Tabla a mostrar segun click */}
       {showUsersTable && (
         <UsersActive usuariosActivos={stats.usuariosActivos} />
+      )}
+      {showCantidadOficiosTable && (
+        <CountOficiosTable oficiosDeLaSemana={stats.oficiosDeLaSemana} />
       )}
       {showOficiosTable && (
         <PrioridadOficios prioridadOficios={stats.prioridadOficios} />
