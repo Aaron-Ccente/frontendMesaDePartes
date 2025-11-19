@@ -18,11 +18,16 @@ const CasoCard = ({ caso, onDerivarClick, isDeriving }) => {
       navigate(`/perito/dashboard/procedimiento/extraccion/${caso.id_oficio}`);
     } else if (tipo === 'analisis-tm') {
       navigate(`/perito/dashboard/procedimiento/analisis-tm/${caso.id_oficio}`);
-    } else {
-      // Fallback o ruta genérica para otros análisis (INST, LAB)
-      // Por ahora, podemos apuntar a una vista en desarrollo o simplemente loguear
-      console.log(`Iniciando procedimiento de tipo ${tipo} para el caso ${caso.id_oficio}`);
-      // navigate(`/perito/dashboard/procedimiento/analisis/${caso.id_oficio}`);
+    } else if (tipo === 'analisis-inst') {
+      // TODO: Implementar vista de análisis INST
+      console.log('Navegar a Análisis INST');
+    } else if (tipo === 'analisis-lab') {
+      navigate(`/perito/dashboard/procedimiento/analisis-lab/${caso.id_oficio}`);
+    } else if (tipo === 'consolidar') {
+      navigate(`/perito/dashboard/procedimiento/consolidar/${caso.id_oficio}`);
+    } else if (tipo === 'reporte') {
+      // TODO: Implementar vista de generación de reporte final (si es diferente a consolidar)
+      console.log('Navegar a Generación de Reporte');
     }
   };
 
@@ -75,14 +80,14 @@ const CasoCard = ({ caso, onDerivarClick, isDeriving }) => {
 
       case 'INSTRUMENTALIZACION':
         if (!estadoCaso.startsWith('DERIVADO')) {
-           primaryButton = (
+          primaryButton = (
             <button key="iniciar" onClick={() => handleIniciarProcedimiento('analisis-inst')} className="btn-primary">
               <IniciarProcedimientoIcon />
               <span>Realizar Análisis</span>
             </button>
           );
         } else {
-           primaryButton = (
+          primaryButton = (
             <button key="derivar" onClick={() => onDerivarClick(caso.id_oficio)} className="btn-primary">
               <DerivarIcon />
               <span>Derivar a LAB</span>
@@ -100,7 +105,7 @@ const CasoCard = ({ caso, onDerivarClick, isDeriving }) => {
             </button>
           );
         } else if (estadoCaso === 'CREACION DEL OFICIO') {
-           primaryButton = (
+          primaryButton = (
             <button key="iniciar" onClick={() => handleIniciarProcedimiento('analisis-lab')} className="btn-primary">
               <IniciarProcedimientoIcon />
               <span>Iniciar Análisis</span>
@@ -108,7 +113,7 @@ const CasoCard = ({ caso, onDerivarClick, isDeriving }) => {
           );
         } else {
           // Asumimos que si no es para consolidar, es para generar el reporte final
-           primaryButton = (
+          primaryButton = (
             <button key="reporte" onClick={() => handleIniciarProcedimiento('reporte')} className="btn-primary">
               <GenerarReporteIcon />
               <span>Generar Reporte</span>
@@ -120,8 +125,8 @@ const CasoCard = ({ caso, onDerivarClick, isDeriving }) => {
       default:
         break;
     }
-    
-    if(primaryButton) buttons.push(primaryButton);
+
+    if (primaryButton) buttons.push(primaryButton);
 
     // Botón secundario "Ver Detalles"
     buttons.push(
@@ -161,7 +166,7 @@ const CasoCard = ({ caso, onDerivarClick, isDeriving }) => {
           <span className="font-semibold text-gray-500 dark:text-dark-text-secondary">Exámenes:</span>
           <span className="text-gray-800 dark:text-dark-text-primary text-right truncate">{caso.tipos_de_examen || 'No especificados'}</span>
         </div>
-         <div className="flex justify-between">
+        <div className="flex justify-between">
           <span className="font-semibold text-gray-500 dark:text-dark-text-secondary">Prioridad:</span>
           <span className="text-gray-800 dark:text-dark-text-primary text-right truncate">{caso.nombre_prioridad || 'No especificada'}</span>
         </div>
@@ -172,7 +177,7 @@ const CasoCard = ({ caso, onDerivarClick, isDeriving }) => {
           {renderButtons()}
         </div>
       </div>
-      
+
     </div>
   );
 };

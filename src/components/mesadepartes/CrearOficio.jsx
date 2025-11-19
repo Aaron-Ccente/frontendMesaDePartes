@@ -34,13 +34,14 @@ const initialFormData = {
   asunto: "",
   folios: "",
   tipo_de_muestra: "TOMA DE MUESTRAS", 
-};function CrearOficio() {
+};
+
+function CrearOficio() {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState(initialFormData);
 
   const [codigo, setCodigo] = useState("");
-  const [closeModal, setCloseModal] = useState(false);
   const [especialidades, setEspecialidades] = useState([]);
   const [prioridades, setPrioridades] = useState([]);
   const [tiposExamen, setTiposExamen] = useState([]);
@@ -62,7 +63,7 @@ const initialFormData = {
         setPrioridades(Array.isArray(prioridadesRes?.data) ? prioridadesRes.data : []);
         const filtered = (especialidadesRes?.data || []).filter(e => ![11, 12, 13].includes(e.id_tipo_departamento));
         setEspecialidades(filtered);
-      } catch (error) {
+      } catch {
         setFeedback("Error al cargar datos iniciales.");
       }
     };
@@ -89,22 +90,22 @@ const initialFormData = {
         throw new Error(res.message || 'No se encontraron peritos.');
       }
     } catch (err) {
-      setFeedback(err.message);
+      setFeedback(err?.message || "Error de conexión.");
     } finally {
       setIsLoadingPeritos(false);
     }
   };
 
   const handleDepartmentSelection = async (department) => {
-    setFormData(prev => ({ 
+    setFormData({ 
       ...initialFormData,
       id_especialidad_requerida: department.id_tipo_departamento, 
       especialidad_requerida: department.nombre_departamento 
-    }));
+    });
     try {
       const tiposRes = await ComplementServices.getTiposByDepartamento(department.id_tipo_departamento);
       setTiposExamen(tiposRes?.data || []);
-    } catch (err) {
+    } catch {
       setTiposExamen([]);
     }
     setStep(2);
@@ -188,8 +189,8 @@ const initialFormData = {
       } else {
         setFeedback(`Error del servidor: ${createResp.message}`);
       }
-    } catch (err) {
-      setFeedback(err?.message || "Error de conexión.");
+    } catch {
+      setFeedback("Error de conexión.");
     }
   };
 
@@ -339,7 +340,7 @@ const initialFormData = {
 
       {step === 1 ? renderDepartmentSelection() : renderDynamicForm()}
 
-      {closeModal && (
+      {codigo && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white dark:bg-dark-bg-secondary p-8 rounded-lg text-center shadow-2xl transform transition-all duration-300 ease-out scale-95 opacity-0 animate-scale-in"> {/* Added backdrop-blur-sm and animation classes */}
             <h3 className="text-2xl font-bold text-success dark:text-dark-pnp-green mb-4">¡Oficio Creado y Asignado!</h3>

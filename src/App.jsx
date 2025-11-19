@@ -34,6 +34,8 @@ import CasosAnalisisLAB from './components/perito/casos/CasosAnalisisLAB';
 import CasosConsolidacion from './components/perito/casos/CasosConsolidacion';
 import ProcedimientoExtraccion from './components/perito/procedimientos/ProcedimientoExtraccion';
 import ProcedimientoAnalisisTM from './components/perito/procedimientos/ProcedimientoAnalisisTM';
+import ProcedimientoAnalisisLAB from './components/perito/procedimientos/ProcedimientoAnalisisLAB';
+import ProcedimientoConsolidacion from './components/perito/procedimientos/ProcedimientoConsolidacion';
 
 
 import MesaDePartes from './components/admin/MesaDePartes';
@@ -80,8 +82,8 @@ function App() {
               <Route path="mesadepartes" element={<MesaDePartes />} />
               <Route path="mesadepartes/crear" element={<MesaDePartesForm />} />
               <Route path="mesadepartes/editar/:cip" element={<MesaDePartesForm />} />
-              <Route path="documentos" element={<DocumentManagement />}  />
-              <Route path="configuracion" element={<SystemConfiguration />}/>
+              <Route path="documentos" element={<DocumentManagement />} />
+              <Route path="configuracion" element={<SystemConfiguration />} />
               <Route path="configuracion/especialidades" element={<EspecialidadesManagement />} />
               <Route path="configuracion/grados" element={<GradosManagement />} />
               <Route path="configuracion/turnos" element={<TurnosManagement />} />
@@ -106,6 +108,8 @@ function App() {
               <Route path="casos/:id" element={<CasoDetail />} />
               <Route path="procedimiento/extraccion/:id" element={<ProcedimientoExtraccion />} />
               <Route path="procedimiento/analisis-tm/:id" element={<ProcedimientoAnalisisTM />} />
+              <Route path="procedimiento/analisis-lab/:id" element={<ProcedimientoAnalisisLAB />} />
+              <Route path="procedimiento/consolidar/:id" element={<ProcedimientoConsolidacion />} />
               <Route path="perfil" element={<PeritoPerfil />} />
             </Route>
 

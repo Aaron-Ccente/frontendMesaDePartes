@@ -1,4 +1,4 @@
-import { authService } from './authService.js';
+
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
 
@@ -8,9 +8,9 @@ export class ProcedimientoService {
    * @returns {HeadersInit}
    */
   static #getHeaders() {
-    const token = authService.getToken();
+    const token = localStorage.getItem('peritoToken');
     if (!token) {
-      console.error("No se encontró token de autenticación.");
+      console.error("No se encontró token de autenticación (peritoToken).");
       throw new Error("Token de autenticación no encontrado. Inicie sesión de nuevo.");
     }
     return {
@@ -64,6 +64,72 @@ export class ProcedimientoService {
       return data;
     } catch (error) {
       console.error('Error en ProcedimientoService.derivar:', error);
+      throw error;
+    }
+  }
+  /**
+   * Registra los datos de extracción de muestras (Perito TM).
+   */
+  static async registrarExtraccion(idOficio, data) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/extraccion`, {
+        method: 'POST',
+        headers: this.#getHeaders(),
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Error en registrarExtraccion:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Registra los datos de análisis (TM, INST, LAB).
+   */
+  static async registrarAnalisis(idOficio, data) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/analisis`, {
+        method: 'POST',
+        headers: this.#getHeaders(),
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Error en registrarAnalisis:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtiene todos los resultados registrados para un oficio (para consolidación).
+   */
+  static async obtenerResultadosCompletos(idOficio) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/resultados-completos`, {
+        method: 'GET',
+        headers: this.#getHeaders(),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Error en obtenerResultadosCompletos:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Registra la consolidación final y cierra el caso.
+   */
+  static async registrarConsolidacion(idOficio, data) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/consolidacion`, {
+        method: 'POST',
+        headers: this.#getHeaders(),
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Error en registrarConsolidacion:', error);
       throw error;
     }
   }
