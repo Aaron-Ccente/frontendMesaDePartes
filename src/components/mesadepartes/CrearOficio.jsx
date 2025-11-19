@@ -46,6 +46,12 @@ const initialFormData = {
   const [tiposExamen, setTiposExamen] = useState([]);
   const [feedback, setFeedback] = useState(null);
 
+  // --- State for Perito Assignment Modal ---
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [peritosDisponibles, setPeritosDisponibles] = useState([]);
+  const [isLoadingPeritos, setIsLoadingPeritos] = useState(false);
+
+
   useEffect(() => {
     const loadInitialData = async () => {
       try {
@@ -62,6 +68,32 @@ const initialFormData = {
     };
     loadInitialData();
   }, []);
+
+  const handleOpenPeritoModal = async () => {
+    const { id_tipos_examen, tipo_de_muestra } = formData;
+    if (tipo_de_muestra !== 'TOMA DE MUESTRAS' && id_tipos_examen.length === 0) {
+      setFeedback("Por favor, seleccione al menos un tipo de examen antes de asignar un perito.");
+      return;
+    }
+
+    setIsLoadingPeritos(true);
+    try {
+      const res = await ComplementServices.getPeritosParaAsignacion({
+        idTiposExamen: id_tipos_examen,
+        tipoDeIngreso: tipo_de_muestra,
+      });
+      if (res.success) {
+        setPeritosDisponibles(res.data);
+        setIsModalOpen(true);
+      } else {
+        throw new Error(res.message || 'No se encontraron peritos.');
+      }
+    } catch (err) {
+      setFeedback(err.message);
+    } finally {
+      setIsLoadingPeritos(false);
+    }
+  };
 
   const handleDepartmentSelection = async (department) => {
     setFormData(prev => ({ 
@@ -86,11 +118,8 @@ const initialFormData = {
     const { name, value } = e.target;
     if (name === "folios") {
       const numValue = parseInt(value, 10);
-      // Asegurarse de que el valor sea un número, no sea 0, y sea menor que 100.
-      // Si no es un número válido o está fuera de rango, no actualizar el estado.
       if (isNaN(numValue) || numValue < 1 || numValue >= 100) {
-        // Opcional: se podría mostrar un feedback al usuario aquí si el valor es inválido.
-        return; // No actualizar el estado si el valor es inválido.
+        return;
       }
       setFormData(prev => ({ ...prev, [name]: numValue }));
     } else {
@@ -100,10 +129,9 @@ const initialFormData = {
 
   const handleClearForm = () => {
     setFormData(prev => ({
-      ...initialFormData, // Reset all fields to their initial state
-      id_especialidad_requerida: prev.id_especialidad_requerida, // Keep the selected department ID
-      especialidad_requerida: prev.especialidad_requerida, // Keep the selected department name
-      // Also keep the tipo_de_muestra selection
+      ...initialFormData,
+      id_especialidad_requerida: prev.id_especialidad_requerida,
+      especialidad_requerida: prev.especialidad_requerida,
       tipo_de_muestra: prev.tipo_de_muestra,
     }));
   };
@@ -117,7 +145,16 @@ const initialFormData = {
       const new_names = isSelected
         ? prev.tipos_examen.filter(n => n !== examenName)
         : [...prev.tipos_examen, examenName];
-      return { ...prev, id_tipos_examen: new_ids, tipos_examen: new_names };
+      
+      // Al cambiar los exámenes, reseteamos el perito seleccionado
+      return { 
+        ...prev, 
+        id_tipos_examen: new_ids, 
+        tipos_examen: new_names,
+        id_usuario_perito_asignado: "",
+        perito_asignado: "",
+        cip_perito_asignado: "",
+      };
     });
   };
 
@@ -140,12 +177,14 @@ const initialFormData = {
           return;
         }
       }
+      // El backend ya no necesita la asignación automática, así que volvemos a la lógica anterior
+      // donde el perito se envía en el payload.
       const payload = { ...formData, mesadepartesData: { id_usuario: user.id_usuario, CIP: user.CIP, nombre_completo: user.nombre_completo } };
       const createResp = await OficiosService.createOficio(payload);
+
       if (createResp.success) {
         setFeedback("¡Oficio creado y asignado exitosamente!");
         setCodigo(createResp.data.numero_oficio || `ID-${createResp.data.id_oficio}`);
-        // setCloseModal(true); // Comentado para no limpiar el formulario y facilitar pruebas
       } else {
         setFeedback(`Error del servidor: ${createResp.message}`);
       }
@@ -184,7 +223,6 @@ const initialFormData = {
             <button onClick={() => setStep(1)} className="px-4 py-2 text-sm rounded-lg bg-gray-200 dark:bg-dark-bg-tertiary hover:bg-gray-300 dark:hover:bg-gray-600">Cambiar Depto.</button>
         </div>
         
-        {/* Tipo de Muestra Selector */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <button onClick={() => handleTipoMuestraChange('TOMA DE MUESTRAS')} className={`p-4 text-left rounded-lg border-2 transition-all duration-200 ${isTomaMuestra ? 'border-info text-info dark:border-blue-400 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-200 dark:border-dark-border hover:bg-blue-50 dark:hover:bg-blue-900/20'}`}>
             <h3 className={`text-lg font-semibold ${!isTomaMuestra ? 'text-gray-700 dark:text-dark-text-secondary' : ''}`}>REQUIERE TOMA DE MUESTRA</h3>
@@ -217,18 +255,6 @@ const initialFormData = {
             <FormInput label="Delito" name="delito" value={formData.delito} onChange={handleChange} required />
           </FormSection>
 
-          {isRemitido && (
-            <FormSection title="3. Información de la Muestra Remitida">
-              {/* Campos de la Parte 3 de Muestra Remitida eliminados temporalmente */}
-            </FormSection>
-          )}
-          
-          {isTomaMuestra && (
-            <FormSection title="3. Información de la Muestra a Extraer">
-              {/* Campos de la Parte 3 de Muestra a Extraer eliminados temporalmente */}
-            </FormSection>
-          )}
-
           <FormSection title="4. Exámenes y Derivación">
             <div className="md:col-span-2">
               <label className="text-sm font-medium text-gray-700 dark:text-dark-text-secondary mb-2 block">Tipos de Examen Requeridos</label>
@@ -246,13 +272,31 @@ const initialFormData = {
                 )) : <p className="text-gray-500 dark:text-dark-text-muted">No hay exámenes para este departamento.</p>}
               </div>
             </div>
-            <AsignacionPerito 
-              idEspecialidad={formData.id_especialidad_requerida} 
-              idTiposExamen={formData.id_tipos_examen} // Pasar el array completo de exámenes para la lógica de asignación
-              tipoDeIngreso={formData.tipo_de_muestra} // Pasar el tipo de ingreso para la lógica de filtrado
-              onPeritoSelect={handlePeritoSelect} 
-              selectedPerito={{nombre_completo: formData.perito_asignado}} 
-            />
+            
+            {/* --- New Perito Assignment UI --- */}
+            <div>
+              <label className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1 block">
+                Asignar a Perito <span className="text-red-500">*</span>
+              </label>
+              <div className="flex items-center gap-4">
+                <div className="flex-grow p-2 border rounded-lg bg-gray-50 dark:bg-dark-bg-tertiary min-h-[42px]">
+                  {formData.perito_asignado ? (
+                    <span className="text-gray-800 dark:text-dark-text-primary">{formData.perito_asignado}</span>
+                  ) : (
+                    <span className="text-gray-400">No seleccionado</span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleOpenPeritoModal}
+                  disabled={isLoadingPeritos}
+                  className="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                >
+                  {isLoadingPeritos ? 'Cargando...' : 'Seleccionar'}
+                </button>
+              </div>
+            </div>
+
             <FormSelect label="Prioridad" name="id_prioridad" value={formData.id_prioridad} onChange={handleChange} required>
               <option value="">Seleccione prioridad</option>
               {prioridades.map(p => <option key={p.id_prioridad} value={p.id_prioridad}>{p.nombre_prioridad}</option>)}
@@ -276,6 +320,14 @@ const initialFormData = {
             <button type="submit" className="px-6 py-2 rounded-lg bg-pnp-green hover:bg-pnp-green-light text-white font-semibold">Crear y Generar Código</button>
           </div>
         </form>
+        
+        <AsignacionPerito 
+          isModalOpen={isModalOpen}
+          peritos={peritosDisponibles}
+          onClose={() => setIsModalOpen(false)}
+          onPeritoSelect={handlePeritoSelect}
+          loading={isLoadingPeritos}
+        />
       </div>
     );
   };

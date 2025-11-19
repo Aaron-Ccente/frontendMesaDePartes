@@ -39,6 +39,27 @@
   --color-dark-accent: #3b82f6;         /* Azul acento para modo oscuro */
 }
 
+@layer components {
+  .form-input {
+    @apply block w-full rounded-md shadow-sm sm:text-sm border;
+    @apply bg-gray-50 border-gray-300 text-gray-900;
+    @apply focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-pnp-green-light)] focus:border-[var(--color-pnp-green-light)];
+  }
+  .dark .form-input {
+    @apply bg-[var(--color-dark-bg-secondary)] border-[var(--color-dark-border)] text-[var(--color-dark-text-primary)];
+    @apply focus:ring-[var(--color-dark-pnp-green)] focus:border-[var(--color-dark-pnp-green)];
+  }
+
+  .btn-primary {
+    @apply flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-200;
+    @apply text-white bg-[var(--color-pnp-green)] hover:bg-[var(--color-pnp-green-light)];
+    @apply disabled:bg-gray-400 disabled:cursor-not-allowed;
+  }
+  .dark .btn-primary {
+    @apply text-[var(--color-dark-bg-primary)] bg-[var(--color-dark-pnp-green)] hover:bg-[var(--color-dark-pnp-green-light)];
+  }
+}
+
 /* Clase de utilidad para ocultar el scrollbar */
 .no-scrollbar::-webkit-scrollbar {
   display: none;

@@ -58,6 +58,22 @@ export class OficiosService {
     }
   }
 
+  static async getOficioDetalle(id) {
+    try {
+      const response = await fetchWithAuth(`/api/oficios/${id}`);
+      const data = await response.json();
+      if (!response.ok) {
+        return { success: false, message: data.message || 'Error al obtener el detalle del oficio' };
+      }
+      return data;
+    } catch (error) {
+      console.error('Error en getOficioDetalle:', error);
+      if (!error.message.includes('Sesión expirada')) {
+        return { success: false, message: error.message || 'Error en la petición' };
+      }
+    }
+  }
+
    static async checkNumero(numero) {
     try {
       const response = await fetchWithAuth(`/api/oficios/check/${encodeURIComponent(numero)}`);
