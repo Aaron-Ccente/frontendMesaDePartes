@@ -75,7 +75,7 @@ const Notification = () => {
 
   const handleVerCasos = () => {
     setShowDropdown(false);
-    navigate('/perito/dashboard/casos');
+    navigate('/perito/dashboard/mis-casos/extraccion');
   };
 
   const handleCloseDropdown = () => {
