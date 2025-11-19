@@ -6,8 +6,8 @@ import { OficiosService } from '../../../services/oficiosService';
 import { ProcedimientoService } from '../../../services/procedimientoService';
 import { LimpiarIcon, GuardarIcon, CancelarIcon, PreviewIcon } from '../../../assets/icons/Actions';
 import DeleteIcon from '../../../assets/icons/DeleteIcon';
+import { DocumentService } from '../../../services/documentService';
 import PDFPreviewModal from '../../documentos/PDFPreviewModal';
-import { generarActaApertura, generarInformeSarroUngueal } from '../../documentos/GeneradorDocumentosPericiales';
 
 // --- Constantes para la lógica de negocio ---
 const TIPOS_DE_MUESTRA = ['Sangre', 'Orina', 'Hisopo Ungueal', 'Visceras', 'Cabello', 'Otro'];
@@ -16,6 +16,27 @@ const EXAMEN_A_TIPO_MUESTRA = {
   'Toxicologico': 'Orina',
   'Sarro Ungueal': 'Hisopo Ungueal',
 };
+
+const OBJETO_PERICIA_DEFAULTS = {
+  'Dosaje Etilico': 'Cuantificación de alcohol etílico en muestra biológica.',
+  'Toxicologico': 'Identificación de sustancias tóxicas y/o drogas en muestra biológica.',
+  'Sarro Ungueal': 'Identificación de adherencias de drogas ilícitas en muestra de sarro ungueal.',
+};
+
+const METODO_UTILIZADO_DEFAULTS = {
+  'Dosaje Etilico': 'Espectrofotometría – UV VIS.',
+  'Toxicologico': 'Cromatografía en capa fina, Inmunoensayo.',
+  'Sarro Ungueal': 'Químico - colorimétrico.',
+};
+
+const TIPOS_DROGA = [
+  { key: 'cocaina', label: 'Alcaloide de cocaína' },
+  { key: 'marihuana', label: 'Cannabinoides (Marihuana)' },
+  { key: 'benzodiacepinas', label: 'Benzodiacepinas' },
+  { key: 'fenotiacinas', label: 'Fenotiacinas' },
+  { key: 'barbituricos', label: 'Barbitúricos' },
+  { key: 'sarro_ungueal', label: 'Sarro Ungueal' },
+];
 // -----------------------------------------
 
 const ProcedimientoAnalisisTM = () => {
@@ -30,7 +51,9 @@ const ProcedimientoAnalisisTM = () => {
   
   // Estados del formulario
   const [aperturaData, setAperturaData] = useState({ descripcion_paquete: '', observaciones: '' });
+  const [metadata, setMetadata] = useState({ objeto_pericia: '', metodo_utilizado: '' });
   const [muestrasAnalizadas, setMuestrasAnalizadas] = useState([]);
+  const [muestrasAgotadas, setMuestrasAgotadas] = useState(true);
 
   // Estados del modal de vista previa
   const [pdfUrl, setPdfUrl] = useState(null);
@@ -67,17 +90,39 @@ const ProcedimientoAnalisisTM = () => {
           .filter(Boolean)
       );
 
+      const initialResultados = TIPOS_DROGA.reduce((acc, droga) => {
+        acc[droga.key] = 'NEGATIVO';
+        return acc;
+      }, {});
+
       const muestrasIniciales = [...tiposSugeridos].map(tipo => ({
         id: Date.now() + Math.random(),
         codigo_muestra: '',
         tipo_muestra: tipo,
-        resultado_analisis: '',
+        descripcion_detallada: '',
+        resultados: { ...initialResultados },
       }));
 
       if (muestrasIniciales.length === 0) {
-        muestrasIniciales.push({ id: Date.now(), codigo_muestra: '', tipo_muestra: '', resultado_analisis: '' });
+        muestrasIniciales.push({ 
+          id: Date.now(), 
+          codigo_muestra: '', 
+          tipo_muestra: '', 
+          descripcion_detallada: '',
+          resultados: { ...initialResultados },
+        });
       }
       setMuestrasAnalizadas(muestrasIniciales);
+
+      // Auto-rellenar metadatos
+      const examenes = oficio.tipos_de_examen || [];
+      const objetoPericia = examenes.map(e => OBJETO_PERICIA_DEFAULTS[e]).filter(Boolean).join(' ');
+      const metodoUtilizado = examenes.map(e => METODO_UTILIZADO_DEFAULTS[e]).filter(Boolean).join(' ');
+      
+      setMetadata({
+        objeto_pericia: objetoPericia || '',
+        metodo_utilizado: metodoUtilizado || '',
+      });
     }
   }, [oficio]);
 
@@ -85,14 +130,32 @@ const ProcedimientoAnalisisTM = () => {
     setAperturaData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleMuestraChange = (index, field, value) => {
+  const handleMetadataChange = (field, value) => {
+    setMetadata(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleMuestraChange = (index, field, value, subfield = null) => {
     const newMuestras = [...muestrasAnalizadas];
-    newMuestras[index][field] = value;
+    if (subfield) {
+      newMuestras[index][field][subfield] = value;
+    } else {
+      newMuestras[index][field] = value;
+    }
     setMuestrasAnalizadas(newMuestras);
   };
 
   const addMuestra = () => {
-    setMuestrasAnalizadas([...muestrasAnalizadas, { id: Date.now(), codigo_muestra: '', tipo_muestra: '', resultado_analisis: '' }]);
+    const initialResultados = TIPOS_DROGA.reduce((acc, droga) => {
+      acc[droga.key] = 'NEGATIVO';
+      return acc;
+    }, {});
+    setMuestrasAnalizadas([...muestrasAnalizadas, { 
+      id: Date.now(), 
+      codigo_muestra: '', 
+      tipo_muestra: '', 
+      descripcion_detallada: '',
+      resultados: { ...initialResultados },
+    }]);
   };
 
   const removeMuestra = (index) => {
@@ -109,24 +172,30 @@ const ProcedimientoAnalisisTM = () => {
       return;
     }
 
-    let promise;
+    let templateName = '';
     if (tipo === 'Acta de Apertura') {
-      promise = generarActaApertura({ oficio, perito: user, aperturaData, muestrasAnalizadas });
+      templateName = 'tm/acta_apertura';
     } else if (tipo === 'Informe de Resultados') {
-      promise = generarInformeSarroUngueal({ oficio, perito: user, muestrasAnalizadas });
+      templateName = 'tm/informe_pericial_tm';
     } else {
       toast.error('Tipo de documento no reconocido.');
       return;
     }
 
-    try {
-      toast.info(`Generando vista previa de "${tipo}"...`);
-      const url = await promise;
+    const extraData = {
+      perito: user,
+      aperturaData,
+      muestrasAnalizadas,
+      metadata,
+      muestrasAgotadas,
+    };
+
+    toast.info(`Generando vista previa de "${tipo}"...`);
+    const url = await DocumentService.getPreviewUrl(id_oficio, templateName, extraData);
+
+    if (url) {
       setPdfUrl(url);
       setIsModalOpen(true);
-    } catch (error) {
-      console.error(`Error al generar PDF para ${tipo}:`, error);
-      toast.error(`No se pudo generar la vista previa: ${error.message}`);
     }
   };
 
@@ -148,6 +217,8 @@ const ProcedimientoAnalisisTM = () => {
     const payload = {
       apertura_data: aperturaData,
       muestras_analizadas: muestrasValidas,
+      metadata,
+      muestras_agotadas: muestrasAgotadas,
     };
 
     try {
@@ -223,10 +294,23 @@ const ProcedimientoAnalisisTM = () => {
           </div>
         </div>
 
-        {/* PASO 2: ANÁLISIS */}
+        {/* PASO 2: METADATOS DEL INFORME */}
+        <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-md border dark:border-dark-border space-y-6">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white border-b dark:border-dark-border pb-3">Paso 2: Datos del Informe Pericial</h3>
+          <div>
+              <label htmlFor="objeto_pericia" className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary">Objeto de la Pericia</label>
+              <textarea id="objeto_pericia" value={metadata.objeto_pericia} onChange={(e) => handleMetadataChange('objeto_pericia', e.target.value)} rows="2" placeholder="Ej: Identificación de sustancias tóxicas y adherencias de drogas ilícitas en muestra biológica." className="mt-1 form-input w-full" />
+          </div>
+          <div>
+              <label htmlFor="metodo_utilizado" className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary">Método Utilizado</label>
+              <textarea id="metodo_utilizado" value={metadata.metodo_utilizado} onChange={(e) => handleMetadataChange('metodo_utilizado', e.target.value)} rows="3" placeholder="Ej: Toxicológico: Cromatografía en capa fina, Inmunoensayo. Sarro ungueal: Químico - colorimétrico." className="mt-1 form-input w-full" />
+          </div>
+        </div>
+
+        {/* PASO 3: ANÁLISIS */}
         <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-md border dark:border-dark-border space-y-6">
           <div className="flex justify-between items-center border-b dark:border-dark-border pb-3">
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Paso 2: Registro y Análisis de Muestras</h3>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Paso 3: Registro y Análisis de Muestras</h3>
               <button type="button" onClick={() => handlePreview('Informe de Resultados')} className="btn-secondary text-sm flex items-center gap-2">
                   <PreviewIcon />
                   <span>Informe de Resultados</span>
@@ -236,7 +320,7 @@ const ProcedimientoAnalisisTM = () => {
               {muestrasAnalizadas.map((muestra, index) => (
               <div key={muestra.id} className="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-dark-bg-tertiary rounded-lg border dark:border-dark-border">
                   <span className="text-pnp-green-dark dark:text-dark-pnp-green font-bold text-lg pt-2">{index + 1}</span>
-                  <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                       <label className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary">Código de Muestra</label>
                       <input type="text" value={muestra.codigo_muestra} onChange={(e) => handleMuestraChange(index, 'codigo_muestra', e.target.value)} placeholder="Leer y escribir código de la etiqueta" className="mt-1 form-input" required />
@@ -248,9 +332,28 @@ const ProcedimientoAnalisisTM = () => {
                           {TIPOS_DE_MUESTRA.map(tipo => (<option key={tipo} value={tipo}>{tipo}</option>))}
                       </select>
                   </div>
-                  <div>
-                      <label className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary">Resultado del Análisis</label>
-                      <input type="text" value={muestra.resultado_analisis} onChange={(e) => handleMuestraChange(index, 'resultado_analisis', e.target.value)} placeholder="Ej: POSITIVO para..." className="mt-1 form-input" required />
+                  <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary">Descripción Detallada de la Muestra</label>
+                      <textarea value={muestra.descripcion_detallada} onChange={(e) => handleMuestraChange(index, 'descripcion_detallada', e.target.value)} placeholder="Ej: Un (01) frasco de plástico transparente..." rows="2" className="mt-1 form-input w-full" />
+                  </div>
+                  <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary mb-2">Resultados del Análisis</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 p-3 border rounded-md bg-gray-100 dark:bg-dark-surface">
+                        {TIPOS_DROGA.map(droga => (
+                          <div key={droga.key} className="flex items-center justify-between">
+                            <label htmlFor={`${muestra.id}-${droga.key}`} className="text-sm text-gray-700 dark:text-dark-text-secondary">{droga.label}:</label>
+                            <select 
+                              id={`${muestra.id}-${droga.key}`}
+                              value={muestra.resultados[droga.key]} 
+                              onChange={(e) => handleMuestraChange(index, 'resultados', e.target.value, droga.key)}
+                              className="form-select-sm"
+                            >
+                              <option value="NEGATIVO">NEGATIVO</option>
+                              <option value="POSITIVO">POSITIVO</option>
+                            </select>
+                          </div>
+                        ))}
+                      </div>
                   </div>
                   </div>
                   <button type="button" onClick={() => removeMuestra(index)} className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20" title="Eliminar muestra">
@@ -262,6 +365,23 @@ const ProcedimientoAnalisisTM = () => {
           <button type="button" onClick={addMuestra} className="mt-4 btn-secondary text-sm">
               + Agregar Muestra Encontrada
           </button>
+        </div>
+
+        {/* PASO 4: CONCLUSIONES ADICIONALES */}
+        <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-md border dark:border-dark-border">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-dark-border pb-3">Paso 4: Conclusiones Adicionales</h3>
+            <div className="flex items-center">
+                <input
+                    type="checkbox"
+                    id="muestrasAgotadas"
+                    checked={muestrasAgotadas}
+                    onChange={(e) => setMuestrasAgotadas(e.target.checked)}
+                    className="h-5 w-5 rounded border-gray-300 text-pnp-green-dark focus:ring-pnp-green-dark"
+                />
+                <label htmlFor="muestrasAgotadas" className="ml-3 block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">
+                    ¿Las muestras se agotaron durante el análisis?
+                </label>
+            </div>
         </div>
 
         <div className="flex flex-wrap justify-end items-center gap-3 pt-6 border-t dark:border-dark-border">

@@ -60,7 +60,7 @@ export class OficiosService {
 
   static async getOficioDetalle(id) {
     try {
-      const response = await fetchWithAuth(`/api/seguimiento/casos/${id}`);
+      const response = await fetchWithAuth(`/api/oficios/${id}`);
       const data = await response.json();
       if (!response.ok) {
         return { success: false, message: data.message || 'Error al obtener el detalle del oficio' };

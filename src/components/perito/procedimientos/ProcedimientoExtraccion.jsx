@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../../../hooks/useAuth';
 import { OficiosService } from '../../../services/oficiosService';
 import { ProcedimientoService } from '../../../services/procedimientoService';
-import { generarActaExtraccion } from '../../documentos/GeneradorActa';
+import { DocumentService } from '../../../services/documentService';
 import PDFPreviewModal from '../../documentos/PDFPreviewModal';
 import DeleteIcon from '../../../assets/icons/DeleteIcon';
 import { LimpiarIcon, PreviewIcon, GuardarIcon, CancelarIcon } from '../../../assets/icons/Actions';
@@ -15,6 +15,21 @@ const EXAMEN_A_TIPO_MUESTRA = {
   'Dosaje Etilico': 'Sangre',
   'Toxicologico': 'Orina',
   'Sarro Ungueal': 'Hisopo Ungueal',
+};
+
+const MUESTRA_DEFAULTS = {
+  'Sangre': {
+    descripcion: 'Muestra de sangre venosa extraída del pliegue del codo, en tubo de ensayo tapa lila con anticoagulante EDTA.',
+    cantidad: '5 ml aprox.',
+  },
+  'Orina': {
+    descripcion: 'Muestra de orina recolectada en un frasco de plástico estéril de boca ancha y tapa rosca.',
+    cantidad: '50 ml aprox.',
+  },
+  'Hisopo Ungueal': {
+    descripcion: 'Muestra de sarro ungueal obtenida mediante raspado con hisopo estéril de las uñas de ambas manos.',
+    cantidad: '2 hisopos',
+  },
 };
 // -----------------------------------------
 
@@ -89,6 +104,16 @@ const ProcedimientoExtraccion = () => {
   const handleMuestraChange = (index, field, value) => {
     const newMuestras = [...muestras];
     newMuestras[index][field] = value;
+
+    // Lógica de autocompletado inteligente
+    if (field === 'tipo_muestra') {
+      const defaults = MUESTRA_DEFAULTS[value];
+      if (defaults) {
+        newMuestras[index].descripcion = defaults.descripcion;
+        newMuestras[index].cantidad = defaults.cantidad;
+      }
+    }
+    
     setMuestras(newMuestras);
   };
 
@@ -121,23 +146,22 @@ const ProcedimientoExtraccion = () => {
       return;
     }
     
-    const datosParaActa = {
-      oficio,
+    // Datos del formulario que aún no se han guardado en la BD
+    const extraData = {
       perito: user,
       muestras,
       observaciones,
       fue_exitosa: fueExitosa,
     };
 
-    try {
-      toast.info('Generando vista previa del Acta de Extracción...');
-      const url = await generarActaExtraccion(datosParaActa);
+    toast.info('Generando vista previa del Acta de Extracción...');
+    const url = await DocumentService.getPreviewUrl(id_oficio, 'tm/acta_extraccion', extraData);
+
+    if (url) {
       setPdfUrl(url);
       setIsModalOpen(true);
-    } catch (error) {
-      console.error("Error al generar el PDF:", error);
-      toast.error(`No se pudo generar la vista previa: ${error.message}`);
     }
+    // El toast de error ya se maneja dentro del DocumentService
   };
 
   const handleSubmit = async (e) => {
@@ -256,9 +280,9 @@ const ProcedimientoExtraccion = () => {
                                 <label className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary">Cantidad / Volumen</label>
                                 <input type="text" value={muestra.cantidad} onChange={(e) => handleMuestraChange(index, 'cantidad', e.target.value)} placeholder="Ej: 50 ml aprox." className="mt-1 form-input" required />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary">Descripción Adicional (Opcional)</label>
-                                <input type="text" value={muestra.descripcion} onChange={(e) => handleMuestraChange(index, 'descripcion', e.target.value)} placeholder="Ej: Frasco de plástico tapa azul" className="mt-1 form-input" />
+                            <div className="md:col-span-3">
+                                <label className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary">Descripción de la Muestra y Embalaje</label>
+                                <textarea value={muestra.descripcion} onChange={(e) => handleMuestraChange(index, 'descripcion', e.target.value)} placeholder="Ej: Muestra de sangre venosa extraída del pliegue del codo..." rows="3" className="mt-1 form-input w-full" />
                             </div>
                             </div>
                             <button type="button" onClick={() => removeMuestra(index)} className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20" title="Eliminar muestra">
