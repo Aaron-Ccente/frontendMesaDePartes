@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { OficioAssignedPeritoService } from '../../../services/oficioAssignedPerito.js';
-import { OficiosService } from '../../../services/oficiosService.js';
+import { ProcedimientoService } from '../../../services/procedimientoService.js';
 import CasoCard from './CasoCard';
 import DerivacionModal from '../DerivacionModal';
 import { toast } from 'sonner';
@@ -13,6 +13,7 @@ const CasosView = ({ funcion, title }) => {
   // Estado para el modal de derivación
   const [isModalOpen, setModalOpen] = useState(false);
   const [selectedCasoId, setSelectedCasoId] = useState(null);
+  const [peritosParaDerivar, setPeritosParaDerivar] = useState([]);
   const [isDeriving, setIsDeriving] = useState(false);
 
   const fetchCasos = useCallback(async () => {
@@ -35,17 +36,30 @@ const CasosView = ({ funcion, title }) => {
     fetchCasos();
   }, [fetchCasos]);
 
-  // --- Lógica del Modal de Derivación ---
+  // --- Lógica del Modal de Derivación Asistida ---
 
-  const handleDerivarClick = (casoId) => {
-    setSelectedCasoId(casoId);
-    setModalOpen(true);
+  const handleDerivarClick = async (casoId) => {
+    try {
+      toast.info('Buscando peritos disponibles...');
+      const response = await ProcedimientoService.getSiguientePaso(casoId);
+      if (response.success && response.data.peritos_disponibles.length > 0) {
+        setPeritosParaDerivar(response.data.peritos_disponibles);
+        setSelectedCasoId(casoId);
+        setModalOpen(true);
+        toast.dismiss(); // Cierra el toast de "buscando"
+      } else {
+        throw new Error(response.message || 'No se encontraron peritos para la derivación.');
+      }
+    } catch (err) {
+      toast.error(err.message);
+    }
   };
 
   const handleCloseModal = () => {
-    if (isDeriving) return; // Evitar cerrar mientras se procesa
+    if (isDeriving) return;
     setModalOpen(false);
     setSelectedCasoId(null);
+    setPeritosParaDerivar([]);
   };
 
   const handlePeritoSelect = async (perito) => {
@@ -55,11 +69,10 @@ const CasosView = ({ funcion, title }) => {
     toast.info('Derivando caso...');
 
     try {
-      // Aquí usamos el servicio para llamar al endpoint de derivación del backend
-      const response = await OficiosService.derivarOficio(selectedCasoId, perito.id_usuario, perito.seccion_nombre);
+      const response = await ProcedimientoService.derivar(selectedCasoId, perito.id_usuario);
       
       if (response.success) {
-        toast.success('Caso derivado exitosamente.');
+        toast.success(response.message || 'Caso derivado exitosamente.');
         handleCloseModal();
         fetchCasos(); // Recargar la lista de casos
       } else {
@@ -72,7 +85,6 @@ const CasosView = ({ funcion, title }) => {
       setIsDeriving(false);
     }
   };
-
 
   return (
     <div className="p-4 sm:p-6 bg-white dark:bg-dark-surface rounded-2xl shadow-lg">
@@ -99,6 +111,7 @@ const CasosView = ({ funcion, title }) => {
                   key={caso.id_oficio} 
                   caso={caso} 
                   onDerivarClick={handleDerivarClick}
+                  isDeriving={isDeriving}
                 />
               ))}
             </div>
@@ -110,12 +123,12 @@ const CasosView = ({ funcion, title }) => {
         </div>
       )}
 
-      {/* Renderizar el modal si está abierto */}
       {isModalOpen && (
         <DerivacionModal 
-          casoId={selectedCasoId}
+          peritos={peritosParaDerivar}
           onClose={handleCloseModal}
           onPeritoSelect={handlePeritoSelect}
+          isDeriving={isDeriving}
         />
       )}
     </div>

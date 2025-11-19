@@ -32,6 +32,8 @@ import CasosExtraccionAnalisis from './components/perito/casos/CasosExtraccionAn
 import CasosAnalisisINST from './components/perito/casos/CasosAnalisisINST';
 import CasosAnalisisLAB from './components/perito/casos/CasosAnalisisLAB';
 import CasosConsolidacion from './components/perito/casos/CasosConsolidacion';
+import ProcedimientoExtraccion from './components/perito/procedimientos/ProcedimientoExtraccion';
+import ProcedimientoAnalisisTM from './components/perito/procedimientos/ProcedimientoAnalisisTM';
 
 
 import MesaDePartes from './components/admin/MesaDePartes';
@@ -102,6 +104,8 @@ function App() {
               <Route path="mis-casos/analisis-lab" element={<CasosAnalisisLAB />} />
               <Route path="mis-casos/consolidacion" element={<CasosConsolidacion />} />
               <Route path="casos/:id" element={<CasoDetail />} />
+              <Route path="procedimiento/extraccion/:id" element={<ProcedimientoExtraccion />} />
+              <Route path="procedimiento/analisis-tm/:id" element={<ProcedimientoAnalisisTM />} />
               <Route path="perfil" element={<PeritoPerfil />} />
             </Route>
 

@@ -29,6 +29,32 @@ class ComplementService {
     }
   }
 
+  // Obtener peritos disponibles para la asignación inicial
+  async getPeritosParaAsignacion({ idTiposExamen, tipoDeIngreso }) {
+    try {
+      const params = new URLSearchParams();
+      if (Array.isArray(idTiposExamen)) {
+        idTiposExamen.forEach(id => params.append('idTiposExamen', id));
+      }
+      if (tipoDeIngreso) {
+        params.append('tipoDeIngreso', tipoDeIngreso);
+      }
+
+      const url = `/api/peritos/disponibles-para-asignacion?${params.toString()}`;
+      const response = await fetchWithAuth(url, { method: 'GET' });
+      const data = await response.json();
+      if (!response.ok) {
+        return { error: data.error || data.message || 'Error obteniendo peritos para asignación.' };
+      }
+      return data;
+    } catch (error) {
+      console.error('Error en getPeritosParaAsignacion:', error);
+      if (!error.message.includes('Sesión expirada')) {
+        return { error: error.message || 'Error de red' };
+      }
+    }
+  }
+
   // Obtener peritos por ID de sección
   async getPeritosPorSeccion(idSeccion) {
     try {
