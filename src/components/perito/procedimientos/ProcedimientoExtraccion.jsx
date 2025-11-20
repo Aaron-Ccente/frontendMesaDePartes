@@ -7,7 +7,8 @@ import { ProcedimientoService } from '../../../services/procedimientoService';
 import { DocumentService } from '../../../services/documentService';
 import PDFPreviewModal from '../../documentos/PDFPreviewModal';
 import DeleteIcon from '../../../assets/icons/DeleteIcon';
-import { LimpiarIcon, PreviewIcon, GuardarIcon, CancelarIcon } from '../../../assets/icons/Actions';
+import { LimpiarIcon, PreviewIcon, GuardarIcon, CancelarIcon, DerivarIcon } from '../../../assets/icons/Actions';
+import DerivacionModal from '../DerivacionModal';
 
 // --- Constantes para la lógica de negocio ---
 const TIPOS_DE_MUESTRA = ['Sangre', 'Orina', 'Hisopo Ungueal', 'Visceras', 'Cabello', 'Otro'];
@@ -31,6 +32,7 @@ const MUESTRA_DEFAULTS = {
     cantidad: '2 hisopos',
   },
 };
+const EXAMEN_SARRO_UNGUEAL = 'SARRO UNGUEAL';
 // -----------------------------------------
 
 const ProcedimientoExtraccion = () => {
@@ -42,7 +44,8 @@ const ProcedimientoExtraccion = () => {
   const [oficio, setOficio] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const [workflow, setWorkflow] = useState('extraccion'); // 'extraccion' o 'extraccion_y_analisis'
+
   // Estados del formulario
   const [fueExitosa, setFueExitosa] = useState(true);
   const [observaciones, setObservaciones] = useState('');
@@ -52,6 +55,12 @@ const ProcedimientoExtraccion = () => {
   const [pdfUrl, setPdfUrl] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Estados para el modal de derivación
+  const [isDerivacionModalOpen, setDerivacionModalOpen] = useState(false);
+  const [peritosParaDerivar, setPeritosParaDerivar] = useState([]);
+  const [isDeriving, setIsDeriving] = useState(false);
+
+
   // Carga inicial de datos del oficio
   const loadData = useCallback(async () => {
     try {
@@ -59,6 +68,13 @@ const ProcedimientoExtraccion = () => {
       const res = await OficiosService.getOficioDetalle(id_oficio);
       if (res.data) {
         setOficio(res.data);
+        // Determinar el tipo de workflow
+        const requiereSarroUngueal = Array.isArray(res.data.tipos_de_examen) && res.data.tipos_de_examen.some(
+          examen => examen.toUpperCase() === EXAMEN_SARRO_UNGUEAL
+        );
+        if (res.data.tipo_de_muestra === 'TOMA DE MUESTRAS' && requiereSarroUngueal) {
+          setWorkflow('extraccion_y_analisis');
+        }
       } else {
         throw new Error(res.message || 'No se pudieron cargar los detalles del oficio.');
       }
@@ -79,9 +95,10 @@ const ProcedimientoExtraccion = () => {
     if (oficio && oficio.tipos_de_examen) {
       const muestrasSugeridas = new Set();
       oficio.tipos_de_examen.forEach(examen => {
-        const tipoMuestraSugerido = EXAMEN_A_TIPO_MUESTRA[examen];
+        // Usamos EXAMEN_A_TIPO_MUESTRA para encontrar el tipo de muestra sugerido
+        const tipoMuestraSugerido = Object.keys(EXAMEN_A_TIPO_MUESTRA).find(key => examen.toUpperCase() === key.toUpperCase());
         if (tipoMuestraSugerido) {
-          muestrasSugeridas.add(tipoMuestraSugerido);
+          muestrasSugeridas.add(EXAMEN_A_TIPO_MUESTRA[tipoMuestraSugerido]);
         }
       });
 
@@ -89,12 +106,11 @@ const ProcedimientoExtraccion = () => {
         const nuevasMuestras = [...muestrasSugeridas].map(tipo => ({
           id: Date.now() + Math.random(),
           tipo_muestra: tipo,
-          descripcion: '',
-          cantidad: '',
+          descripcion: MUESTRA_DEFAULTS[tipo]?.descripcion || '',
+          cantidad: MUESTRA_DEFAULTS[tipo]?.cantidad || '',
         }));
         setMuestras(nuevasMuestras);
       } else {
-        // Si no hay sugerencias, empezar con una muestra vacía
         setMuestras([{ id: Date.now(), tipo_muestra: '', descripcion: '', cantidad: '' }]);
       }
     }
@@ -105,7 +121,6 @@ const ProcedimientoExtraccion = () => {
     const newMuestras = [...muestras];
     newMuestras[index][field] = value;
 
-    // Lógica de autocompletado inteligente
     if (field === 'tipo_muestra') {
       const defaults = MUESTRA_DEFAULTS[value];
       if (defaults) {
@@ -134,7 +149,6 @@ const ProcedimientoExtraccion = () => {
     if (window.confirm('¿Estás seguro de que deseas limpiar todos los campos del formulario?')) {
       setFueExitosa(true);
       setObservaciones('');
-      // Reiniciar a una muestra vacía en lugar de las sugeridas
       setMuestras([{ id: Date.now(), tipo_muestra: '', descripcion: '', cantidad: '' }]);
       toast.success('Formulario limpiado.');
     }
@@ -146,7 +160,6 @@ const ProcedimientoExtraccion = () => {
       return;
     }
     
-    // Datos del formulario que aún no se han guardado en la BD
     const extraData = {
       perito: user,
       muestras,
@@ -161,13 +174,61 @@ const ProcedimientoExtraccion = () => {
       setPdfUrl(url);
       setIsModalOpen(true);
     }
-    // El toast de error ya se maneja dentro del DocumentService
   };
+
+  // --- Lógica del Modal de Derivación ---
+  const handleDerivarClick = async () => {
+    try {
+      toast.info('Buscando peritos disponibles para la derivación...');
+      const response = await ProcedimientoService.getSiguientePaso(id_oficio);
+      if (response.success && response.data.peritos_disponibles.length > 0) {
+        setPeritosParaDerivar(response.data.peritos_disponibles);
+        setDerivacionModalOpen(true);
+        toast.dismiss();
+      } else {
+        throw new Error(response.message || 'No se encontraron peritos para la derivación.');
+      }
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleCloseDerivacionModal = () => {
+    if (isDeriving) return;
+    setDerivacionModalOpen(false);
+    setPeritosParaDerivar([]);
+  };
+
+  const handlePeritoSelect = async (perito) => {
+    if (!id_oficio || !perito.id_usuario) return;
+    
+    setIsDeriving(true);
+    toast.info('Derivando caso...');
+
+    try {
+      const response = await ProcedimientoService.derivar(id_oficio, perito.id_usuario);
+      
+      if (response.success) {
+        toast.success(response.message || 'Caso derivado exitosamente.');
+        handleCloseDerivacionModal();
+        navigate('/perito/dashboard');
+      } else {
+        throw new Error(response.message || 'Error al derivar el caso.');
+      }
+    } catch (err) {
+      console.error('Error en handlePeritoSelect:', err);
+      toast.error(err.message || 'Ocurrió un error inesperado.');
+    } finally {
+      setIsDeriving(false);
+    }
+  };
+  // --- Fin Lógica de Derivación ---
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    toast.info('Registrando procedimiento...');
+    toast.info('Registrando procedimiento de extracción...');
 
     const payload = {
       fue_exitosa: fueExitosa,
@@ -176,7 +237,7 @@ const ProcedimientoExtraccion = () => {
     };
 
     if (fueExitosa && payload.muestras.length === 0) {
-        toast.error('Debe registrar al menos una muestra válida (con tipo y cantidad) para una extracción exitosa.');
+        toast.error('Debe registrar al menos una muestra válida para una extracción exitosa.');
         setIsSubmitting(false);
         return;
     }
@@ -184,12 +245,12 @@ const ProcedimientoExtraccion = () => {
     try {
       const res = await ProcedimientoService.registrarExtraccion(id_oficio, payload);
       if (res.success) {
-        const codigos = res.data?.codigos_generados || [];
-        const mensajeExito = `${res.message} Códigos generados: ${codigos.join(', ')}`;
-        toast.success(mensajeExito);
-        navigate('/perito/dashboard/mis-casos/extraccion');
+        toast.success(res.message || 'Procedimiento registrado. Serás redirigido al panel.');
+        // Unificar el comportamiento: siempre volver al dashboard después de guardar.
+        // El dashboard se encargará de mostrar la acción correcta (Continuar Análisis o Derivar).
+        navigate('/perito/dashboard');
       } else {
-        throw new Error(res.message || 'Ocurrió un error desconocido.');
+        throw new Error(res.message || 'Ocurrió un error desconocido al registrar.');
       }
     } catch (error) {
       toast.error(`Error al registrar: ${error.message}`);
@@ -243,7 +304,6 @@ const ProcedimientoExtraccion = () => {
         <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-md border dark:border-dark-border space-y-6">
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-dark-border pb-3">Registro del Procedimiento</h3>
             
-            {/* Resultado del Procedimiento */}
             <div className="p-4 border rounded-lg dark:border-dark-border">
                 <h4 className="text-lg font-semibold text-gray-700 dark:text-dark-text-primary mb-4">1. Resultado del Procedimiento</h4>
                 <div className="flex items-center space-x-6">
@@ -258,7 +318,6 @@ const ProcedimientoExtraccion = () => {
                 </div>
             </div>
 
-            {/* Muestras Recolectadas */}
             {fueExitosa && (
                 <div className="p-4 border rounded-lg dark:border-dark-border">
                     <h4 className="text-lg font-semibold text-gray-700 dark:text-dark-text-primary mb-4">2. Muestras Recolectadas</h4>
@@ -297,14 +356,12 @@ const ProcedimientoExtraccion = () => {
                 </div>
             )}
 
-            {/* Observaciones */}
             <div className="p-4 border rounded-lg dark:border-dark-border">
                 <h4 className="text-lg font-semibold text-gray-700 dark:text-dark-text-primary mb-2">{fueExitosa ? '3. Observaciones Adicionales' : '2. Motivo de la Falla'}</h4>
                 <textarea value={observaciones} onChange={(e) => setObservaciones(e.target.value)} rows="4" placeholder={fueExitosa ? 'Detalles relevantes del procedimiento...' : 'Especifique por qué no se pudo realizar la extracción...'} className="mt-1 form-input w-full" required={!fueExitosa} />
             </div>
         </div>
 
-        {/* Botones de Acción */}
         <div className="flex flex-wrap justify-end items-center gap-3 pt-6 border-t dark:border-dark-border">
             <button 
                 type="button" 
@@ -336,13 +393,22 @@ const ProcedimientoExtraccion = () => {
                 className="btn-primary"
             >
                 <GuardarIcon />
-                <span>{isSubmitting ? 'Guardando...' : 'Finalizar y Guardar'}</span>
+                <span>{isSubmitting ? 'Guardando...' : 'Finalizar Extracción'}</span>
             </button>
         </div>
       </form>
 
       {isModalOpen && (
         <PDFPreviewModal pdfUrl={pdfUrl} onClose={() => setIsModalOpen(false)} />
+      )}
+
+      {isDerivacionModalOpen && (
+        <DerivacionModal 
+          peritos={peritosParaDerivar}
+          onClose={handleCloseDerivacionModal}
+          onPeritoSelect={handlePeritoSelect}
+          isDeriving={isDeriving}
+        />
       )}
     </>
   );

@@ -49,26 +49,30 @@ const CasoCard = ({ caso, onDerivarClick, isDeriving }) => {
 
     switch (seccionPerito) {
       case 'TOMA DE MUESTRA':
-        // El botón de "iniciar" depende del tipo de caso.
-        // Si el tipo de muestra es TOMA DE MUESTRAS, es extracción.
-        // Si es MUESTRAS REMITIDAS, es análisis (Sarro Ungueal).
         if (estadoCaso === 'CREACION DEL OFICIO') {
           if (caso.tipo_de_muestra === 'TOMA DE MUESTRAS') {
             primaryButton = (
-              <button key="iniciar" onClick={() => handleIniciarProcedimiento('extraccion')} className="btn-primary">
+              <button key="iniciar-extraccion" onClick={() => handleIniciarProcedimiento('extraccion')} className="btn-primary">
                 <IniciarProcedimientoIcon />
                 <span>Registrar Muestra</span>
               </button>
             );
           } else { // Asumimos MUESTRAS REMITIDAS
             primaryButton = (
-              <button key="iniciar" onClick={() => handleIniciarProcedimiento('analisis-tm')} className="btn-primary">
+              <button key="iniciar-analisis" onClick={() => handleIniciarProcedimiento('analisis-tm')} className="btn-primary">
                 <IniciarProcedimientoIcon />
                 <span>Iniciar Análisis</span>
               </button>
             );
           }
-        } else {
+        } else if (estadoCaso === 'PENDIENTE_ANALISIS_TM') {
+          primaryButton = (
+            <button key="continuar-analisis" onClick={() => handleIniciarProcedimiento('analisis-tm')} className="btn-primary">
+              <IniciarProcedimientoIcon />
+              <span>Continuar con Análisis</span>
+            </button>
+          );
+        } else if (estadoCaso === 'ANALISIS_TM_FINALIZADO' || estadoCaso === 'EXTRACCION_FINALIZADA') {
           primaryButton = (
             <button key="derivar" onClick={() => onDerivarClick(caso.id_oficio)} className="btn-primary" disabled={isDeriving}>
               <DerivarIcon />
@@ -76,47 +80,55 @@ const CasoCard = ({ caso, onDerivarClick, isDeriving }) => {
             </button>
           );
         }
+        // Para otros estados como EXTRACCION_FALLIDA, no se muestra botón de acción primario.
         break;
 
       case 'INSTRUMENTALIZACION':
-        if (!estadoCaso.startsWith('DERIVADO')) {
+        if (estadoCaso.startsWith('DERIVADO A')) { // Estado después de ser asignado
           primaryButton = (
-            <button key="iniciar" onClick={() => handleIniciarProcedimiento('analisis-inst')} className="btn-primary">
+            <button key="iniciar-analisis-inst" onClick={() => handleIniciarProcedimiento('analisis-inst')} className="btn-primary">
               <IniciarProcedimientoIcon />
               <span>Realizar Análisis</span>
             </button>
           );
-        } else {
+        } else if (estadoCaso === 'ANALISIS_INST_FINALIZADO') { // Estado después de analizar
           primaryButton = (
-            <button key="derivar" onClick={() => onDerivarClick(caso.id_oficio)} className="btn-primary">
+            <button key="derivar-inst" onClick={() => onDerivarClick(caso.id_oficio)} className="btn-primary" disabled={isDeriving}>
               <DerivarIcon />
-              <span>Derivar a LAB</span>
+              <span>{isDeriving ? 'Derivando...' : 'Derivar a LAB'}</span>
             </button>
           );
         }
         break;
 
       case 'LABORATORIO':
-        if (estadoCaso.startsWith('DERIVADO A: LABORATORIO')) {
+        if (estadoCaso.startsWith('DERIVADO A: LABORATORIO')) { // Viene de otra sección para consolidar
           primaryButton = (
             <button key="consolidar" onClick={() => handleIniciarProcedimiento('consolidar')} className="btn-primary">
               <ConsolidarIcon />
-              <span>Consolidar</span>
+              <span>Consolidar Resultados</span>
             </button>
           );
-        } else if (estadoCaso === 'CREACION DEL OFICIO') {
-          primaryButton = (
-            <button key="iniciar" onClick={() => handleIniciarProcedimiento('analisis-lab')} className="btn-primary">
+        } else if (estadoCaso === 'CREACION DEL OFICIO' || estadoCaso.startsWith('DERIVADO A')) { // Asignado para análisis
+           primaryButton = (
+            <button key="iniciar-analisis-lab" onClick={() => handleIniciarProcedimiento('analisis-lab')} className="btn-primary">
               <IniciarProcedimientoIcon />
               <span>Iniciar Análisis</span>
             </button>
           );
+        } else if (estadoCaso === 'ANALISIS_LAB_FINALIZADO') {
+           primaryButton = (
+            <button key="derivar-lab" onClick={() => onDerivarClick(caso.id_oficio)} className="btn-primary" disabled={isDeriving}>
+              <DerivarIcon />
+              <span>{isDeriving ? 'Derivando...' : 'Asignar Consolidación'}</span>
+            </button>
+          );
         } else {
-          // Asumimos que si no es para consolidar, es para generar el reporte final
-          primaryButton = (
+           // Asumimos un estado final donde se genera el reporte
+           primaryButton = (
             <button key="reporte" onClick={() => handleIniciarProcedimiento('reporte')} className="btn-primary">
               <GenerarReporteIcon />
-              <span>Generar Reporte</span>
+              <span>Generar Reporte Final</span>
             </button>
           );
         }
