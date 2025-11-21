@@ -65,12 +65,31 @@ export class ProcedimientoService {
     } catch (error) {
       console.error('Error en ProcedimientoService.derivar:', error);
       throw error;
-    }
-  }
-  /**
-   * Registra los datos de extracción de muestras (Perito TM).
-   */
-  static async registrarExtraccion(idOficio, data) {
+        }
+      }
+      /**
+       * Obtiene los datos previamente guardados de un procedimiento de extracción.
+       */
+        static async getDatosExtraccion(idOficio) {
+          try {
+            const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/extraccion`, {
+              method: 'GET',
+              headers: this.#getHeaders(),
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+              throw new Error(data.message || 'Error al obtener los datos de la extracción.');
+            }
+            return data;
+          } catch (error) {
+            console.error('Error en getDatosExtraccion:', error);
+            throw error;
+          }
+        }    
+      /**
+       * Registra los datos de extracción de muestras (Perito TM).
+       */
+      static async registrarExtraccion(idOficio, data) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/extraccion`, {
         method: 'POST',

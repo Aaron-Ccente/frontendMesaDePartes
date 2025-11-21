@@ -4,11 +4,10 @@ import { toast } from 'sonner';
 import { useAuth } from '../../../hooks/useAuth';
 import { OficiosService } from '../../../services/oficiosService';
 import { ProcedimientoService } from '../../../services/procedimientoService';
-import { LimpiarIcon, GuardarIcon, CancelarIcon, PreviewIcon, DerivarIcon } from '../../../assets/icons/Actions';
+import { LimpiarIcon, GuardarIcon, CancelarIcon, PreviewIcon } from '../../../assets/icons/Actions';
 import DeleteIcon from '../../../assets/icons/DeleteIcon';
 import { DocumentService } from '../../../services/documentService';
 import PDFPreviewModal from '../../documentos/PDFPreviewModal';
-import DerivacionModal from '../DerivacionModal';
 
 // --- Constantes ---
 const TIPOS_DE_MUESTRA = ['Sangre', 'Orina', 'Hisopo Ungueal', 'Visceras', 'Cabello', 'Otro'];
@@ -59,9 +58,6 @@ const ProcedimientoAnalisisTM = () => {
   // Estados del modal
   const [pdfUrl, setPdfUrl] = useState(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
-  const [isDerivacionModalOpen, setDerivacionModalOpen] = useState(false);
-  const [peritosParaDerivar, setPeritosParaDerivar] = useState([]);
-  const [isDeriving, setIsDeriving] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -135,47 +131,6 @@ const ProcedimientoAnalisisTM = () => {
     }
   };
 
-  // --- Lógica de Derivación ---
-  const handleDerivarClick = async () => {
-    try {
-      toast.info('Buscando siguiente paso...');
-      const response = await ProcedimientoService.getSiguientePaso(id_oficio);
-      if (response.success && response.data.peritos_disponibles.length > 0) {
-        setPeritosParaDerivar(response.data.peritos_disponibles);
-        setDerivacionModalOpen(true);
-        toast.dismiss();
-      } else {
-        throw new Error(response.message || 'No se encontraron peritos para la derivación.');
-      }
-    } catch (err) {
-      toast.error(err.message);
-    }
-  };
-  const handleCloseDerivacionModal = () => {
-    if (isDeriving) return;
-    setDerivacionModalOpen(false);
-    setPeritosParaDerivar([]);
-  };
-  const handlePeritoSelect = async (perito) => {
-    if (!id_oficio || !perito.id_usuario) return;
-    setIsDeriving(true);
-    toast.info('Derivando caso...');
-    try {
-      const response = await ProcedimientoService.derivar(id_oficio, perito.id_usuario);
-      if (response.success) {
-        toast.success(response.message || 'Caso derivado exitosamente.');
-        handleCloseDerivacionModal();
-        navigate('/perito/dashboard');
-      } else {
-        throw new Error(response.message || 'Error al derivar el caso.');
-      }
-    } catch (err) {
-      toast.error(err.message || 'Ocurrió un error inesperado.');
-    } finally {
-      setIsDeriving(false);
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!aperturaData.descripcion_paquete) return toast.error('Debe describir el estado del paquete recibido.');
@@ -189,8 +144,8 @@ const ProcedimientoAnalisisTM = () => {
     try {
       const res = await ProcedimientoService.registrarAnalisis(id_oficio, payload);
       if (res.success) {
-        toast.success(res.message);
-        handleDerivarClick(); // En lugar de navegar, abrir el modal de derivación
+        toast.success(res.message || 'Análisis guardado exitosamente.');
+        navigate('/perito/dashboard');
       } else {
         throw new Error(res.message || 'Ocurrió un error desconocido.');
       }
@@ -288,14 +243,13 @@ const ProcedimientoAnalisisTM = () => {
         </div>
         <div className="flex flex-wrap justify-end items-center gap-3 pt-6 border-t dark:border-dark-border">
           <button type="button" onClick={() => navigate('/perito/dashboard')} className="btn-secondary"><CancelarIcon /><span>Cancelar</span></button>
-          <button type="submit" disabled={isSubmitting || isDeriving} className="btn-primary flex items-center gap-2">
-            <DerivarIcon />
-            <span>{isSubmitting ? 'Guardando...' : 'Finalizar y Derivar'}</span>
+          <button type="submit" disabled={isSubmitting} className="btn-primary flex items-center gap-2">
+            <GuardarIcon />
+            <span>{isSubmitting ? 'Guardando...' : 'Finalizar Análisis'}</span>
           </button>
         </div>
       </form>
       {isPreviewModalOpen && (<PDFPreviewModal pdfUrl={pdfUrl} onClose={() => setIsPreviewModalOpen(false)} />)}
-      {isDerivacionModalOpen && (<DerivacionModal peritos={peritosParaDerivar} onClose={handleCloseDerivacionModal} onPeritoSelect={handlePeritoSelect} isDeriving={isDeriving} />)}
     </>
   );
 };

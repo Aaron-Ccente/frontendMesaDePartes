@@ -7,8 +7,7 @@ import { ProcedimientoService } from '../../../services/procedimientoService';
 import { DocumentService } from '../../../services/documentService';
 import PDFPreviewModal from '../../documentos/PDFPreviewModal';
 import DeleteIcon from '../../../assets/icons/DeleteIcon';
-import { LimpiarIcon, PreviewIcon, GuardarIcon, CancelarIcon, DerivarIcon } from '../../../assets/icons/Actions';
-import DerivacionModal from '../DerivacionModal';
+import { LimpiarIcon, PreviewIcon, GuardarIcon, CancelarIcon } from '../../../assets/icons/Actions';
 
 // --- Constantes para la lógica de negocio ---
 const TIPOS_DE_MUESTRA = ['Sangre', 'Orina', 'Hisopo Ungueal', 'Visceras', 'Cabello', 'Otro'];
@@ -32,7 +31,6 @@ const MUESTRA_DEFAULTS = {
     cantidad: '2 hisopos',
   },
 };
-const EXAMEN_SARRO_UNGUEAL = 'SARRO UNGUEAL';
 // -----------------------------------------
 
 const ProcedimientoExtraccion = () => {
@@ -44,7 +42,6 @@ const ProcedimientoExtraccion = () => {
   const [oficio, setOficio] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [workflow, setWorkflow] = useState('extraccion'); // 'extraccion' o 'extraccion_y_analisis'
 
   // Estados del formulario
   const [fueExitosa, setFueExitosa] = useState(true);
@@ -55,28 +52,57 @@ const ProcedimientoExtraccion = () => {
   const [pdfUrl, setPdfUrl] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Estados para el modal de derivación
-  const [isDerivacionModalOpen, setDerivacionModalOpen] = useState(false);
-  const [peritosParaDerivar, setPeritosParaDerivar] = useState([]);
-  const [isDeriving, setIsDeriving] = useState(false);
-
-
-  // Carga inicial de datos del oficio
+// Carga inicial de datos: Lógica unificada para modo creación y edición.
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await OficiosService.getOficioDetalle(id_oficio);
-      if (res.data) {
-        setOficio(res.data);
-        // Determinar el tipo de workflow
-        const requiereSarroUngueal = Array.isArray(res.data.tipos_de_examen) && res.data.tipos_de_examen.some(
-          examen => examen.toUpperCase() === EXAMEN_SARRO_UNGUEAL
-        );
-        if (res.data.tipo_de_muestra === 'TOMA DE MUESTRAS' && requiereSarroUngueal) {
-          setWorkflow('extraccion_y_analisis');
+
+      // 1. Intentar obtener datos de una extracción previa PRIMERO.
+      const procRes = await ProcedimientoService.getDatosExtraccion(id_oficio);
+      
+      // 2. Si hay datos, estamos en MODO EDICIÓN.
+      if (procRes.success && procRes.data) {
+        toast.info('Modo edición: se han cargado los datos guardados anteriormente.');
+        
+        // Cargar los datos del procedimiento guardado
+        setMuestras(procRes.data.muestras.map(m => ({ ...m, id: m.id_muestra })) || []);
+        setObservaciones(procRes.data.observaciones || '');
+        setFueExitosa(procRes.data.fue_exitosa);
+
+        // También necesitamos los datos del oficio para la cabecera
+        const oficioRes = await OficiosService.getOficioDetalle(id_oficio);
+        if (oficioRes.success) setOficio(oficioRes.data);
+
+        return; // Salir temprano para no ejecutar la lógica de creación.
+      }
+
+      // 3. Si no hay datos, estamos en MODO CREACIÓN.
+      const oficioRes = await OficiosService.getOficioDetalle(id_oficio);
+      if (!oficioRes.success) throw new Error(oficioRes.message || 'No se pudieron cargar los detalles del oficio.');
+      
+      const oficioData = oficioRes.data;
+      setOficio(oficioData);
+
+      if (oficioData && oficioData.tipos_de_examen) {
+        const muestrasSugeridas = new Set();
+        oficioData.tipos_de_examen.forEach(examen => {
+          const tipoMuestraSugerido = Object.keys(EXAMEN_A_TIPO_MUESTRA).find(key => examen.toUpperCase() === key.toUpperCase());
+          if (tipoMuestraSugerido) {
+            muestrasSugeridas.add(EXAMEN_A_TIPO_MUESTRA[tipoMuestraSugerido]);
+          }
+        });
+
+        if (muestrasSugeridas.size > 0) {
+          const nuevasMuestras = [...muestrasSugeridas].map(tipo => ({
+            id: Date.now() + Math.random(),
+            tipo_muestra: tipo,
+            descripcion: MUESTRA_DEFAULTS[tipo]?.descripcion || '',
+            cantidad: MUESTRA_DEFAULTS[tipo]?.cantidad || '',
+          }));
+          setMuestras(nuevasMuestras);
+        } else {
+          setMuestras([{ id: Date.now(), tipo_muestra: '', descripcion: '', cantidad: '' }]);
         }
-      } else {
-        throw new Error(res.message || 'No se pudieron cargar los detalles del oficio.');
       }
     } catch (error) {
       toast.error(`Error al cargar datos: ${error.message}`);
@@ -90,31 +116,6 @@ const ProcedimientoExtraccion = () => {
     loadData();
   }, [loadData]);
 
-  // Efecto para pre-poblar las muestras basadas en los tipos de examen
-  useEffect(() => {
-    if (oficio && oficio.tipos_de_examen) {
-      const muestrasSugeridas = new Set();
-      oficio.tipos_de_examen.forEach(examen => {
-        // Usamos EXAMEN_A_TIPO_MUESTRA para encontrar el tipo de muestra sugerido
-        const tipoMuestraSugerido = Object.keys(EXAMEN_A_TIPO_MUESTRA).find(key => examen.toUpperCase() === key.toUpperCase());
-        if (tipoMuestraSugerido) {
-          muestrasSugeridas.add(EXAMEN_A_TIPO_MUESTRA[tipoMuestraSugerido]);
-        }
-      });
-
-      if (muestrasSugeridas.size > 0) {
-        const nuevasMuestras = [...muestrasSugeridas].map(tipo => ({
-          id: Date.now() + Math.random(),
-          tipo_muestra: tipo,
-          descripcion: MUESTRA_DEFAULTS[tipo]?.descripcion || '',
-          cantidad: MUESTRA_DEFAULTS[tipo]?.cantidad || '',
-        }));
-        setMuestras(nuevasMuestras);
-      } else {
-        setMuestras([{ id: Date.now(), tipo_muestra: '', descripcion: '', cantidad: '' }]);
-      }
-    }
-  }, [oficio]);
 
 
   const handleMuestraChange = (index, field, value) => {
@@ -137,12 +138,8 @@ const ProcedimientoExtraccion = () => {
   };
 
   const removeMuestra = (index) => {
-    if (muestras.length > 1) {
-      const newMuestras = muestras.filter((_, i) => i !== index);
-      setMuestras(newMuestras);
-    } else {
-      toast.error('Debe haber al menos una muestra.');
-    }
+    const newMuestras = muestras.filter((_, i) => i !== index);
+    setMuestras(newMuestras);
   };
 
   const handleClear = () => {
@@ -176,59 +173,10 @@ const ProcedimientoExtraccion = () => {
     }
   };
 
-  // --- Lógica del Modal de Derivación ---
-  const handleDerivarClick = async () => {
-    try {
-      toast.info('Buscando peritos disponibles para la derivación...');
-      const response = await ProcedimientoService.getSiguientePaso(id_oficio);
-      if (response.success && response.data.peritos_disponibles.length > 0) {
-        setPeritosParaDerivar(response.data.peritos_disponibles);
-        setDerivacionModalOpen(true);
-        toast.dismiss();
-      } else {
-        throw new Error(response.message || 'No se encontraron peritos para la derivación.');
-      }
-    } catch (err) {
-      toast.error(err.message);
-    }
-  };
-
-  const handleCloseDerivacionModal = () => {
-    if (isDeriving) return;
-    setDerivacionModalOpen(false);
-    setPeritosParaDerivar([]);
-  };
-
-  const handlePeritoSelect = async (perito) => {
-    if (!id_oficio || !perito.id_usuario) return;
-    
-    setIsDeriving(true);
-    toast.info('Derivando caso...');
-
-    try {
-      const response = await ProcedimientoService.derivar(id_oficio, perito.id_usuario);
-      
-      if (response.success) {
-        toast.success(response.message || 'Caso derivado exitosamente.');
-        handleCloseDerivacionModal();
-        navigate('/perito/dashboard');
-      } else {
-        throw new Error(response.message || 'Error al derivar el caso.');
-      }
-    } catch (err) {
-      console.error('Error en handlePeritoSelect:', err);
-      toast.error(err.message || 'Ocurrió un error inesperado.');
-    } finally {
-      setIsDeriving(false);
-    }
-  };
-  // --- Fin Lógica de Derivación ---
-
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    toast.info('Registrando procedimiento de extracción...');
+    toast.info('Guardando procedimiento...');
 
     const payload = {
       fue_exitosa: fueExitosa,
@@ -245,15 +193,13 @@ const ProcedimientoExtraccion = () => {
     try {
       const res = await ProcedimientoService.registrarExtraccion(id_oficio, payload);
       if (res.success) {
-        toast.success(res.message || 'Procedimiento registrado. Serás redirigido al panel.');
-        // Unificar el comportamiento: siempre volver al dashboard después de guardar.
-        // El dashboard se encargará de mostrar la acción correcta (Continuar Análisis o Derivar).
+        toast.success(res.message || 'Procedimiento guardado exitosamente.');
         navigate('/perito/dashboard');
       } else {
-        throw new Error(res.message || 'Ocurrió un error desconocido al registrar.');
+        throw new Error(res.message || 'Ocurrió un error desconocido al guardar.');
       }
     } catch (error) {
-      toast.error(`Error al registrar: ${error.message}`);
+      toast.error(`Error al guardar: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -393,22 +339,13 @@ const ProcedimientoExtraccion = () => {
                 className="btn-primary"
             >
                 <GuardarIcon />
-                <span>{isSubmitting ? 'Guardando...' : 'Finalizar Extracción'}</span>
+                <span>{isSubmitting ? 'Guardando...' : 'Guardar Procedimiento'}</span>
             </button>
         </div>
       </form>
 
       {isModalOpen && (
         <PDFPreviewModal pdfUrl={pdfUrl} onClose={() => setIsModalOpen(false)} />
-      )}
-
-      {isDerivacionModalOpen && (
-        <DerivacionModal 
-          peritos={peritosParaDerivar}
-          onClose={handleCloseDerivacionModal}
-          onPeritoSelect={handlePeritoSelect}
-          isDeriving={isDeriving}
-        />
       )}
     </>
   );

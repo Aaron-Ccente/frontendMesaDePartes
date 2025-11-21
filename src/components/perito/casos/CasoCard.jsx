@@ -38,14 +38,13 @@ const CasoCard = ({ caso, onDerivarClick, isDeriving }) => {
   };
 
   const renderButtons = () => {
-    const buttons = [];
+    const actionButtons = [];
     const seccionPerito = normalizeString(user?.seccion_nombre);
     const estadoCaso = caso.ultimo_estado?.toUpperCase() || 'CREACION DEL OFICIO';
 
     let primaryButton = null;
-
     const secondaryClasses = "flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm text-gray-700 bg-gray-100 border border-gray-300 hover:bg-gray-200 dark:text-dark-text-secondary dark:bg-dark-bg-tertiary dark:border-dark-border dark:hover:bg-dark-border transition-colors duration-200";
-
+    const editButtonClasses = "flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm text-amber-700 bg-amber-100 border border-amber-300 hover:bg-amber-200 dark:text-amber-400 dark:bg-amber-900/20 dark:border-amber-500/30 dark:hover:bg-amber-900/40 transition-colors duration-200";
 
     switch (seccionPerito) {
       case 'TOMA DE MUESTRA':
@@ -79,37 +78,50 @@ const CasoCard = ({ caso, onDerivarClick, isDeriving }) => {
               <span>{isDeriving ? 'Derivando...' : 'Derivar'}</span>
             </button>
           );
+          
+          let editType = estadoCaso === 'ANALISIS_TM_FINALIZADO' ? 'analisis-tm' : 'extraccion';
+          actionButtons.push(
+            <button key="editar" onClick={() => handleIniciarProcedimiento(editType)} className={editButtonClasses}>
+              <IniciarProcedimientoIcon />
+              <span>Editar</span>
+            </button>
+          );
         }
-        // Para otros estados como EXTRACCION_FALLIDA, no se muestra botón de acción primario.
         break;
 
       case 'INSTRUMENTALIZACION':
-        if (estadoCaso.startsWith('DERIVADO A')) { // Estado después de ser asignado
+        if (estadoCaso.startsWith('DERIVADO A')) {
           primaryButton = (
             <button key="iniciar-analisis-inst" onClick={() => handleIniciarProcedimiento('analisis-inst')} className="btn-primary">
               <IniciarProcedimientoIcon />
               <span>Realizar Análisis</span>
             </button>
           );
-        } else if (estadoCaso === 'ANALISIS_INST_FINALIZADO') { // Estado después de analizar
+        } else if (estadoCaso === 'ANALISIS_INST_FINALIZADO') {
           primaryButton = (
             <button key="derivar-inst" onClick={() => onDerivarClick(caso.id_oficio)} className="btn-primary" disabled={isDeriving}>
               <DerivarIcon />
               <span>{isDeriving ? 'Derivando...' : 'Derivar a LAB'}</span>
             </button>
           );
+          actionButtons.push(
+            <button key="editar-inst" onClick={() => handleIniciarProcedimiento('analisis-inst')} className={editButtonClasses}>
+              <IniciarProcedimientoIcon />
+              <span>Editar</span>
+            </button>
+          );
         }
         break;
 
       case 'LABORATORIO':
-        if (estadoCaso.startsWith('DERIVADO A: LABORATORIO')) { // Viene de otra sección para consolidar
+        if (estadoCaso.startsWith('DERIVADO A: LABORATORIO')) {
           primaryButton = (
             <button key="consolidar" onClick={() => handleIniciarProcedimiento('consolidar')} className="btn-primary">
               <ConsolidarIcon />
               <span>Consolidar Resultados</span>
             </button>
           );
-        } else if (estadoCaso === 'CREACION DEL OFICIO' || estadoCaso.startsWith('DERIVADO A')) { // Asignado para análisis
+        } else if (estadoCaso === 'CREACION DEL OFICIO' || estadoCaso.startsWith('DERIVADO A')) {
            primaryButton = (
             <button key="iniciar-analisis-lab" onClick={() => handleIniciarProcedimiento('analisis-lab')} className="btn-primary">
               <IniciarProcedimientoIcon />
@@ -123,8 +135,13 @@ const CasoCard = ({ caso, onDerivarClick, isDeriving }) => {
               <span>{isDeriving ? 'Derivando...' : 'Asignar Consolidación'}</span>
             </button>
           );
+           actionButtons.push(
+            <button key="editar-lab" onClick={() => handleIniciarProcedimiento('analisis-lab')} className={editButtonClasses}>
+              <IniciarProcedimientoIcon />
+              <span>Editar</span>
+            </button>
+          );
         } else {
-           // Asumimos un estado final donde se genera el reporte
            primaryButton = (
             <button key="reporte" onClick={() => handleIniciarProcedimiento('reporte')} className="btn-primary">
               <GenerarReporteIcon />
@@ -138,17 +155,16 @@ const CasoCard = ({ caso, onDerivarClick, isDeriving }) => {
         break;
     }
 
-    if (primaryButton) buttons.push(primaryButton);
+    if (primaryButton) actionButtons.unshift(primaryButton);
 
-    // Botón secundario "Ver Detalles"
-    buttons.push(
+    actionButtons.push(
       <button key="detalles" onClick={handleVerDetalles} className={secondaryClasses}>
         <VerDetalleIcon />
         <span>Ver Detalles</span>
       </button>
     );
 
-    return buttons;
+    return actionButtons;
   };
 
   return (
