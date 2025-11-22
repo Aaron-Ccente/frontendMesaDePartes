@@ -40,6 +40,9 @@
 }
 
 @layer components {
+  .text-success {
+    color: var(--color-success);
+  }
   .form-input {
     @apply block w-full rounded-md shadow-sm sm:text-sm border;
     @apply bg-gray-50 border-gray-300 text-gray-900;

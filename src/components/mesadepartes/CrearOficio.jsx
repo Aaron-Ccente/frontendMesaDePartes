@@ -34,13 +34,13 @@ const initialFormData = {
   asunto: "",
   folios: "",
   tipo_de_muestra: "TOMA DE MUESTRAS", 
-};function CrearOficio() {
+};
+
+function CrearOficio() {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState(initialFormData);
 
-  const [codigo, setCodigo] = useState("");
-  const [closeModal, setCloseModal] = useState(false);
   const [especialidades, setEspecialidades] = useState([]);
   const [prioridades, setPrioridades] = useState([]);
   const [tiposExamen, setTiposExamen] = useState([]);
@@ -62,7 +62,7 @@ const initialFormData = {
         setPrioridades(Array.isArray(prioridadesRes?.data) ? prioridadesRes.data : []);
         const filtered = (especialidadesRes?.data || []).filter(e => ![11, 12, 13].includes(e.id_tipo_departamento));
         setEspecialidades(filtered);
-      } catch (error) {
+      } catch {
         setFeedback("Error al cargar datos iniciales.");
       }
     };
@@ -89,22 +89,22 @@ const initialFormData = {
         throw new Error(res.message || 'No se encontraron peritos.');
       }
     } catch (err) {
-      setFeedback(err.message);
+      setFeedback(err?.message || "Error de conexión.");
     } finally {
       setIsLoadingPeritos(false);
     }
   };
 
   const handleDepartmentSelection = async (department) => {
-    setFormData(prev => ({ 
+    setFormData({ 
       ...initialFormData,
       id_especialidad_requerida: department.id_tipo_departamento, 
       especialidad_requerida: department.nombre_departamento 
-    }));
+    });
     try {
       const tiposRes = await ComplementServices.getTiposByDepartamento(department.id_tipo_departamento);
       setTiposExamen(tiposRes?.data || []);
-    } catch (err) {
+    } catch {
       setTiposExamen([]);
     }
     setStep(2);
@@ -177,25 +177,25 @@ const initialFormData = {
           return;
         }
       }
-      // El backend ya no necesita la asignación automática, así que volvemos a la lógica anterior
-      // donde el perito se envía en el payload.
       const payload = { ...formData, mesadepartesData: { id_usuario: user.id_usuario, CIP: user.CIP, nombre_completo: user.nombre_completo } };
       const createResp = await OficiosService.createOficio(payload);
 
       if (createResp.success) {
-        setFeedback("¡Oficio creado y asignado exitosamente!");
-        setCodigo(createResp.data.numero_oficio || `ID-${createResp.data.id_oficio}`);
+        const newCodigo = createResp.data.numero_oficio || `ID-${createResp.data.id_oficio}`;
+        setFeedback(`¡Oficio creado! Código: ${newCodigo}`);
+        // No limpiar el formulario para permitir ediciones o registros rápidos.
       } else {
         setFeedback(`Error del servidor: ${createResp.message}`);
       }
-    } catch (err) {
-      setFeedback(err?.message || "Error de conexión.");
+    } catch {
+      setFeedback("Error de conexión.");
     }
   };
 
   const handleReset = () => {
     setStep(1);
     setFormData(initialFormData);
+    setFeedback(null);
   };
 
   const renderDepartmentSelection = () => (
@@ -339,16 +339,7 @@ const initialFormData = {
 
       {step === 1 ? renderDepartmentSelection() : renderDynamicForm()}
 
-      {closeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-dark-bg-secondary p-8 rounded-lg text-center shadow-2xl transform transition-all duration-300 ease-out scale-95 opacity-0 animate-scale-in"> {/* Added backdrop-blur-sm and animation classes */}
-            <h3 className="text-2xl font-bold text-success dark:text-dark-pnp-green mb-4">¡Oficio Creado y Asignado!</h3>
-            <p className="text-gray-700 dark:text-dark-text-secondary mb-6">El código para seguimiento es:</p>
-            <p className="text-4xl font-extrabold text-gray-900 dark:text-white mb-8">{codigo}</p>
-            <button onClick={handleReset} className="bg-pnp-green hover:bg-pnp-green-light text-white font-bold py-3 px-8 rounded-lg">Aceptar y Crear Nuevo</button>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
