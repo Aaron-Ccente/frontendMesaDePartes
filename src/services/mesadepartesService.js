@@ -241,6 +241,24 @@ class MesaDePartes {
     }
   }
 
+  // Obtener casos culminados para la bandeja de Mesa de Partes
+  static async getCasosCulminados() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/mesadepartes-dashboard/casos-culminados`, {
+        method: 'GET',
+        headers: this.getHeaders()
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        return { error: data.error || data.message || 'Error obteniendo casos culminados' };
+      }
+      return data;
+    } catch (error) {
+      console.error('Error en getCasosCulminados:', error);
+      return { error: error.message || 'Error de red' };
+    }
+  }
+
 }   
 
 export default MesaDePartes;

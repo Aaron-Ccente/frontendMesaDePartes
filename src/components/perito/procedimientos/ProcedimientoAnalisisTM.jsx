@@ -62,9 +62,34 @@ const ProcedimientoAnalisisTM = () => {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await OficiosService.getOficioDetalle(id_oficio);
-      if (res.data) setOficio(res.data);
-      else throw new Error(res.message || 'No se pudieron cargar los detalles del oficio.');
+      
+      // 1. Intentar obtener datos de un análisis previo PRIMERO.
+      const procRes = await ProcedimientoService.getDatosAnalisisTM(id_oficio);
+
+      // 2. Si hay datos, estamos en MODO EDICIÓN.
+      if (procRes.success && procRes.data) {
+        toast.info('Modo edición: se han cargado los datos del análisis guardado.');
+        
+        // Cargar los datos del procedimiento guardado
+        setAperturaData(procRes.data.aperturaData);
+        setMetadata(procRes.data.metadata);
+        setMuestrasAnalizadas(procRes.data.muestrasAnalizadas);
+        setMuestrasAgotadas(procRes.data.muestrasAgotadas);
+
+        // También necesitamos los datos del oficio para la cabecera
+        const oficioRes = await OficiosService.getOficioDetalle(id_oficio);
+        if (oficioRes.success) setOficio(oficioRes.data);
+
+        return; // Salir temprano para no ejecutar la lógica de creación.
+      }
+      
+      // 3. Si no hay datos, estamos en MODO CREACIÓN.
+      const oficioRes = await OficiosService.getOficioDetalle(id_oficio);
+      if (oficioRes.success) {
+        setOficio(oficioRes.data);
+      } else {
+        throw new Error(oficioRes.message || 'No se pudieron cargar los detalles del oficio.');
+      }
     } catch (error) {
       toast.error(`Error al cargar datos: ${error.message}`);
       navigate('/perito/dashboard');

@@ -34,7 +34,9 @@ import CasosAnalisisLAB from './components/perito/casos/CasosAnalisisLAB';
 import CasosConsolidacion from './components/perito/casos/CasosConsolidacion';
 import ProcedimientoExtraccion from './components/perito/procedimientos/ProcedimientoExtraccion';
 import ProcedimientoAnalisisTM from './components/perito/procedimientos/ProcedimientoAnalisisTM';
+import ProcedimientoAnalisisINST from './components/perito/procedimientos/ProcedimientoAnalisisINST';
 import ProcedimientoAnalisisLAB from './components/perito/procedimientos/ProcedimientoAnalisisLAB';
+import ProcedimientoConsolidacionLAB from './components/perito/procedimientos/ProcedimientoConsolidacionLAB';
 import ProcedimientoConsolidacion from './components/perito/procedimientos/ProcedimientoConsolidacion';
 
 
@@ -47,9 +49,11 @@ import RespuestaOficio from './components/mesadepartes/RespuestaOficio';
 import SeguimientoCasos from './components/mesadepartes/SeguimientoCasos';
 import SeguimientoDetalle from './components/mesadepartes/SeguimientoDetalle';
 import MesaDePartesResumen from './components/mesadepartes/MesaDePartesResumen';
+import CasosCulminados from './components/mesadepartes/CasosCulminados';
 import EspecialidadesManagement from './components/admin/SystemConfiguration/EspecialidadesManagement';
 import GradosManagement from './components/admin/SystemConfiguration/GradosManagement';
 import TurnosManagement from './components/admin/SystemConfiguration/TurnosManagement';
+
 import TiposExamenManagement from './components/admin/SystemConfiguration/TiposExamenManagement.jsx';
 import TiposDePrioridadManagement from './components/admin/SystemConfiguration/TiposDePrioridadManagement.jsx';
 
@@ -108,7 +112,9 @@ function App() {
               <Route path="casos/:id" element={<CasoDetail />} />
               <Route path="procedimiento/extraccion/:id" element={<ProcedimientoExtraccion />} />
               <Route path="procedimiento/analisis-tm/:id" element={<ProcedimientoAnalisisTM />} />
+              <Route path="procedimiento/analisis-inst/:id" element={<ProcedimientoAnalisisINST />} />
               <Route path="procedimiento/analisis-lab/:id" element={<ProcedimientoAnalisisLAB />} />
+              <Route path="procedimiento/consolidacion-lab/:id" element={<ProcedimientoConsolidacionLAB />} />
               <Route path="procedimiento/consolidar/:id" element={<ProcedimientoConsolidacion />} />
               <Route path="perfil" element={<PeritoPerfil />} />
             </Route>
@@ -122,6 +128,7 @@ function App() {
               <Route index element={<MesaDePartesResumen />} />
               <Route path="crear/oficio" element={<CrearOficio />} />
               <Route path="seguimiento/casos" element={<SeguimientoCasos />} />
+              <Route path="casos-culminados" element={<CasosCulminados />} />
               <Route path="seguimiento/casos/:id" element={<SeguimientoDetalle />} />
             </Route>
 

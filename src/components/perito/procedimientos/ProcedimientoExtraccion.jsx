@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../../../hooks/useAuth';
 import { OficiosService } from '../../../services/oficiosService';
@@ -36,7 +36,10 @@ const MUESTRA_DEFAULTS = {
 const ProcedimientoExtraccion = () => {
   const { id: id_oficio } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  
+  const funcion = location.state?.funcion; // 'extraccion' o 'extraccion_y_analisis'
 
   // Estados del componente
   const [oficio, setOficio] = useState(null);
@@ -191,7 +194,14 @@ const ProcedimientoExtraccion = () => {
     }
 
     try {
-      const res = await ProcedimientoService.registrarExtraccion(id_oficio, payload);
+      let res;
+      // Lógica condicional basada en el flujo de trabajo
+      if (funcion === 'extraccion_y_analisis') {
+        res = await ProcedimientoService.finalizarExtraccionInterna(id_oficio, payload);
+      } else {
+        res = await ProcedimientoService.registrarExtraccion(id_oficio, payload);
+      }
+
       if (res.success) {
         toast.success(res.message || 'Procedimiento guardado exitosamente.');
         navigate('/perito/dashboard');

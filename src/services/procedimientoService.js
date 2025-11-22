@@ -104,6 +104,44 @@ export class ProcedimientoService {
   }
 
   /**
+   * Registra los datos de extracción para el flujo 'Extracción y Análisis', actualizando el estado
+   * del caso a PENDIENTE_ANALISIS_TM sin derivarlo.
+   */
+  static async finalizarExtraccionInterna(idOficio, data) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/finalizar-extraccion-interna`, {
+        method: 'POST',
+        headers: this.#getHeaders(),
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Error en finalizarExtraccionInterna:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtiene los datos previamente guardados de un procedimiento de análisis de TM.
+   */
+  static async getDatosAnalisisTM(idOficio) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/analisis-tm`, {
+        method: 'GET',
+        headers: this.#getHeaders(),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Error al obtener los datos del análisis.');
+      }
+      return data;
+    } catch (error) {
+      console.error('Error en getDatosAnalisisTM:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Registra los datos de análisis (TM, INST, LAB).
    */
   static async registrarAnalisis(idOficio, data) {
@@ -147,9 +185,54 @@ export class ProcedimientoService {
         body: JSON.stringify(data),
       });
       return await response.json();
-    } catch (error) {
-      console.error('Error en registrarConsolidacion:', error);
-      throw error;
+        } catch (error) {
+          console.error('Error en registrarConsolidacion:', error);
+          throw error;
+        }
+      }
+    
+      // --- Métodos para flujos con formularios placeholder ---
+    
+      static async registrarAnalisisPlaceholder(idOficio, tipo_analisis) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/placeholder-analisis`, {
+            method: 'POST',
+            headers: this.#getHeaders(),
+            body: JSON.stringify({ tipo_analisis }), // 'INST' o 'LAB'
+          });
+          return await response.json();
+        } catch (error) {
+          console.error('Error en registrarAnalisisPlaceholder:', error);
+          throw error;
+        }
+      }
+    
+      static async registrarConsolidacionPlaceholder(idOficio) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/placeholder-consolidacion`, {
+            method: 'POST',
+            headers: this.#getHeaders(),
+            body: JSON.stringify({}),
+          });
+          return await response.json();
+        } catch (error) {
+          console.error('Error en registrarConsolidacionPlaceholder:', error);
+          throw error;
+        }
+      }
+    
+      static async finalizarParaMP(idOficio) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/finalizar-para-mp`, {
+            method: 'POST',
+            headers: this.#getHeaders(),
+            body: JSON.stringify({}),
+          });
+          return await response.json();
+        } catch (error) {
+          console.error('Error en finalizarParaMP:', error);
+          throw error;
+        }
+      }
     }
-  }
-}
+    

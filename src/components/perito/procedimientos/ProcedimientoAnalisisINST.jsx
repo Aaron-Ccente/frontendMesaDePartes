@@ -1,18 +1,18 @@
 import PlaceholderProcedimiento from './PlaceholderProcedimiento';
 import { ProcedimientoService } from '../../../services/procedimientoService';
 
-const ProcedimientoAnalisisLAB = () => {
+const ProcedimientoAnalisisINST = () => {
   const handleSave = (idOficio) => {
-    return ProcedimientoService.registrarAnalisisPlaceholder(idOficio, 'LAB');
+    return ProcedimientoService.registrarAnalisisPlaceholder(idOficio, 'INST');
   };
 
   return (
     <PlaceholderProcedimiento
-      pageTitle="Análisis Toxicológico (Laboratorio)"
+      pageTitle="Análisis de Dosaje Etílico (Instrumentalización)"
       onSave={handleSave}
       saveButtonText="Guardar Análisis"
     />
   );
 };
 
-export default ProcedimientoAnalisisLAB;
+export default ProcedimientoAnalisisINST;

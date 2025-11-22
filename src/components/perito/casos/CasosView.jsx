@@ -112,6 +112,7 @@ const CasosView = ({ funcion, title }) => {
                   caso={caso} 
                   onDerivarClick={handleDerivarClick}
                   isDeriving={isDeriving}
+                  funcion={funcion} // Pasar la función al componente hijo
                 />
               ))}
             </div>
