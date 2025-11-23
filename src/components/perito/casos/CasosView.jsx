@@ -1,10 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { OficioAssignedPeritoService } from '../../../services/oficioAssignedPerito.js';
-<<<<<<< HEAD
 import { ProcedimientoService } from '../../../services/procedimientoService.js';
-=======
-import { OficiosService } from '../../../services/oficiosService.js';
->>>>>>> 46696a9 (refactor + implementacion de casos diferenciados por funcionalidad)
 import CasoCard from './CasoCard';
 import DerivacionModal from '../DerivacionModal';
 import { toast } from 'sonner';
@@ -17,10 +13,7 @@ const CasosView = ({ funcion, title }) => {
   // Estado para el modal de derivación
   const [isModalOpen, setModalOpen] = useState(false);
   const [selectedCasoId, setSelectedCasoId] = useState(null);
-<<<<<<< HEAD
   const [peritosParaDerivar, setPeritosParaDerivar] = useState([]);
-=======
->>>>>>> 46696a9 (refactor + implementacion de casos diferenciados por funcionalidad)
   const [isDeriving, setIsDeriving] = useState(false);
 
   const fetchCasos = useCallback(async () => {
@@ -43,7 +36,6 @@ const CasosView = ({ funcion, title }) => {
     fetchCasos();
   }, [fetchCasos]);
 
-<<<<<<< HEAD
   // --- Lógica del Modal de Derivación Asistida ---
 
   const handleDerivarClick = async (casoId) => {
@@ -68,19 +60,6 @@ const CasosView = ({ funcion, title }) => {
     setModalOpen(false);
     setSelectedCasoId(null);
     setPeritosParaDerivar([]);
-=======
-  // --- Lógica del Modal de Derivación ---
-
-  const handleDerivarClick = (casoId) => {
-    setSelectedCasoId(casoId);
-    setModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    if (isDeriving) return; // Evitar cerrar mientras se procesa
-    setModalOpen(false);
-    setSelectedCasoId(null);
->>>>>>> 46696a9 (refactor + implementacion de casos diferenciados por funcionalidad)
   };
 
   const handlePeritoSelect = async (perito) => {
@@ -90,18 +69,10 @@ const CasosView = ({ funcion, title }) => {
     toast.info('Derivando caso...');
 
     try {
-<<<<<<< HEAD
       const response = await ProcedimientoService.derivar(selectedCasoId, perito.id_usuario);
       
       if (response.success) {
         toast.success(response.message || 'Caso derivado exitosamente.');
-=======
-      // Aquí usamos el servicio para llamar al endpoint de derivación del backend
-      const response = await OficiosService.derivarOficio(selectedCasoId, perito.id_usuario, perito.seccion_nombre);
-      
-      if (response.success) {
-        toast.success('Caso derivado exitosamente.');
->>>>>>> 46696a9 (refactor + implementacion de casos diferenciados por funcionalidad)
         handleCloseModal();
         fetchCasos(); // Recargar la lista de casos
       } else {
@@ -115,10 +86,6 @@ const CasosView = ({ funcion, title }) => {
     }
   };
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 46696a9 (refactor + implementacion de casos diferenciados por funcionalidad)
   return (
     <div className="p-4 sm:p-6 bg-white dark:bg-dark-surface rounded-2xl shadow-lg">
       <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-dark-text-primary mb-6 border-b border-gray-200 dark:border-dark-border pb-4">
@@ -144,11 +111,8 @@ const CasosView = ({ funcion, title }) => {
                   key={caso.id_oficio} 
                   caso={caso} 
                   onDerivarClick={handleDerivarClick}
-<<<<<<< HEAD
                   isDeriving={isDeriving}
                   funcion={funcion} // Pasar la función al componente hijo
-=======
->>>>>>> 46696a9 (refactor + implementacion de casos diferenciados por funcionalidad)
                 />
               ))}
             </div>
@@ -160,21 +124,12 @@ const CasosView = ({ funcion, title }) => {
         </div>
       )}
 
-<<<<<<< HEAD
       {isModalOpen && (
         <DerivacionModal 
           peritos={peritosParaDerivar}
           onClose={handleCloseModal}
           onPeritoSelect={handlePeritoSelect}
           isDeriving={isDeriving}
-=======
-      {/* Renderizar el modal si está abierto */}
-      {isModalOpen && (
-        <DerivacionModal 
-          casoId={selectedCasoId}
-          onClose={handleCloseModal}
-          onPeritoSelect={handlePeritoSelect}
->>>>>>> 46696a9 (refactor + implementacion de casos diferenciados por funcionalidad)
         />
       )}
     </div>
