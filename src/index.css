@@ -40,11 +40,16 @@
 }
 
 @layer components {
+  .text-success {
+    color: var(--color-success);
+  }
+
   .form-input {
     @apply block w-full rounded-md shadow-sm sm:text-sm border;
     @apply bg-gray-50 border-gray-300 text-gray-900;
     @apply focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-pnp-green-light)] focus:border-[var(--color-pnp-green-light)];
   }
+
   .dark .form-input {
     @apply bg-[var(--color-dark-bg-secondary)] border-[var(--color-dark-border)] text-[var(--color-dark-text-primary)];
     @apply focus:ring-[var(--color-dark-pnp-green)] focus:border-[var(--color-dark-pnp-green)];
@@ -55,15 +60,48 @@
     @apply text-white bg-[var(--color-pnp-green)] hover:bg-[var(--color-pnp-green-light)];
     @apply disabled:bg-gray-400 disabled:cursor-not-allowed;
   }
+
   .dark .btn-primary {
     @apply text-[var(--color-dark-bg-primary)] bg-[var(--color-dark-pnp-green)] hover:bg-[var(--color-dark-pnp-green-light)];
   }
+}
+
+/* Prevenir cambios de color en autocompletado - Modo claro */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #f3f4f6 inset !important;
+  box-shadow: 0 0 0 30px #f3f4f6 inset !important;
+}
+
+input:-webkit-autofill {
+  -webkit-text-fill-color: #111827 !important;
+}
+
+/* Prevenir cambios de color en autocompletado - Modo oscuro */
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px var(--color-dark-bg-secondary) inset !important;
+  box-shadow: 0 0 0 30px var(--color-dark-bg-secondary) inset !important;
+}
+
+.dark input:-webkit-autofill {
+  -webkit-text-fill-color: var(--color-dark-text-primary) !important;
+}
+
+/* Transición suave para cambio de color de autocompletado */
+input:-webkit-autofill {
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 /* Clase de utilidad para ocultar el scrollbar */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .no-scrollbar {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */

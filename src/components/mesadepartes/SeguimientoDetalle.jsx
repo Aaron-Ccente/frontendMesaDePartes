@@ -176,10 +176,10 @@ const SeguimientoDetalle = () => {
           <h3 className="text-xl font-bold text-gray-800 dark:text-white border-b dark:border-dark-border pb-3 mb-4">Detalles del Oficio</h3>
           <dl>
             <InfoItem label="Unidad Solicitante" value={caso.unidad_solicitante} />
-            <InfoItem label="Remitente" value={caso.unidad_remitente} />
             <InfoItem label="Fecha de Incidente" value={new Date(caso.fecha_hora_incidente).toLocaleString('es-ES')} />
             <InfoItem label="Prioridad" value={caso.nombre_prioridad} />
             <InfoItem label="Tipos de Examen" value={caso.tipos_de_examen.join(', ')} />
+            <InfoItem label="Celular del conductor" value={caso.celular_conductor} />
           </dl>
         </div>
         <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-lg border dark:border-dark-border">

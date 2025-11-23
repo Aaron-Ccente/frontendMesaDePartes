@@ -12,15 +12,16 @@ const initialFormData = {
   fechaHora: "",
   fiscalia: "", // Unidad Solicitante
   regionSolicitante: "",
+  celularConductor: "",
   implicado: "",
   dniImplicado: "",
   direccionImplicado: "",
   delito: "",
+  situacionPersona: "",
   celular: "",
   referencia: "",
   fechaIncidente: "",
   horaIncidente: "",
-  fiscal_remitente: "",
   id_tipos_examen: [],
   tipos_examen: [],
   muestra: "N/A", // Campo corregido y con valor por defecto
@@ -34,23 +35,23 @@ const initialFormData = {
   asunto: "",
   folios: "",
   tipo_de_muestra: "TOMA DE MUESTRAS", 
-};function CrearOficio() {
+};
+
+function CrearOficio() {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState(initialFormData);
 
-  const [codigo, setCodigo] = useState("");
-  const [closeModal, setCloseModal] = useState(false);
   const [especialidades, setEspecialidades] = useState([]);
   const [prioridades, setPrioridades] = useState([]);
   const [tiposExamen, setTiposExamen] = useState([]);
   const [feedback, setFeedback] = useState(null);
+  const [toastType, setToastType] = useState('success'); // 'success' o 'error'
 
   // --- State for Perito Assignment Modal ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [peritosDisponibles, setPeritosDisponibles] = useState([]);
   const [isLoadingPeritos, setIsLoadingPeritos] = useState(false);
-
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -62,8 +63,9 @@ const initialFormData = {
         setPrioridades(Array.isArray(prioridadesRes?.data) ? prioridadesRes.data : []);
         const filtered = (especialidadesRes?.data || []).filter(e => ![11, 12, 13].includes(e.id_tipo_departamento));
         setEspecialidades(filtered);
-      } catch (error) {
+      } catch {
         setFeedback("Error al cargar datos iniciales.");
+        setToastType('error');
       }
     };
     loadInitialData();
@@ -73,6 +75,7 @@ const initialFormData = {
     const { id_tipos_examen, tipo_de_muestra } = formData;
     if (tipo_de_muestra !== 'TOMA DE MUESTRAS' && id_tipos_examen.length === 0) {
       setFeedback("Por favor, seleccione al menos un tipo de examen antes de asignar un perito.");
+      setToastType('error');
       return;
     }
 
@@ -89,22 +92,23 @@ const initialFormData = {
         throw new Error(res.message || 'No se encontraron peritos.');
       }
     } catch (err) {
-      setFeedback(err.message);
+      setFeedback(err?.message || "Error de conexión.");
+      setToastType('error');
     } finally {
       setIsLoadingPeritos(false);
     }
   };
 
   const handleDepartmentSelection = async (department) => {
-    setFormData(prev => ({ 
+    setFormData({ 
       ...initialFormData,
       id_especialidad_requerida: department.id_tipo_departamento, 
       especialidad_requerida: department.nombre_departamento 
-    }));
+    });
     try {
       const tiposRes = await ComplementServices.getTiposByDepartamento(department.id_tipo_departamento);
       setTiposExamen(tiposRes?.data || []);
-    } catch (err) {
+    } catch {
       setTiposExamen([]);
     }
     setStep(2);
@@ -135,7 +139,9 @@ const initialFormData = {
       tipo_de_muestra: prev.tipo_de_muestra,
     }));
   };
+  
   const handlePeritoSelect = (perito) => setFormData(prev => ({ ...prev, id_usuario_perito_asignado: perito.id_usuario, perito_asignado: perito.nombre_completo, cip_perito_asignado: perito.CIP }));
+  
   const handleTipoExamenToggle = (examenId, examenName) => {
     setFormData(prev => {
       const isSelected = prev.id_tipos_examen.includes(examenId);
@@ -162,40 +168,41 @@ const initialFormData = {
     e.preventDefault();
     if (!formData.id_especialidad_requerida || !formData.id_usuario_perito_asignado || !formData.id_prioridad) {
       setFeedback("Error: Debe seleccionar especialidad, perito y prioridad.");
+      setToastType('error');
       return;
     }
     if (formData.id_tipos_examen.length === 0) {
       setFeedback("Error: Debe seleccionar al menos un tipo de examen.");
+      setToastType('error');
       return;
     }
     setFeedback("Procesando...");
+    setToastType('success');
     try {
       if (formData.numeroOficio) {
         const checkResp = await OficiosService.checkNumero(formData.numeroOficio);
         if (checkResp.exists) {
           setFeedback(`Error: Ya existe un oficio con el número ${formData.numeroOficio}`);
+          setToastType('error');
           return;
         }
       }
-      // El backend ya no necesita la asignación automática, así que volvemos a la lógica anterior
-      // donde el perito se envía en el payload.
       const payload = { ...formData, mesadepartesData: { id_usuario: user.id_usuario, CIP: user.CIP, nombre_completo: user.nombre_completo } };
       const createResp = await OficiosService.createOficio(payload);
 
       if (createResp.success) {
-        setFeedback("¡Oficio creado y asignado exitosamente!");
-        setCodigo(createResp.data.numero_oficio || `ID-${createResp.data.id_oficio}`);
+        const newCodigo = createResp.data.numero_oficio || `ID-${createResp.data.id_oficio}`;
+        setFeedback(`¡Oficio creado! Código: ${newCodigo}`);
+        setToastType('success');
+        // No limpiar el formulario para permitir ediciones o registros rápidos.
       } else {
         setFeedback(`Error del servidor: ${createResp.message}`);
+        setToastType('error');
       }
-    } catch (err) {
-      setFeedback(err?.message || "Error de conexión.");
+    } catch {
+      setFeedback("Error de conexión.");
+      setToastType('error');
     }
-  };
-
-  const handleReset = () => {
-    setStep(1);
-    setFormData(initialFormData);
   };
 
   const renderDepartmentSelection = () => (
@@ -224,35 +231,51 @@ const initialFormData = {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <button onClick={() => handleTipoMuestraChange('TOMA DE MUESTRAS')} className={`p-4 text-left rounded-lg border-2 transition-all duration-200 ${isTomaMuestra ? 'border-info text-info dark:border-blue-400 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-200 dark:border-dark-border hover:bg-blue-50 dark:hover:bg-blue-900/20'}`}>
+          <button onClick={() => handleTipoMuestraChange('TOMA DE MUESTRAS')} className={`p-4 text-left rounded-lg border-2 border-gray-200 dark:border-dark-border transition-all duration-200 cursor-pointer  hover:scale-102 ${isTomaMuestra ? ' bg-[#1a4d2e] text-white' : ''}`}>
             <h3 className={`text-lg font-semibold ${!isTomaMuestra ? 'text-gray-700 dark:text-dark-text-secondary' : ''}`}>REQUIERE TOMA DE MUESTRA</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">El perito asignado se encargará de recolectar la muestra.</p>
+            <p className="text-sm dark:text-gray-400">El perito asignado se encargará de recolectar la muestra.</p>
           </button>
-          <button onClick={() => handleTipoMuestraChange('MUESTRAS REMITIDAS')} className={`p-4 text-left rounded-lg border-2 transition-all duration-200 ${isRemitido ? 'border-pnp-green text-pnp-green dark:border-dark-pnp-green dark:text-dark-pnp-green bg-green-50 dark:bg-green-900/30' : 'border-gray-200 dark:border-dark-border hover:bg-green-50 dark:hover:bg-green-900/20'}`}>
+          <button onClick={() => handleTipoMuestraChange('MUESTRAS REMITIDAS')} className={`p-4 text-left rounded-lg border-2 border-gray-200 dark:border-dark-border transition-all duration-200 cursor-pointer hover:scale-102 ${isRemitido ? 'bg-yellow-500 text-black' : ' dark:text-white'}`}>
             <h3 className={`text-lg font-semibold ${!isRemitido ? 'text-gray-700 dark:text-dark-text-secondary' : ''}`}>MUESTRA REMITIDA</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">La muestra física se entrega junto con el oficio.</p>
+            <p className="text-sm ">La muestra física se entrega junto con el oficio.</p>
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
           <FormSection title="1. Información del Registro">
-            <FormInput label="Número de Oficio" name="numeroOficio" value={formData.numeroOficio} onChange={handleChange} />
+            <FormInput label="Número de Oficio" name="numeroOficio" value={formData.numeroOficio} onChange={handleChange} required/>
             <FormInput label="Número de Folios" name="folios" type="number" value={formData.folios} onChange={handleChange} min="1" max="99" />
             <FormInput label="Referencia (Opcional)" name="referencia" value={formData.referencia} onChange={handleChange} />
             <FormInput label="Unidad Solicitante" name="fiscalia" value={formData.fiscalia} onChange={handleChange} required />
-            <FormInput label="Remitente" name="fiscal_remitente" value={formData.fiscal_remitente} onChange={handleChange} />
-            <div className="grid grid-cols-2 gap-4">
+            <FormInput label="Región Solicitante" name="regionSolicitante" value={formData.regionSolicitante} onChange={handleChange} />
+            <FormInput label="Celular del conductor" name="celularConductor" value={formData.celularConductor} onChange={handleChange} />
+            {!isRemitido  && 
+            (<div className="grid grid-cols-2 gap-4">
               <FormInput label="Fecha del Incidente" name="fechaIncidente" type="date" value={formData.fechaIncidente} onChange={handleChange} />
               <FormInput label="Hora del Incidente" name="horaIncidente" type="time" value={formData.horaIncidente} onChange={handleChange} />
-            </div>
+            </div>)
+            }
           </FormSection>
 
           <FormSection title="2. Información del Implicado">
             <FormInput label="Nombre Completo" name="implicado" value={formData.implicado} onChange={handleChange} required />
-            <FormInput label="Documento de Identidad (DNI)" name="dniImplicado" value={formData.dniImplicado} onChange={handleChange} required />
+            <FormInput label="Documento de Identidad (DNI)" name="dniImplicado" value={formData.dniImplicado} onChange={handleChange} />
             <FormInput label="Dirección" name="direccionImplicado" value={formData.direccionImplicado} onChange={handleChange} />
             <FormInput label="Celular de Contacto" name="celular" value={formData.celular} onChange={handleChange} />
             <FormInput label="Delito" name="delito" value={formData.delito} onChange={handleChange} required />
+            <FormSelect 
+                label="Situación de la Persona" 
+                name="situacionPersona" 
+                value={formData.situacionPersona} 
+                onChange={handleChange} 
+                required
+              >
+                <option value="">Seleccione situación</option>
+                <option value="Ocsiso">Ocsiso</option>
+                <option value="Agraviado">Agraviado</option>
+                <option value="Detenido">Detenido</option>
+                <option value="Investigado">Investigado</option>
+              </FormSelect>
           </FormSection>
 
           <FormSection title="4. Exámenes y Derivación">
@@ -261,7 +284,7 @@ const initialFormData = {
               <div className="p-4 border dark:border-dark-border rounded-lg flex flex-wrap gap-3 bg-white dark:bg-dark-bg-primary">
                 {tiposExamen.length > 0 ? tiposExamen.map(examen => (
                   <button type="button" key={examen.id_tipo_de_examen} onClick={() => handleTipoExamenToggle(examen.id_tipo_de_examen, examen.nombre)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer hover:scale-105 ${
                       formData.id_tipos_examen.includes(examen.id_tipo_de_examen)
                         ? 'bg-pnp-green text-white shadow-md'
                         : 'bg-gray-200 dark:bg-dark-bg-tertiary text-gray-700 dark:text-dark-text-secondary hover:bg-gray-300 dark:hover:bg-gray-600'
@@ -290,7 +313,7 @@ const initialFormData = {
                   type="button"
                   onClick={handleOpenPeritoModal}
                   disabled={isLoadingPeritos}
-                  className="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                  className="py-2 px-4 bg-[#1a4d2e] text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 cursor-pointer"
                 >
                   {isLoadingPeritos ? 'Cargando...' : 'Seleccionar'}
                 </button>
@@ -305,13 +328,13 @@ const initialFormData = {
 
           <FormSection title="5. Actas y Asunto">
             <div className="flex items-center">
-                <button type="button" onClick={() => alert('Funcionalidad para Acta de Observaciones pendiente.')} disabled={isTomaMuestra} className="px-4 py-2 rounded-lg bg-blue-500 text-white disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed">
+                <button type="button" onClick={() => alert('Funcionalidad para Acta de Observaciones pendiente.')} disabled={isTomaMuestra} className="px-4 py-2 rounded-lg bg-[#1a4d2e] text-white disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed hover:bg-green-700 cursor-pointer">
                     Generar Acta de Observaciones
                 </button>
             </div>
             <div className="md:col-span-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-dark-text-secondary">Asunto <span className="text-red-500">*</span></label>
-                <textarea name="asunto" value={formData.asunto} onChange={handleChange} rows="3" className="w-full border p-2 rounded-lg bg-white dark:bg-dark-bg-tertiary dark:border-dark-border" required></textarea>
+                <label className="text-sm font-medium text-gray-700 dark:text-dark-text-secondary">Asunto</label>
+                <textarea name="asunto" value={formData.asunto} onChange={handleChange} rows="3" className="w-full border p-2 rounded-lg bg-white dark:bg-dark-bg-tertiary dark:border-dark-border"></textarea>
             </div>
           </FormSection>
 
@@ -335,20 +358,15 @@ const initialFormData = {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-extrabold text-center mb-8 text-gray-800 dark:text-gray-100">Crear Nuevo Oficio</h1>
-      {feedback && <ShowToast message={feedback} onClose={() => setFeedback(null)} />}
+      {feedback && (
+        <ShowToast 
+          type={toastType} 
+          message={feedback} 
+          onClose={() => setFeedback(null)} 
+        />
+      )}
 
       {step === 1 ? renderDepartmentSelection() : renderDynamicForm()}
-
-      {closeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-dark-bg-secondary p-8 rounded-lg text-center shadow-2xl transform transition-all duration-300 ease-out scale-95 opacity-0 animate-scale-in"> {/* Added backdrop-blur-sm and animation classes */}
-            <h3 className="text-2xl font-bold text-success dark:text-dark-pnp-green mb-4">¡Oficio Creado y Asignado!</h3>
-            <p className="text-gray-700 dark:text-dark-text-secondary mb-6">El código para seguimiento es:</p>
-            <p className="text-4xl font-extrabold text-gray-900 dark:text-white mb-8">{codigo}</p>
-            <button onClick={handleReset} className="bg-pnp-green hover:bg-pnp-green-light text-white font-bold py-3 px-8 rounded-lg">Aceptar y Crear Nuevo</button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

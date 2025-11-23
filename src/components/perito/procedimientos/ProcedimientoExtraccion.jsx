@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../../../hooks/useAuth';
 import { OficiosService } from '../../../services/oficiosService';
@@ -36,13 +36,16 @@ const MUESTRA_DEFAULTS = {
 const ProcedimientoExtraccion = () => {
   const { id: id_oficio } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  
+  const funcion = location.state?.funcion; // 'extraccion' o 'extraccion_y_analisis'
 
   // Estados del componente
   const [oficio, setOficio] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Estados del formulario
   const [fueExitosa, setFueExitosa] = useState(true);
   const [observaciones, setObservaciones] = useState('');
@@ -52,15 +55,57 @@ const ProcedimientoExtraccion = () => {
   const [pdfUrl, setPdfUrl] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Carga inicial de datos del oficio
+// Carga inicial de datos: Lógica unificada para modo creación y edición.
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await OficiosService.getOficioDetalle(id_oficio);
-      if (res.data) {
-        setOficio(res.data);
-      } else {
-        throw new Error(res.message || 'No se pudieron cargar los detalles del oficio.');
+
+      // 1. Intentar obtener datos de una extracción previa PRIMERO.
+      const procRes = await ProcedimientoService.getDatosExtraccion(id_oficio);
+      
+      // 2. Si hay datos, estamos en MODO EDICIÓN.
+      if (procRes.success && procRes.data) {
+        toast.info('Modo edición: se han cargado los datos guardados anteriormente.');
+        
+        // Cargar los datos del procedimiento guardado
+        setMuestras(procRes.data.muestras.map(m => ({ ...m, id: m.id_muestra })) || []);
+        setObservaciones(procRes.data.observaciones || '');
+        setFueExitosa(procRes.data.fue_exitosa);
+
+        // También necesitamos los datos del oficio para la cabecera
+        const oficioRes = await OficiosService.getOficioDetalle(id_oficio);
+        if (oficioRes.success) setOficio(oficioRes.data);
+
+        return; // Salir temprano para no ejecutar la lógica de creación.
+      }
+
+      // 3. Si no hay datos, estamos en MODO CREACIÓN.
+      const oficioRes = await OficiosService.getOficioDetalle(id_oficio);
+      if (!oficioRes.success) throw new Error(oficioRes.message || 'No se pudieron cargar los detalles del oficio.');
+      
+      const oficioData = oficioRes.data;
+      setOficio(oficioData);
+
+      if (oficioData && oficioData.tipos_de_examen) {
+        const muestrasSugeridas = new Set();
+        oficioData.tipos_de_examen.forEach(examen => {
+          const tipoMuestraSugerido = Object.keys(EXAMEN_A_TIPO_MUESTRA).find(key => examen.toUpperCase() === key.toUpperCase());
+          if (tipoMuestraSugerido) {
+            muestrasSugeridas.add(EXAMEN_A_TIPO_MUESTRA[tipoMuestraSugerido]);
+          }
+        });
+
+        if (muestrasSugeridas.size > 0) {
+          const nuevasMuestras = [...muestrasSugeridas].map(tipo => ({
+            id: Date.now() + Math.random(),
+            tipo_muestra: tipo,
+            descripcion: MUESTRA_DEFAULTS[tipo]?.descripcion || '',
+            cantidad: MUESTRA_DEFAULTS[tipo]?.cantidad || '',
+          }));
+          setMuestras(nuevasMuestras);
+        } else {
+          setMuestras([{ id: Date.now(), tipo_muestra: '', descripcion: '', cantidad: '' }]);
+        }
       }
     } catch (error) {
       toast.error(`Error al cargar datos: ${error.message}`);
@@ -74,38 +119,12 @@ const ProcedimientoExtraccion = () => {
     loadData();
   }, [loadData]);
 
-  // Efecto para pre-poblar las muestras basadas en los tipos de examen
-  useEffect(() => {
-    if (oficio && oficio.tipos_de_examen) {
-      const muestrasSugeridas = new Set();
-      oficio.tipos_de_examen.forEach(examen => {
-        const tipoMuestraSugerido = EXAMEN_A_TIPO_MUESTRA[examen];
-        if (tipoMuestraSugerido) {
-          muestrasSugeridas.add(tipoMuestraSugerido);
-        }
-      });
-
-      if (muestrasSugeridas.size > 0) {
-        const nuevasMuestras = [...muestrasSugeridas].map(tipo => ({
-          id: Date.now() + Math.random(),
-          tipo_muestra: tipo,
-          descripcion: '',
-          cantidad: '',
-        }));
-        setMuestras(nuevasMuestras);
-      } else {
-        // Si no hay sugerencias, empezar con una muestra vacía
-        setMuestras([{ id: Date.now(), tipo_muestra: '', descripcion: '', cantidad: '' }]);
-      }
-    }
-  }, [oficio]);
 
 
   const handleMuestraChange = (index, field, value) => {
     const newMuestras = [...muestras];
     newMuestras[index][field] = value;
 
-    // Lógica de autocompletado inteligente
     if (field === 'tipo_muestra') {
       const defaults = MUESTRA_DEFAULTS[value];
       if (defaults) {
@@ -122,19 +141,14 @@ const ProcedimientoExtraccion = () => {
   };
 
   const removeMuestra = (index) => {
-    if (muestras.length > 1) {
-      const newMuestras = muestras.filter((_, i) => i !== index);
-      setMuestras(newMuestras);
-    } else {
-      toast.error('Debe haber al menos una muestra.');
-    }
+    const newMuestras = muestras.filter((_, i) => i !== index);
+    setMuestras(newMuestras);
   };
 
   const handleClear = () => {
     if (window.confirm('¿Estás seguro de que deseas limpiar todos los campos del formulario?')) {
       setFueExitosa(true);
       setObservaciones('');
-      // Reiniciar a una muestra vacía en lugar de las sugeridas
       setMuestras([{ id: Date.now(), tipo_muestra: '', descripcion: '', cantidad: '' }]);
       toast.success('Formulario limpiado.');
     }
@@ -146,7 +160,6 @@ const ProcedimientoExtraccion = () => {
       return;
     }
     
-    // Datos del formulario que aún no se han guardado en la BD
     const extraData = {
       perito: user,
       muestras,
@@ -161,13 +174,12 @@ const ProcedimientoExtraccion = () => {
       setPdfUrl(url);
       setIsModalOpen(true);
     }
-    // El toast de error ya se maneja dentro del DocumentService
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    toast.info('Registrando procedimiento...');
+    toast.info('Guardando procedimiento...');
 
     const payload = {
       fue_exitosa: fueExitosa,
@@ -176,23 +188,28 @@ const ProcedimientoExtraccion = () => {
     };
 
     if (fueExitosa && payload.muestras.length === 0) {
-        toast.error('Debe registrar al menos una muestra válida (con tipo y cantidad) para una extracción exitosa.');
+        toast.error('Debe registrar al menos una muestra válida para una extracción exitosa.');
         setIsSubmitting(false);
         return;
     }
 
     try {
-      const res = await ProcedimientoService.registrarExtraccion(id_oficio, payload);
-      if (res.success) {
-        const codigos = res.data?.codigos_generados || [];
-        const mensajeExito = `${res.message} Códigos generados: ${codigos.join(', ')}`;
-        toast.success(mensajeExito);
-        navigate('/perito/dashboard/mis-casos/extraccion');
+      let res;
+      // Lógica condicional basada en el flujo de trabajo
+      if (funcion === 'extraccion_y_analisis') {
+        res = await ProcedimientoService.finalizarExtraccionInterna(id_oficio, payload);
       } else {
-        throw new Error(res.message || 'Ocurrió un error desconocido.');
+        res = await ProcedimientoService.registrarExtraccion(id_oficio, payload);
+      }
+
+      if (res.success) {
+        toast.success(res.message || 'Procedimiento guardado exitosamente.');
+        navigate('/perito/dashboard');
+      } else {
+        throw new Error(res.message || 'Ocurrió un error desconocido al guardar.');
       }
     } catch (error) {
-      toast.error(`Error al registrar: ${error.message}`);
+      toast.error(`Error al guardar: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -243,7 +260,6 @@ const ProcedimientoExtraccion = () => {
         <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-md border dark:border-dark-border space-y-6">
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-dark-border pb-3">Registro del Procedimiento</h3>
             
-            {/* Resultado del Procedimiento */}
             <div className="p-4 border rounded-lg dark:border-dark-border">
                 <h4 className="text-lg font-semibold text-gray-700 dark:text-dark-text-primary mb-4">1. Resultado del Procedimiento</h4>
                 <div className="flex items-center space-x-6">
@@ -258,7 +274,6 @@ const ProcedimientoExtraccion = () => {
                 </div>
             </div>
 
-            {/* Muestras Recolectadas */}
             {fueExitosa && (
                 <div className="p-4 border rounded-lg dark:border-dark-border">
                     <h4 className="text-lg font-semibold text-gray-700 dark:text-dark-text-primary mb-4">2. Muestras Recolectadas</h4>
@@ -297,14 +312,12 @@ const ProcedimientoExtraccion = () => {
                 </div>
             )}
 
-            {/* Observaciones */}
             <div className="p-4 border rounded-lg dark:border-dark-border">
                 <h4 className="text-lg font-semibold text-gray-700 dark:text-dark-text-primary mb-2">{fueExitosa ? '3. Observaciones Adicionales' : '2. Motivo de la Falla'}</h4>
                 <textarea value={observaciones} onChange={(e) => setObservaciones(e.target.value)} rows="4" placeholder={fueExitosa ? 'Detalles relevantes del procedimiento...' : 'Especifique por qué no se pudo realizar la extracción...'} className="mt-1 form-input w-full" required={!fueExitosa} />
             </div>
         </div>
 
-        {/* Botones de Acción */}
         <div className="flex flex-wrap justify-end items-center gap-3 pt-6 border-t dark:border-dark-border">
             <button 
                 type="button" 
@@ -336,7 +349,7 @@ const ProcedimientoExtraccion = () => {
                 className="btn-primary"
             >
                 <GuardarIcon />
-                <span>{isSubmitting ? 'Guardando...' : 'Finalizar y Guardar'}</span>
+                <span>{isSubmitting ? 'Guardando...' : 'Guardar Procedimiento'}</span>
             </button>
         </div>
       </form>
