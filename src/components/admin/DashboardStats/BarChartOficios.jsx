@@ -1,11 +1,21 @@
-import { BarChart, Bar, Rectangle, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 const BarChartOficios = ({ data }) => {
-  // Asegurar que cantidad_oficios sea número
   const formattedData = data.map(d => ({
     ...d,
     cantidad_oficios: Number(d.cantidad_oficios)
   }));
+
+  // Colores para cada día (domingo a sábado)
+  const colors = [
+    "#ef4444", // domingo - rojo
+    "#f97316", // lunes - naranja
+    "#f59e0b", // martes - amarillo
+    "#10b981", // miércoles - verde
+    "#3b82f6", // jueves - azul
+    "#8b5cf6", // viernes - morado
+    "#ec4899", // sábado - rosado
+  ];
 
   return (
     <BarChart
@@ -20,22 +30,18 @@ const BarChartOficios = ({ data }) => {
       }}
     >
       <CartesianGrid strokeDasharray="3 3" />
-      
-      {/* Mostrar el nombre del día en el eje X */}
       <XAxis dataKey="dia_semana_nombre" />
-
       <YAxis />
-
       <Tooltip />
       <Legend />
 
-      {/* Cantidad de oficios como valor de la barra */}
       <Bar 
         dataKey="cantidad_oficios" 
-        fill="#4ade80" 
-        activeBar={<Rectangle fill="#22c55e" stroke="#166534" />} 
-        name="Cantidad de oficios"
-      />
+      >
+        {formattedData.map((_, index) => (
+          <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+        ))}
+      </Bar>
     </BarChart>
   );
 };
