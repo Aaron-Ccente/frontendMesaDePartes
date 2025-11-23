@@ -192,12 +192,6 @@ function CrearOficio() {
     }
   };
 
-  const handleReset = () => {
-    setStep(1);
-    setFormData(initialFormData);
-    setFeedback(null);
-  };
-
   const renderDepartmentSelection = () => (
     <div className="p-4">
       <h2 className="text-2xl font-bold mb-8 text-center text-gray-800 dark:text-gray-100">Paso 1: Seleccione un Departamento</h2>

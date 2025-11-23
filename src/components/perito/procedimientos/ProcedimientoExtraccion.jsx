@@ -8,30 +8,12 @@ import { DocumentService } from '../../../services/documentService';
 import PDFPreviewModal from '../../documentos/PDFPreviewModal';
 import DeleteIcon from '../../../assets/icons/DeleteIcon';
 import { LimpiarIcon, PreviewIcon, GuardarIcon, CancelarIcon } from '../../../assets/icons/Actions';
-
-// --- Constantes para la lógica de negocio ---
-const TIPOS_DE_MUESTRA = ['Sangre', 'Orina', 'Hisopo Ungueal', 'Visceras', 'Cabello', 'Otro'];
-const EXAMEN_A_TIPO_MUESTRA = {
-  'Dosaje Etilico': 'Sangre',
-  'Toxicologico': 'Orina',
-  'Sarro Ungueal': 'Hisopo Ungueal',
-};
-
-const MUESTRA_DEFAULTS = {
-  'Sangre': {
-    descripcion: 'Muestra de sangre venosa extraída del pliegue del codo, en tubo de ensayo tapa lila con anticoagulante EDTA.',
-    cantidad: '5 ml aprox.',
-  },
-  'Orina': {
-    descripcion: 'Muestra de orina recolectada en un frasco de plástico estéril de boca ancha y tapa rosca.',
-    cantidad: '50 ml aprox.',
-  },
-  'Hisopo Ungueal': {
-    descripcion: 'Muestra de sarro ungueal obtenida mediante raspado con hisopo estéril de las uñas de ambas manos.',
-    cantidad: '2 hisopos',
-  },
-};
-// -----------------------------------------
+import DetallesCasoHeader from '../common/DetallesCasoHeader';
+import SelectField from '../../ui/forms/SelectField';
+import InputField from '../../ui/forms/InputField';
+import TextareaField from '../../ui/forms/TextareaField';
+import { TIPOS_DE_MUESTRA, EXAMEN_A_TIPO_MUESTRA, MUESTRA_DEFAULTS } from '../../../utils/constants';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 
 const ProcedimientoExtraccion = () => {
   const { id: id_oficio } = useParams();
@@ -45,20 +27,24 @@ const ProcedimientoExtraccion = () => {
   const [oficio, setOficio] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
 
   // Estados del formulario
   const [fueExitosa, setFueExitosa] = useState(true);
   const [observaciones, setObservaciones] = useState('');
   const [muestras, setMuestras] = useState([]);
 
-  // Estados del modal de vista previa
+  // Estados de modales
   const [pdfUrl, setPdfUrl] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isClearModalOpen, setIsClearModalOpen] = useState(false);
+
 
 // Carga inicial de datos: Lógica unificada para modo creación y edición.
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
+      setErrors({});
 
       // 1. Intentar obtener datos de una extracción previa PRIMERO.
       const procRes = await ProcedimientoService.getDatosExtraccion(id_oficio);
@@ -68,7 +54,7 @@ const ProcedimientoExtraccion = () => {
         toast.info('Modo edición: se han cargado los datos guardados anteriormente.');
         
         // Cargar los datos del procedimiento guardado
-        setMuestras(procRes.data.muestras.map(m => ({ ...m, id: m.id_muestra })) || []);
+        setMuestras(procRes.data.muestras.map(m => ({ ...m, id: m.id_muestra, errors: {} })) || []);
         setObservaciones(procRes.data.observaciones || '');
         setFueExitosa(procRes.data.fue_exitosa);
 
@@ -101,10 +87,11 @@ const ProcedimientoExtraccion = () => {
             tipo_muestra: tipo,
             descripcion: MUESTRA_DEFAULTS[tipo]?.descripcion || '',
             cantidad: MUESTRA_DEFAULTS[tipo]?.cantidad || '',
+            errors: {},
           }));
           setMuestras(nuevasMuestras);
         } else {
-          setMuestras([{ id: Date.now(), tipo_muestra: '', descripcion: '', cantidad: '' }]);
+          setMuestras([{ id: Date.now(), tipo_muestra: '', descripcion: '', cantidad: '', errors: {} }]);
         }
       }
     } catch (error) {
@@ -124,6 +111,9 @@ const ProcedimientoExtraccion = () => {
   const handleMuestraChange = (index, field, value) => {
     const newMuestras = [...muestras];
     newMuestras[index][field] = value;
+    if(newMuestras[index].errors[field]){
+        newMuestras[index].errors[field] = null;
+    }
 
     if (field === 'tipo_muestra') {
       const defaults = MUESTRA_DEFAULTS[value];
@@ -137,7 +127,7 @@ const ProcedimientoExtraccion = () => {
   };
 
   const addMuestra = () => {
-    setMuestras([...muestras, { id: Date.now(), tipo_muestra: '', descripcion: '', cantidad: '' }]);
+    setMuestras([...muestras, { id: Date.now(), tipo_muestra: '', descripcion: '', cantidad: '', errors: {} }]);
   };
 
   const removeMuestra = (index) => {
@@ -146,12 +136,16 @@ const ProcedimientoExtraccion = () => {
   };
 
   const handleClear = () => {
-    if (window.confirm('¿Estás seguro de que deseas limpiar todos los campos del formulario?')) {
-      setFueExitosa(true);
-      setObservaciones('');
-      setMuestras([{ id: Date.now(), tipo_muestra: '', descripcion: '', cantidad: '' }]);
-      toast.success('Formulario limpiado.');
-    }
+    setIsClearModalOpen(true);
+  };
+
+  const handleConfirmClear = () => {
+    setFueExitosa(true);
+    setObservaciones('');
+    setMuestras([{ id: Date.now(), tipo_muestra: '', descripcion: '', cantidad: '', errors: {} }]);
+    setErrors({});
+    toast.success('Formulario limpiado.');
+    setIsClearModalOpen(false);
   };
 
   const handlePreview = async () => {
@@ -167,8 +161,11 @@ const ProcedimientoExtraccion = () => {
       fue_exitosa: fueExitosa,
     };
 
-    toast.info('Generando vista previa del Acta de Extracción...');
-    const url = await DocumentService.getPreviewUrl(id_oficio, 'tm/acta_extraccion', extraData);
+    const templateName = fueExitosa ? 'tm/acta_extraccion' : 'tm/informe_no_extraccion';
+    const toastMessage = fueExitosa ? 'Generando vista previa del Acta de Extracción...' : 'Generando vista previa del Informe de No Extracción...';
+
+    toast.info(toastMessage);
+    const url = await DocumentService.getPreviewUrl(id_oficio, templateName, extraData);
 
     if (url) {
       setPdfUrl(url);
@@ -176,8 +173,44 @@ const ProcedimientoExtraccion = () => {
     }
   };
 
+  const validate = () => {
+    const newErrors = {};
+    if (!fueExitosa && !observaciones.trim()) {
+        newErrors.observaciones = 'El motivo de la falla es requerido.';
+    }
+    
+    let muestrasAreValid = true;
+    if (fueExitosa) {
+        if (muestras.length === 0) {
+            muestrasAreValid = false;
+        } else {
+            const newMuestrasState = [...muestras];
+            muestras.forEach((muestra, index) => {
+                if (!muestra.tipo_muestra || !muestra.cantidad.trim()) {
+                    muestrasAreValid = false;
+                    if(!muestra.tipo_muestra) newMuestrasState[index].errors.tipo_muestra = 'Requerido';
+                    if(!muestra.cantidad.trim()) newMuestrasState[index].errors.cantidad = 'Requerido';
+                }
+            });
+            setMuestras(newMuestrasState);
+        }
+
+        if (!muestrasAreValid) {
+            newErrors.muestras = 'Debe registrar al menos una muestra válida (con tipo y cantidad).';
+        }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validate()) {
+        toast.error('Por favor, corrija los errores en el formulario.');
+        return;
+    }
+
     setIsSubmitting(true);
     toast.info('Guardando procedimiento...');
 
@@ -186,12 +219,6 @@ const ProcedimientoExtraccion = () => {
       observaciones,
       muestras: fueExitosa ? muestras.filter(m => m.tipo_muestra && m.cantidad) : [],
     };
-
-    if (fueExitosa && payload.muestras.length === 0) {
-        toast.error('Debe registrar al menos una muestra válida para una extracción exitosa.');
-        setIsSubmitting(false);
-        return;
-    }
 
     try {
       let res;
@@ -223,13 +250,6 @@ const ProcedimientoExtraccion = () => {
     );
   }
 
-  const InfoField = ({ label, value }) => (
-    <div>
-      <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400">{label}</h4>
-      <p className="text-base text-gray-800 dark:text-gray-200">{value || 'No especificado'}</p>
-    </div>
-  );
-
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-8 max-w-6xl mx-auto">
@@ -243,18 +263,7 @@ const ProcedimientoExtraccion = () => {
           </p>
         </div>
 
-        {/* Detalles del Caso */}
-        <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-md border dark:border-dark-border">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-dark-border pb-3">Detalles del Caso</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <InfoField label="Asunto" value={oficio?.asunto} />
-                <InfoField label="Implicado" value={oficio?.examinado_incriminado} />
-                <InfoField label="Delito" value={oficio?.delito} />
-                <InfoField label="Tipos de Examen" value={oficio?.tipos_de_examen?.join(', ')} />
-                <InfoField label="Perito Asignado" value={oficio?.nombre_perito_actual} />
-                <InfoField label="Prioridad" value={oficio?.nombre_prioridad} />
-            </div>
-        </div>
+        <DetallesCasoHeader oficio={oficio} />
 
         {/* Formulario del Procedimiento */}
         <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-md border dark:border-dark-border space-y-6">
@@ -277,27 +286,42 @@ const ProcedimientoExtraccion = () => {
             {fueExitosa && (
                 <div className="p-4 border rounded-lg dark:border-dark-border">
                     <h4 className="text-lg font-semibold text-gray-700 dark:text-dark-text-primary mb-4">2. Muestras Recolectadas</h4>
+                    {errors.muestras && <p className="text-sm text-red-500 mb-2">{errors.muestras}</p>}
                     <div className="space-y-4">
                         {muestras.map((muestra, index) => (
                         <div key={muestra.id} className="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-dark-bg-tertiary rounded-lg border dark:border-dark-border">
                             <span className="text-pnp-green-dark dark:text-dark-pnp-green font-bold text-lg pt-2">{index + 1}</span>
                             <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary">Tipo de Muestra</label>
-                                <select value={muestra.tipo_muestra} onChange={(e) => handleMuestraChange(index, 'tipo_muestra', e.target.value)} className="mt-1 form-select" required>
-                                    <option value="">Seleccione un tipo...</option>
-                                    {TIPOS_DE_MUESTRA.map(tipo => (
-                                        <option key={tipo} value={tipo}>{tipo}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary">Cantidad / Volumen</label>
-                                <input type="text" value={muestra.cantidad} onChange={(e) => handleMuestraChange(index, 'cantidad', e.target.value)} placeholder="Ej: 50 ml aprox." className="mt-1 form-input" required />
-                            </div>
+                            <SelectField
+                                label="Tipo de Muestra"
+                                name="tipo_muestra"
+                                value={muestra.tipo_muestra}
+                                onChange={(e) => handleMuestraChange(index, 'tipo_muestra', e.target.value)}
+                                required
+                                options={[
+                                    { value: '', label: 'Seleccione un tipo...' },
+                                    ...TIPOS_DE_MUESTRA.map(tipo => ({ value: tipo, label: tipo }))
+                                ]}
+                                error={muestra.errors?.tipo_muestra}
+                            />
+                            <InputField
+                                label="Cantidad / Volumen"
+                                name="cantidad"
+                                value={muestra.cantidad}
+                                onChange={(e) => handleMuestraChange(index, 'cantidad', e.target.value)}
+                                placeholder="Ej: 50 ml aprox."
+                                required
+                                error={muestra.errors?.cantidad}
+                            />
                             <div className="md:col-span-3">
-                                <label className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary">Descripción de la Muestra y Embalaje</label>
-                                <textarea value={muestra.descripcion} onChange={(e) => handleMuestraChange(index, 'descripcion', e.target.value)} placeholder="Ej: Muestra de sangre venosa extraída del pliegue del codo..." rows="3" className="mt-1 form-input w-full" />
+                                <TextareaField
+                                    label="Descripción de la Muestra y Embalaje"
+                                    name="descripcion"
+                                    value={muestra.descripcion}
+                                    onChange={(e) => handleMuestraChange(index, 'descripcion', e.target.value)}
+                                    placeholder="Ej: Muestra de sangre venosa extraída del pliegue del codo..."
+                                    rows={3}
+                                />
                             </div>
                             </div>
                             <button type="button" onClick={() => removeMuestra(index)} className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20" title="Eliminar muestra">
@@ -313,8 +337,19 @@ const ProcedimientoExtraccion = () => {
             )}
 
             <div className="p-4 border rounded-lg dark:border-dark-border">
-                <h4 className="text-lg font-semibold text-gray-700 dark:text-dark-text-primary mb-2">{fueExitosa ? '3. Observaciones Adicionales' : '2. Motivo de la Falla'}</h4>
-                <textarea value={observaciones} onChange={(e) => setObservaciones(e.target.value)} rows="4" placeholder={fueExitosa ? 'Detalles relevantes del procedimiento...' : 'Especifique por qué no se pudo realizar la extracción...'} className="mt-1 form-input w-full" required={!fueExitosa} />
+                <TextareaField
+                    label={fueExitosa ? '3. Observaciones Adicionales' : '2. Motivo de la Falla'}
+                    name="observaciones"
+                    value={observaciones}
+                    onChange={(e) => {
+                        setObservaciones(e.target.value);
+                        if (errors.observaciones) setErrors(prev => ({...prev, observaciones: null}));
+                    }}
+                    rows={4}
+                    placeholder={fueExitosa ? 'Detalles relevantes del procedimiento...' : 'Especifique por qué no se pudo realizar la extracción...'}
+                    required={!fueExitosa}
+                    error={errors.observaciones}
+                />
             </div>
         </div>
 
@@ -357,6 +392,14 @@ const ProcedimientoExtraccion = () => {
       {isModalOpen && (
         <PDFPreviewModal pdfUrl={pdfUrl} onClose={() => setIsModalOpen(false)} />
       )}
+
+      <ConfirmationModal
+        isOpen={isClearModalOpen}
+        onClose={() => setIsClearModalOpen(false)}
+        onConfirm={handleConfirmClear}
+        title="Confirmar Limpieza de Formulario"
+        message="¿Estás seguro de que deseas limpiar todos los campos? Esta acción no se puede deshacer."
+      />
     </>
   );
 };

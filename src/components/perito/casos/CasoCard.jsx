@@ -6,7 +6,7 @@ import { ProcedimientoService } from '../../../services/procedimientoService.js'
 
 import { VerDetalleIcon, IniciarProcedimientoIcon, DerivarIcon, GenerarReporteIcon } from '../../../assets/icons/Actions';
 
-const CasoCard = ({ caso, onDerivarClick, isDeriving, funcion }) => {
+const CasoCard = ({ caso, onDerivarClick, onFinalizarClick = null, isDeriving, funcion }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
