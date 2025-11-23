@@ -156,33 +156,45 @@ class MesaDePartes {
   }
 
   // Obtener casos para la vista de seguimiento
-  static async getCasos({ estado = 'pendiente', search = '' }) {
-    try {
-      const params = new URLSearchParams({
-        estado,
-      });
-
-      if (search) {
-        params.append('search', search);
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/seguimiento/casos?${params}`, {
-        method: 'GET',
-        headers: this.getHeaders()
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return { error: data.error || data.message || 'Error obteniendo los casos' };
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error en getCasos:', error);
-      return { error: error.message || 'Error de red' };
+  static async getCasos({ estado = '', search = '' } = {}) {
+  try {
+    const params = new URLSearchParams();
+    if (estado && estado.trim()) {
+      params.append('estado', estado.trim());
     }
+    if (search && search.trim()) {
+      params.append('search', search.trim());
+    }
+
+    const queryString = params.toString();
+    const url = queryString 
+      ? `${API_BASE_URL}/api/seguimiento/casos?${queryString}`
+      : `${API_BASE_URL}/api/seguimiento/casos`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: this.getHeaders()
+    });
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return { 
+        success: false, 
+        message: data.message || 'Error obteniendo los casos' 
+      };
+    }
+    return {
+      success: true,
+      data: data.data || []
+    };
+  } catch (error) {
+    console.error('Error en getCasos:', error);
+    return { 
+      success: false, 
+      message: error.message || 'Error de red' 
+    };
   }
+}
 
   // Obtener el detalle de un caso específico
   static async getDetalleCaso(id_oficio) {

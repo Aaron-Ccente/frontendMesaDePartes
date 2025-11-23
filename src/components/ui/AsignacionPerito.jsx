@@ -7,12 +7,12 @@ const AsignacionPerito = ({ isModalOpen, peritos, onClose, onPeritoSelect, loadi
 
   const handleSelect = (perito) => {
     onPeritoSelect(perito);
-    onClose(); // Cierra el modal después de seleccionar
+    onClose();
   };
 
   return (
     <Portal>
-      <div className="fixed inset-0 bg-transparent backdrop-blur-md flex justify-center items-center z-50">
+      <div className="fixed inset-0 bg-black/20 flex justify-center items-center z-50">
         <div className="bg-white dark:bg-dark-bg-secondary rounded-xl shadow-2xl p-6 w-full max-w-2xl">
           <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100">Seleccionar Perito</h3>
           <div className="overflow-y-auto max-h-[60vh]">
@@ -34,7 +34,7 @@ const AsignacionPerito = ({ isModalOpen, peritos, onClose, onPeritoSelect, loadi
                       <tr key={perito.id_usuario} className="border-b border-gray-200 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-bg-tertiary">
                         <td className="p-3 text-gray-700 dark:text-gray-200">{perito.nombre_completo}</td>
                         <td className="p-3 text-gray-700 dark:text-gray-200">{perito.CIP}</td>
-                        <td className="p-3 text-center text-gray-700 dark:text-gray-200">{perito.casos_activos ?? 0}</td>
+                        <td className="p-3 text-center text-gray-700 dark:text-gray-200">{perito.casos_asignados ?? 0}</td>
                         <td className="p-3">
                           <button
                             onClick={() => handleSelect(perito)}
