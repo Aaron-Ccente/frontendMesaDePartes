@@ -121,7 +121,7 @@ const CasoCard = ({ caso, onDerivarClick, onFinalizarClick = null, isDeriving, f
     }
 
     if (primaryButton) actionButtons.unshift(primaryButton);
-    if (onDerivarClick || onFinalizarClick) { // Solo muestra detalles si es una vista de acción
+    if (onDerivarClick) { // Solo muestra detalles si es una vista de acción
         actionButtons.push(<button key="detalles" onClick={handleVerDetalles} className={secondaryClasses}><VerDetalleIcon /><span>Ver Detalles</span></button>);
     }
 
@@ -143,7 +143,7 @@ const CasoCard = ({ caso, onDerivarClick, onFinalizarClick = null, isDeriving, f
         <div className="flex justify-between"><span className="font-semibold text-gray-500 dark:text-dark-text-secondary">Exámenes:</span><span className="text-gray-800 dark:text-dark-text-primary text-right truncate">{caso.tipos_de_examen || 'No especificados'}</span></div>
         <div className="flex justify-between"><span className="font-semibold text-gray-500 dark:text-dark-text-secondary">Prioridad:</span><span className="text-gray-800 dark:text-dark-text-primary text-right truncate">{caso.nombre_prioridad || 'No especificada'}</span></div>
       </div>
-      {(onDerivarClick || onFinalizarClick) && (
+      {(onDerivarClick) && (
         <div className="p-4 bg-gray-50 dark:bg-dark-bg-tertiary border-t border-gray-200 dark:border-dark-border">
           <div className="flex justify-end items-center space-x-3">
             {renderButtons()}

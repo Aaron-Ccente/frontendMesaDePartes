@@ -1,4 +1,4 @@
-function UsersActive({ usuariosActivos }) {
+function UsersActive({ usuariosActivos, close }) {
     
   // Para formatear la fecha
   const formatDate = (dateString) => {
@@ -13,11 +13,15 @@ function UsersActive({ usuariosActivos }) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors duration-300">
+    <div 
+    className="bg-black/30 fixed top-0 left-0 w-full h-full z-50 flex items-center justify-center p-4">
+    <div className=" bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors duration-300 w-8/12">
+      <div className="flex justify-between"> 
       <h2 className="text-xl font-semibold text-green-800 dark:text-green-400 mb-4">
         Historial de Usuarios Activos
-      </h2>
-      
+        </h2>
+        <button type="button" onClick={close} className="mb-4 px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-700 transition-colors duration-200">Cerrar</button>
+      </div> 
       {usuariosActivos && usuariosActivos.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -67,6 +71,7 @@ function UsersActive({ usuariosActivos }) {
           No hay datos de usuarios activos disponibles
         </div>
       )}
+      </div>
     </div>
   );
 }

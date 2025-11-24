@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { OficiosService } from "../../services/oficiosService";
+import MesaDePartes from "../../services/mesadepartesService";
 import Usuarios from "../../assets/icons/Usuarios";
 import SeguimientoDeOficios from "./DocumentManagement/SeguimientoDeOficios";
 
@@ -12,7 +12,7 @@ const DocumentManagement = () => {
   const [filterNumero, setFilterNumero] = useState("");
   const [filterPerito, setFilterPerito] = useState("");
   const [filterEstado, setFilterEstado] = useState("");
-  const [selectedOficioId, setSelectedOficioId] = useState({id_oficio: null, numero_oficio: null});
+  const [selectedOficioId, setSelectedOficioId] = useState({ id_oficio: null, numero_oficio: null });
 
   useEffect(() => {
     let mounted = true;
@@ -20,7 +20,7 @@ const DocumentManagement = () => {
       setLoading(true);
       setError(null);
       try {
-        const resp = await OficiosService.getAllSeguimientoOficios();
+        const resp = await MesaDePartes.getCasos();
         if (!mounted) return;
         if (!resp || !resp.success) {
           setError(resp?.message || "Error al obtener seguimientos");
@@ -49,7 +49,7 @@ const DocumentManagement = () => {
     return seguimientos.filter((s) => {
       const n = (s.numero_oficio || "").toString().toLowerCase();
       const p = (s.perito_asignado || "").toString().toLowerCase();
-      const e = (s.ultimo_estado || "").toString().toLowerCase();
+      const e = (s.estado_actual || "").toString().toLowerCase();
 
       if (numero && !n.includes(numero)) return false;
       if (perito && !p.includes(perito)) return false;
@@ -75,7 +75,7 @@ const DocumentManagement = () => {
         </p>
       </div>
 
-      {/* Tabla para ver estados actuales e informacion adicional de oficios para el admin */}
+      {/* Tabla para ver estados actuales e información adicional de oficios para el admin */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
         {/* Filtros */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -129,10 +129,10 @@ const DocumentManagement = () => {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Número</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Fecha creación</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Asunto</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Administrado</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Perito asignado</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Especialidad</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Último estado</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Fecha último estado</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Estado actual</th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -144,13 +144,15 @@ const DocumentManagement = () => {
                   >
                     <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-200">{row.numero_oficio}</td>
                     <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
-                      {row.fecha_creacion ? new Date(row.fecha_creacion).toLocaleString() : "-"}
+                      {row.fecha_creacion ? new Date(row.fecha_creacion).toLocaleString('es-PE') : "-"}
                     </td>
+                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-200 max-w-xs truncate">{row.asunto || "-"}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-200">{row.administrado || "-"}</td>
                     <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-200">{row.perito_asignado || "-"}</td>
-                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-200">{row.especialidad_requerida || "-"}</td>
-                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-200">{row.ultimo_estado || "-"}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
-                      {row.fecha_ultimo_estado ? new Date(row.fecha_ultimo_estado).toLocaleString() : "-"}
+                    <td className="px-6 py-4 text-sm">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                        {row.estado_actual || "-"}
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -162,7 +164,11 @@ const DocumentManagement = () => {
 
       {/* Modal seguimiento */}
       {selectedOficioId.id_oficio && (
-        <SeguimientoDeOficios id={selectedOficioId.id_oficio} numero={selectedOficioId.numero_oficio} onClose={() => setSelectedOficioId({id_oficio: null, numero_oficio: null})} />
+        <SeguimientoDeOficios 
+          id_oficio={selectedOficioId.id_oficio} 
+          numero={selectedOficioId.numero_oficio} 
+          onClose={() => setSelectedOficioId({ id_oficio: null, numero_oficio: null })} 
+        />
       )}
     </div>
   );
