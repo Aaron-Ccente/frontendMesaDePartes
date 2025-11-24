@@ -19,7 +19,8 @@ const BarChartOficios = ({ data }) => {
 
   return (
     <BarChart
-      width={500}
+      style={{ width: '100%', maxWidth: '400px', maxHeight: '60vh', aspectRatio: 1 }}
+      width={400}
       height={300}
       data={formattedData}
       margin={{
@@ -28,6 +29,7 @@ const BarChartOficios = ({ data }) => {
         left: 0,
         bottom: 5,
       }}
+      responsive
     >
       <CartesianGrid strokeDasharray="3 3" />
       <XAxis dataKey="dia_semana_nombre" />
