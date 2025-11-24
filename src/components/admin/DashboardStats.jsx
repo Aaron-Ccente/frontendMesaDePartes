@@ -237,13 +237,13 @@ const DashboardStats = () => {
 
       {/* Tabla a mostrar segun click */}
       {showUsersTable && (
-        <UsersActive usuariosActivos={stats.usuariosActivos} />
+        <UsersActive usuariosActivos={stats.usuariosActivos} close={toggleUsersTable} />
       )}
       {showCantidadOficiosTable && (
-        <CountOficiosTable oficiosDeLaSemana={stats.oficiosDeLaSemana} />
+        <CountOficiosTable oficiosDeLaSemana={stats.oficiosDeLaSemana} close={toggleCantidadOficiosTable} />
       )}
       {showOficiosTable && (
-        <PrioridadOficios prioridadOficios={stats.prioridadOficios} />
+        <PrioridadOficios prioridadOficios={stats.prioridadOficios} close={toggleOficiosTable} />
       )}
     </div>
   );
