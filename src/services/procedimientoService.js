@@ -122,11 +122,11 @@ export class ProcedimientoService {
   }
 
   /**
-   * Obtiene los datos previamente guardados de un procedimiento de análisis de TM.
+   * Obtiene los datos previamente guardados de un procedimiento de análisis (genérico).
    */
-  static async getDatosAnalisisTM(idOficio) {
+  static async getDatosAnalisis(idOficio) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/analisis-tm`, {
+      const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/analisis`, {
         method: 'GET',
         headers: this.#getHeaders(),
       });
@@ -136,7 +136,7 @@ export class ProcedimientoService {
       }
       return data;
     } catch (error) {
-      console.error('Error en getDatosAnalisisTM:', error);
+      console.error('Error en getDatosAnalisis:', error);
       throw error;
     }
   }
@@ -170,6 +170,26 @@ export class ProcedimientoService {
       return await response.json();
     } catch (error) {
       console.error('Error en obtenerResultadosCompletos:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtiene todos los datos necesarios para la vista de consolidación.
+   */
+  static async getDatosConsolidacion(idOficio) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/datos-consolidacion`, {
+        method: 'GET',
+        headers: this.#getHeaders(),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Error al obtener los datos para la consolidación.');
+      }
+      return data;
+    } catch (error) {
+      console.error('Error en getDatosConsolidacion:', error);
       throw error;
     }
   }

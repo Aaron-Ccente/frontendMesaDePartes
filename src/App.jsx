@@ -33,10 +33,7 @@ import CasosAnalisisINST from './components/perito/casos/CasosAnalisisINST';
 import CasosAnalisisLAB from './components/perito/casos/CasosAnalisisLAB';
 import CasosConsolidacion from './components/perito/casos/CasosConsolidacion';
 import ProcedimientoExtraccion from './components/perito/procedimientos/ProcedimientoExtraccion';
-import ProcedimientoAnalisisTM from './components/perito/procedimientos/ProcedimientoAnalisisTM';
-import ProcedimientoAnalisisINST from './components/perito/procedimientos/ProcedimientoAnalisisINST';
-import ProcedimientoAnalisisLAB from './components/perito/procedimientos/ProcedimientoAnalisisLAB';
-import ProcedimientoConsolidacionLAB from './components/perito/procedimientos/ProcedimientoConsolidacionLAB';
+import ProcedimientoAnalisis from './components/perito/procedimientos/ProcedimientoAnalisis';
 import ProcedimientoConsolidacion from './components/perito/procedimientos/ProcedimientoConsolidacion';
 
 
@@ -111,10 +108,7 @@ function App() {
               <Route path="mis-casos/consolidacion" element={<CasosConsolidacion />} />
               <Route path="casos/:id" element={<CasoDetail />} />
               <Route path="procedimiento/extraccion/:id" element={<ProcedimientoExtraccion />} />
-              <Route path="procedimiento/analisis-tm/:id" element={<ProcedimientoAnalisisTM />} />
-              <Route path="procedimiento/analisis-inst/:id" element={<ProcedimientoAnalisisINST />} />
-              <Route path="procedimiento/analisis-lab/:id" element={<ProcedimientoAnalisisLAB />} />
-              <Route path="procedimiento/consolidacion-lab/:id" element={<ProcedimientoConsolidacionLAB />} />
+              <Route path="procedimiento/analisis/:id" element={<ProcedimientoAnalisis />} />
               <Route path="procedimiento/consolidar/:id" element={<ProcedimientoConsolidacion />} />
               <Route path="perfil" element={<PeritoPerfil />} />
             </Route>

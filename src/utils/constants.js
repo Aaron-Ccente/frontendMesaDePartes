@@ -41,5 +41,5 @@ export const TIPOS_DROGA = [
     { key: 'benzodiacepinas', label: 'Benzodiacepinas' },
     { key: 'fenotiacinas', label: 'Fenotiacinas' },
     { key: 'barbituricos', label: 'Barbitúricos' },
-    { key: 'sarro_ungueal', label: 'Sarro Ungueal' },
+    { key: 'opioides', label: 'Opioides' },
 ];
