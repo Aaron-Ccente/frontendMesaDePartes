@@ -22,8 +22,8 @@ const DetallesCasoHeader = ({ oficio }) => {
                 <InfoField label="Asunto" value={oficio.asunto} />
                 <InfoField label="Implicado" value={oficio.examinado_incriminado} />
                 <InfoField label="Delito" value={oficio.delito} />
-                <InfoField label="Tipos de Examen" value={oficio.tipos_de_examen?.join(', ')} />
-                <InfoField label="Perito Asignado" value={oficio.nombre_perito_actual} />
+                <InfoField label="Tipos de Examen" value={oficio.tipos_de_examenes} />
+                <InfoField label="Perito Asignado" value={oficio.perito_asignado} />
                 <InfoField label="Prioridad" value={oficio.nombre_prioridad} />
             </div>
         </div>
