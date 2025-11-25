@@ -257,7 +257,7 @@ function CrearOficio() {
             }
           </FormSection>
 
-          <FormSection title="2. Información del Implicado">
+          <FormSection title="2. Información del Examinado/Incriminado">
             <FormInput label="Nombre Completo" name="implicado" value={formData.implicado} onChange={handleChange} required />
             <FormInput label="Documento de Identidad (DNI)" name="dniImplicado" value={formData.dniImplicado} onChange={handleChange} />
             <FormInput label="Dirección" name="direccionImplicado" value={formData.direccionImplicado} onChange={handleChange} />
