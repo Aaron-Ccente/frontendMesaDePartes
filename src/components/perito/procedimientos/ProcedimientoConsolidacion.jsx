@@ -19,7 +19,7 @@ const ProcedimientoConsolidacion = () => {
     const [oficio, setOficio] = useState(null);
     const [muestras, setMuestras] = useState([]);
     const [resultadosPrevios, setResultadosPrevios] = useState([]);
-    
+
     const [examenesConsolidados, setExamenesConsolidados] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -85,7 +85,7 @@ const ProcedimientoConsolidacion = () => {
                 if (!res.success) throw new Error(res.message);
 
                 const { oficio, resultados_previos, metadata, muestras, recolector_muestra } = res.data;
-                
+
                 setOficio(oficio);
                 setResultadosPrevios(resultados_previos || []);
                 setMuestras(muestras || []);
@@ -124,7 +124,7 @@ const ProcedimientoConsolidacion = () => {
                     cuerpoP1_1: 'Me dirijo a Usted, con la finalidad de remitir adjunto al presente el informe Pericial de Ingeniería Forense – ',
                     cuerpoP1_2: `Físico N° ${oficio.numero_oficio.split('-')[0]}`,
                     cuerpoP1_3: ', practicado en las muestras remitidas ',
-                    cuerpoP1_4: muestras.map((m, i) => `M${i+1}: (${m.descripcion})`).join(', '),
+                    cuerpoP1_4: muestras.map((m, i) => `M${i + 1}: (${m.descripcion})`).join(', '),
                     cuerpoP1_5: ', de conformidad al documento de la referencia. Se adjunta acta de deslacrado y lacrado de muestras para análisis pericial de ingeniería forense.',
                     regNum: '', // Completar si se tiene
                     regIniciales: `${user.nombre_completo.split(' ').map(n => n[0]).join('')}/lgp.`,
@@ -166,14 +166,14 @@ const ProcedimientoConsolidacion = () => {
                 if (res.resultados && res.resultados[idMuestra]) {
                     for (const analito in res.resultados[idMuestra]) {
                         if (analito !== 'descripcion_detallada' && analito !== 'no_aplicable') {
-                             let resultadoFormateado = res.resultados[idMuestra][analito];
-                             let analitoFormateado = analito.charAt(0).toUpperCase() + analito.slice(1).replace(/_/g, ' ');
-                             if (res.tipo_resultado === 'Sarro Ungueal') {
-                                 analitoFormateado = 'Sarro Ungueal';
-                                 resultadoFormateado = `: ${resultadoFormateado}`;
-                             } else {
-                                 resultadoFormateado = `: ${resultadoFormateado} en (${codigoMuestra})`;
-                             }
+                            let resultadoFormateado = res.resultados[idMuestra][analito];
+                            let analitoFormateado = analito.charAt(0).toUpperCase() + analito.slice(1).replace(/_/g, ' ');
+                            if (res.tipo_resultado === 'Sarro Ungueal') {
+                                analitoFormateado = 'Sarro Ungueal';
+                                resultadoFormateado = `: ${resultadoFormateado}`;
+                            } else {
+                                resultadoFormateado = `: ${resultadoFormateado} en (${codigoMuestra})`;
+                            }
                             consolidados[res.tipo_resultado].resultados.push({ analito: analitoFormateado, resultado: resultadoFormateado });
                         }
                     }
@@ -200,6 +200,7 @@ const ProcedimientoConsolidacion = () => {
         setPreviewLoading(true);
         try {
             const pdfBlob = await ProcedimientoService.generarCaratula(id_oficio, caratulaFormData);
+            console.log('DEBUG: PDF Blob received', { size: pdfBlob.size, type: pdfBlob.type });
             const url = URL.createObjectURL(pdfBlob);
             setCaratulaPdfUrl(url);
             setIsCaratulaModalOpen(true);
@@ -224,7 +225,7 @@ const ProcedimientoConsolidacion = () => {
             setPreviewLoading(false);
         }
     };
-    
+
     const handleGuardarYContinuar = async () => {
         if (!informeFormData.objeto_pericia || !informeFormData.conclusion_principal) {
             toast.error('El Objeto de la Pericia y la Conclusión Principal son obligatorios.');
@@ -249,7 +250,7 @@ const ProcedimientoConsolidacion = () => {
             setIsSubmitting(false);
         }
     };
-    
+
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file && file.type === "application/pdf") {
@@ -315,15 +316,15 @@ const ProcedimientoConsolidacion = () => {
                             </button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mt-4">
-                           <EditableField label="Lugar y Fecha" name="lugarFecha" value={caratulaFormData.lugarFecha} onChange={handleCaratulaInputChange} />
-                           <EditableField label="Número de Oficio" name="numOficio" value={caratulaFormData.numOficio} onChange={handleCaratulaInputChange} />
-                           <EditableField label="Referencia" name="referencia" value={caratulaFormData.referencia} onChange={handleCaratulaInputChange} />
-                           <h4 className="md:col-span-2 text-lg font-semibold border-b mt-4 dark:border-dark-border">Destinatario</h4>
-                           <EditableField label="Cargo Destinatario" name="destCargo" value={caratulaFormData.destCargo} onChange={handleCaratulaInputChange} />
-                           <EditableField label="Nombre Destinatario" name="destNombre" value={caratulaFormData.destNombre} onChange={handleCaratulaInputChange} />
-                           <h4 className="md:col-span-2 text-lg font-semibold border-b mt-4 dark:border-dark-border">Firmante</h4>
-                           <EditableField label="Nombre Firmante" name="firmanteNombre" value={caratulaFormData.firmanteNombre} onChange={handleCaratulaInputChange} />
-                           <EditableField label="Cargo Firmante" name="firmanteCargo" value={caratulaFormData.firmanteCargo} onChange={handleCaratulaInputChange} />
+                            <EditableField label="Lugar y Fecha" name="lugarFecha" value={caratulaFormData.lugarFecha} onChange={handleCaratulaInputChange} />
+                            <EditableField label="Número de Oficio" name="numOficio" value={caratulaFormData.numOficio} onChange={handleCaratulaInputChange} />
+                            <EditableField label="Referencia" name="referencia" value={caratulaFormData.referencia} onChange={handleCaratulaInputChange} />
+                            <h4 className="md:col-span-2 text-lg font-semibold border-b mt-4 dark:border-dark-border">Destinatario</h4>
+                            <EditableField label="Cargo Destinatario" name="destCargo" value={caratulaFormData.destCargo} onChange={handleCaratulaInputChange} />
+                            <EditableField label="Nombre Destinatario" name="destNombre" value={caratulaFormData.destNombre} onChange={handleCaratulaInputChange} />
+                            <h4 className="md:col-span-2 text-lg font-semibold border-b mt-4 dark:border-dark-border">Firmante</h4>
+                            <EditableField label="Nombre Firmante" name="firmanteNombre" value={caratulaFormData.firmanteNombre} onChange={handleCaratulaInputChange} />
+                            <EditableField label="Cargo Firmante" name="firmanteCargo" value={caratulaFormData.firmanteCargo} onChange={handleCaratulaInputChange} />
                         </div>
                     </div>
                 </TabPanel>
@@ -331,7 +332,7 @@ const ProcedimientoConsolidacion = () => {
                 {/* --- PESTAÑA 2: INFORME PERICIAL --- */}
                 <TabPanel>
                     <div className="bg-white dark:bg-dark-surface p-6 rounded-xl shadow-md border dark:border-dark-border">
-                         <div className="flex justify-between items-center border-b pb-3 dark:border-dark-border">
+                        <div className="flex justify-between items-center border-b pb-3 dark:border-dark-border">
                             <h3 className="text-xl font-bold">Contenido del Informe</h3>
                             <button type="button" onClick={handleInformePreview} disabled={previewLoading} className="btn-secondary">
                                 <PreviewIcon /><span>{previewLoading ? 'Generando...' : 'Vista Previa Informe'}</span>
@@ -342,9 +343,9 @@ const ProcedimientoConsolidacion = () => {
                             <EditableField label="A. Procedencia" name="unidad_solicitante" value={informeFormData.unidad_solicitante} onChange={handleInformeInputChange} />
                             <EditableField label="B. Documento de Referencia" name="documento_referencia" value={informeFormData.documento_referencia} onChange={handleInformeInputChange} />
                             <EditableField label="Fecha del Documento" name="fecha_documento" type="date" value={informeFormData.fecha_documento} onChange={handleInformeInputChange} />
-                            
+
                             <h4 className="md:col-span-2 text-lg font-semibold border-b mt-4 dark:border-dark-border">D. Objeto de la Pericia</h4>
-                             <div className="md:col-span-2">
+                            <div className="md:col-span-2">
                                 <EditableField label="D. Objeto de la Pericia" name="objeto_pericia" value={informeFormData.objeto_pericia} onChange={handleInformeInputChange} isTextarea={true} rows={3} />
                             </div>
 
@@ -381,7 +382,7 @@ const ProcedimientoConsolidacion = () => {
                             <div className="md:col-span-2">
                                 <EditableField label="K. Conclusión Principal" name="conclusion_principal" value={informeFormData.conclusion_principal} onChange={handleInformeInputChange} isTextarea={true} rows={5} />
                             </div>
-                             <div className="md:col-span-2">
+                            <div className="md:col-span-2">
                                 <EditableField label="L. Muestra Tomada Por" name="recolector_muestra" value={informeFormData.recolector_muestra} onChange={handleInformeInputChange} />
                             </div>
                         </div>
@@ -392,13 +393,13 @@ const ProcedimientoConsolidacion = () => {
                         </div>
                     </div>
                 </TabPanel>
-                
+
                 {/* --- PESTAÑA 3: FIRMA Y ENVÍO --- */}
                 <TabPanel>
                     <div className="bg-white dark:bg-dark-surface p-6 rounded-xl shadow-md border dark:border-dark-border text-center">
                         <h3 className="text-xl font-bold mb-4">Paso Final: Firma y Envío</h3>
                         <p className="mb-6">Los documentos han sido generados. Descárguelos, firme el Informe Pericial y súbalo para completar el proceso.</p>
-                        
+
                         <div className="flex justify-center gap-4 mb-8">
                             <a href={caratulaPdfUrl} download={`Caratula-${oficio?.nro_oficio}.pdf`} className="btn-secondary"><DownloadIcon /> Descargar Carátula</a>
                             <a href={informePdfUrl} download={`Informe-Pericial-${oficio?.nro_oficio}.pdf`} className="btn-primary"><DownloadIcon /> Descargar Informe</a>
