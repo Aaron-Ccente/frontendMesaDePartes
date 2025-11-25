@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../../../hooks/useAuth';
 import { OficiosService } from '../../../services/oficiosService';
 import { ProcedimientoService } from '../../../services/procedimientoService';
+import { DocumentService } from '../../../services/documentService';
 import { GuardarIcon, CancelarIcon, PreviewIcon } from '../../../assets/icons/Actions';
 import AddIcon from '../../../assets/icons/AddIcon';
 import DeleteIcon from '../../../assets/icons/DeleteIcon';
@@ -35,6 +36,8 @@ const ProcedimientoAnalisis = () => {
   const [isCreationMode, setIsCreationMode] = useState(false);
   const [isFirstPerito, setIsFirstPerito] = useState(false);
   const [canEditSamples, setCanEditSamples] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState(null);
 
   // Estados del formulario
   const [aperturaData, setAperturaData] = useState({ descripcion_paquete: '', observaciones: '' });
@@ -52,15 +55,12 @@ const ProcedimientoAnalisis = () => {
 
       const procRes = await ProcedimientoService.getDatosAnalisis(id_oficio);
       if (!procRes.success) {
-        // Si getDatosAnalisis falla, podría ser un caso nuevo sin datos.
-        // Se asume modo creación, pero se verifica si hay muestras pre-registradas.
         setIsCreationMode(true);
         const muestrasPrecargadas = oficioRes.data.muestras_registradas || [];
         setMuestras(muestrasPrecargadas.map(m => ({ ...m, resultados: {} })));
-        return; // Salir temprano
+        return; 
       }
 
-      // Si getDatosAnalisis tiene éxito, siempre usamos su data.
       const {
         aperturaData: ad,
         metadata: md,
@@ -139,8 +139,19 @@ const ProcedimientoAnalisis = () => {
     setMuestras(prev => prev.filter(m => m.id !== id));
   };
   
-  const handlePreview = async (tipo) => {
-    toast.info(`Generando vista previa de "${tipo}"...`);
+  const handleGenerarActa = async () => {
+    if (!aperturaData.descripcion_paquete) {
+      toast.error('Debe rellenar la descripción del paquete para generar el acta.');
+      return;
+    }
+    toast.info('Generando Acta de Apertura...');
+    const data = { aperturaData, muestras };
+    const url = await DocumentService.generarActaApertura(id_oficio, data);
+    if (url) {
+      setPdfUrl(url);
+      setIsPreviewModalOpen(true);
+      toast.success('Acta generada exitosamente.');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -166,7 +177,6 @@ const ProcedimientoAnalisis = () => {
       apertura_data: aperturaData, 
       muestras: muestras.map(m => ({
           ...m,
-          // El ID temporal se usa solo en el frontend
           id: m.isNew ? undefined : m.id,
       })),
       metadata, 
@@ -227,7 +237,13 @@ const ProcedimientoAnalisis = () => {
 
         {(oficio?.tipo_de_muestra === 'MUESTRAS REMITIDAS' && isFirstPerito) && (
           <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-md border dark:border-dark-border space-y-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-white border-b dark:border-dark-border pb-3">Paso 1: Apertura del Paquete Lacrado</h3>
+            <div className="flex justify-between items-center border-b dark:border-dark-border pb-3">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Paso 1: Apertura del Paquete Lacrado</h3>
+              <button type="button" onClick={handleGenerarActa} className="btn-secondary text-sm flex items-center gap-2">
+                <PreviewIcon />
+                <span>Generar Acta</span>
+              </button>
+            </div>
             <TextareaField
               label="Descripción del Paquete Recibido"
               name="descripcion_paquete"
@@ -275,7 +291,7 @@ const ProcedimientoAnalisis = () => {
               {canEditSamples && (
                   <button type="button" onClick={handleAddMuestra} className="btn-primary text-sm flex items-center gap-2"><AddIcon /><span>Añadir Muestra</span></button>
               )}
-              <button type="button" onClick={() => handlePreview('Informe de Resultados')} className="btn-secondary text-sm flex items-center gap-2"><PreviewIcon /><span>Informe Parcial</span></button>
+              <button type="button" onClick={() => toast.info('Funcionalidad de informe parcial en desarrollo.')} className="btn-secondary text-sm flex items-center gap-2"><PreviewIcon /><span>Informe Parcial</span></button>
             </div>
           </div>
           
@@ -350,7 +366,7 @@ const ProcedimientoAnalisis = () => {
           </button>
         </div>
       </form>
-      {/* {isPreviewModalOpen && (<PDFPreviewModal pdfUrl={pdfUrl} onClose={() => setIsPreviewModalOpen(false)} />)} */}
+      {isPreviewModalOpen && (<PDFPreviewModal pdfUrl={pdfUrl} onClose={() => setIsPreviewModalOpen(false)} />)}
     </>
   );
 };
