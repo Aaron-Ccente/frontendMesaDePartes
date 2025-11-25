@@ -194,7 +194,7 @@ function CrearOficio() {
         const newCodigo = createResp.data.numero_oficio || `ID-${createResp.data.id_oficio}`;
         setFeedback(`¡Oficio creado! Código: ${newCodigo}`);
         setToastType('success');
-        // No limpiar el formulario para permitir ediciones o registros rápidos.
+        handleClearForm();
       } else {
         setFeedback(`Error del servidor: ${createResp.message}`);
         setToastType('error');
