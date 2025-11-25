@@ -1,349 +1,308 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../../../hooks/useAuth';
-import { OficiosService } from '../../../services/oficiosService';
 import { ProcedimientoService } from '../../../services/procedimientoService';
-import { DocumentService } from '../../../services/documentService';
-import PDFPreviewModal from '../../documentos/PDFPreviewModal';
+import { DictamenService } from '../../../services/dictamenService.js';
 import { GuardarIcon, CancelarIcon, PreviewIcon } from '../../../assets/icons/Actions';
+import { InfoCard, ReadOnlyField, EditableField } from '../../ui/InformeConsolidadoComponents';
+import PDFPreviewModal from '../../documentos/PDFPreviewModal';
 
 const ProcedimientoConsolidacion = () => {
     const { id: id_oficio } = useParams();
     const navigate = useNavigate();
-    const { user } = useAuth();
+    useAuth(); // Se mantiene por si el hook tiene efectos globales, pero 'user' no se usa.
 
-    // Estados
+    // Estados para datos crudos del backend
     const [oficio, setOficio] = useState(null);
+    const [muestras, setMuestras] = useState([]);
     const [resultadosPrevios, setResultadosPrevios] = useState([]);
-    const [metadata, setMetadata] = useState({});
-    const [loading, setLoading] = useState(true);
+    
+    // Estado para la UI 
+    const [examenesConsolidados, setExamenesConsolidados] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // Estados para el Informe Final (Consolidado)
+    const [loading, setLoading] = useState(true);
+    const [previewLoading, setPreviewLoading] = useState(false);
+    
+    // State unificado para todo el formulario del informe
     const [formData, setFormData] = useState({
-        destinatario_cargo: 'JEFE DE LA UNIDAD SOLICITANTE',
-        destinatario_nombre: '',
-        asunto: '',
-        conclusiones: '',
-        observaciones: ''
+        unidad_solicitante: '',
+        documento_referencia: '',
+        fecha_documento: '',
+        objeto_pericia: '',
+        hora_incidente: '',
+        fecha_incidente: '',
+        hora_toma_muestra: '',
+        fecha_toma_muestra: '',
+        conductor: '',
+        examinado_incriminado: '',
+        edad_examinado: '',
+        conclusion_principal: '',
+        recolector_muestra: ''
     });
 
-    // Modal PDF
+    // State para el modal de vista previa
     const [pdfUrl, setPdfUrl] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-
-    const loadData = useCallback(async () => {
-        try {
-            setLoading(true);
-            const res = await ProcedimientoService.getDatosConsolidacion(id_oficio);
-            if (!res.success) throw new Error(res.message);
-
-            const { oficio: oficioData, resultados_previos: resultadosData, metadata: metadataData } = res.data;
-
-            setOficio(oficioData);
-            setResultadosPrevios(resultadosData || []);
-            setMetadata(metadataData || {});
-
-            // Generar sugerencias y datos para el formulario
-            const sugerencia = generarConclusionSugerida(resultadosData, oficioData.examinado_incriminado);
-            
-            // Unir métodos de la metadata con los tipos de examen del oficio
-            const metodos = oficioData.tipos_de_examen.map(ex => metadataData.metodo_utilizado || '').join('; ');
-
-            setFormData(prev => ({
-                ...prev,
-                asunto: `Informe Pericial de ${oficioData.asunto || 'Toxicología'}`,
-                conclusiones: sugerencia,
-            }));
-            
-            // Actualizar metadata para la UI
-            setMetadata(prev => ({
-                ...prev,
-                objeto_pericia: oficioData.tipos_de_examen.join(', '),
-                metodo_utilizado: metodos || 'Ver anexos respectivos.'
-            }));
-
-        } catch (error) {
-            toast.error(`Error al cargar datos para consolidación: ${error.message}`);
-        } finally {
-            setLoading(false);
-        }
-    }, [id_oficio]);
-
-    useEffect(() => {
-        loadData();
-    }, [loadData]);
-
-    const generarConclusionSugerida = (resultados, nombreImplicado) => {
-        if (!resultados || resultados.length === 0) return '';
-        let positivos = [];
-        resultados.forEach(res => {
-            if (res.resultados) {
-                Object.entries(res.resultados).forEach(([key, val]) => {
-                    if (val === 'POSITIVO') positivos.push(key.toUpperCase().replace(/_/g, ' '));
-                });
-            }
-        });
-        positivos = [...new Set(positivos)];
-
-        if (positivos.length > 0) {
-            return `Las muestras analizadas de la persona "${nombreImplicado}" dieron resultado POSITIVO para: ${positivos.join(', ')}.`;
-        } else {
-            return `Las muestras analizadas de la persona "${nombreImplicado}" dieron resultado NEGATIVO para las sustancias investigadas.`;
-        }
-    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handlePreview = async () => {
-        if (!oficio || !user) return;
+    const formatDateForInput = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        const offset = date.getTimezoneOffset();
+        const adjustedDate = new Date(date.getTime() + (offset * 60 * 1000));
+        return adjustedDate.toISOString().split('T')[0];
+    };
 
-        const coverData = {
-            lugarFecha: `Huancayo, ${new Date().toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}`,
-            numOficio: oficio.numero_oficio,
-            destCargo: formData.destinatario_cargo,
-            destNombre: formData.destinatario_nombre,
-            destPuesto: '',
-            asuntoBase: `Informe Pericial de ${oficio.asunto || 'Toxicología'}`,
-            asuntoRemite: 'REMITE',
-            referencia: `OF. N° ${oficio.numero_oficio}`,
-            cuerpoP1_1: 'Me dirijo a Usted, con la finalidad de remitir adjunto al presente el informe Pericial de Ingeniería Forense – ',
-            cuerpoP1_2: 'Físico N° 2328-2329/25',
-            cuerpoP1_3: ', practicado en las muestras remitidas ',
-            cuerpoP1_4: 'M1 y M2: (Planchas metálicas con caracteres y números "A4P-236" "D11", las mismas que se adjuntan a la presente con su respectiva cadena de custodia)',
-            cuerpoP1_5: ', de conformidad al documento de la referencia. Se adjunta acta de deslacrado y lacrado de muestras para análisis pericial de ingeniería forense.',
-            regNum: 'PENDIENTE',
-            regIniciales: user.nombre_completo ? user.nombre_completo.split(' ').map(n => n.charAt(0)).join('').substring(0, 3) : 'XXX',
-            firmanteQS: user.cip,
-            firmanteNombre: user.nombre_completo,
-            firmanteCargo: user.cargo,
-            firmanteDependencia: 'OFICRI PNP - HUANCAYO',
-            conclusiones_finales: formData.conclusiones,
-            observaciones_finales: formData.observaciones,
+    // Carga de datos y pre-llenado del formulario
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                setLoading(true);
+                const res = await ProcedimientoService.getDatosConsolidacion(id_oficio);
+                if (!res.success) throw new Error(res.message);
+
+                const { oficio, resultados_previos, metadata, muestras, recolector_muestra } = res.data;
+                
+                setOficio(oficio);
+                setResultadosPrevios(resultados_previos || []);
+                setMuestras(muestras || []);
+
+                setFormData({
+                    unidad_solicitante: oficio.unidad_solicitante || '',
+                    documento_referencia: oficio.documento_referencia || '',
+                    fecha_documento: formatDateForInput(oficio.fecha_documento),
+                    objeto_pericia: metadata.objeto_pericia || oficio?.tipos_de_examen?.join(', ') || '',
+                    hora_incidente: oficio.hora_incidente || '',
+                    fecha_incidente: formatDateForInput(oficio.fecha_incidente),
+                    hora_toma_muestra: oficio.hora_toma_muestra || '',
+                    fecha_toma_muestra: formatDateForInput(oficio.fecha_toma_muestra),
+                    conductor: oficio.conductor || '',
+                    examinado_incriminado: oficio.examinado_incriminado || '',
+                    edad_examinado: oficio.edad_examinado || '',
+                    recolector_muestra: recolector_muestra || '',
+                    conclusion_principal: generarConclusionSugerida(resultados_previos, oficio.examinado_incriminado || 'el examinado')
+                });
+
+            } catch (error) {
+                toast.error(`Error al cargar datos: ${error.message}`);
+            } finally {
+                setLoading(false);
+            }
         };
+        loadData();
+    }, [id_oficio]);
 
-        // Formatear anexos para el template
-        const anexos = resultadosPrevios.map((res) => ({
-            reportNumber: `${oficio.numero_oficio}-${res.tipo_procedimiento}`,
-            procedencia: oficio.unidad_solicitante,
-            oficioNumber: oficio.numero_oficio,
-            oficioDate: oficio.fecha,
-            incidentTime: oficio.hora_incidente || 'No encontrado',
-            incidentDate: oficio.fecha_incidente || 'No encontrado',
-            sampleTime: res.hora_toma_muestra || 'No encontrado',
-            sampleDate: res.fecha_toma_muestra || 'No encontrado',
-            subjectName: oficio.examinado_incriminado,
-            subjectAge: oficio.edad_examinado,
-            conductor: oficio.conductor,
-            sarroResult: res.resultados.sarro_ungueal || 'No encontrado',
-            resultados: res.resultados,
-            conclusion1: `La muestra M1 analizada de la persona: "${oficio.examinado_incriminado} (${oficio.edad_examinado})", dieron resultado: ${
-                Object.values(res.resultados).includes('POSITIVO') ? `<strong>POSITIVO</strong> para ${Object.keys(res.resultados).filter(k => res.resultados[k] === 'POSITIVO').join(', ')}` : 'NEGATIVO'
-            } en el análisis toxicológico y <strong>${res.resultados.sarro_ungueal || 'No encontrado'}</strong> para ADHERENCIAS DE DROGAS ILICITAS en muestra de SARRO UNGUEAL.`,
-            perito: {
-                nombre: res.perito_nombre,
-                cip: res.perito_cip,
-                dni: res.perito_dni,
-                cqfp: res.perito_cqfp,
-                iniciales: res.perito_nombre.split(' ').map(n => n.charAt(0)).join(''),
-                cg: res.perito_cg,
-                grado: res.perito_grado,
-            },
-            footerDate: `Huancayo, ${new Date(res.fecha_creacion).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}`,
-        }));
-
-        const extraData = {
-            ...coverData,
-            anexos: anexos,
-        };
-
-        toast.info('Generando vista previa del Dictamen Consolidado...');
-        const url = await DocumentService.getPreviewUrl(id_oficio, 'lab/dictamen_consolidado', extraData);
-
-        if (url) {
-            setPdfUrl(url);
-            setIsModalOpen(true);
+    // Procesamiento de resultados para la UI
+    useEffect(() => {
+        if (!resultadosPrevios.length || !muestras.length) {
+            setExamenesConsolidados([]);
+            return;
         }
+
+        const consolidados = {};
+        resultadosPrevios.forEach(res => {
+            const examenInfo = { nombre: res.tipo_resultado };
+            if (!consolidados[res.tipo_resultado]) {
+                consolidados[res.tipo_resultado] = {
+                    nombre: examenInfo.nombre,
+                    resultados: []
+                };
+            }
+
+            muestras.forEach((muestra, index) => {
+                const idMuestra = muestra.id_muestra;
+                const codigoMuestra = `M${index + 1}`;
+                if (res.resultados && res.resultados[idMuestra]) {
+                    for (const analito in res.resultados[idMuestra]) {
+                        if (analito !== 'descripcion_detallada' && analito !== 'no_aplicable') {
+                             let resultadoFormateado = res.resultados[idMuestra][analito];
+                             let analitoFormateado = analito.charAt(0).toUpperCase() + analito.slice(1).replace(/_/g, ' ');
+                             if (res.tipo_resultado === 'Sarro Ungueal') {
+                                 analitoFormateado = 'Sarro Ungueal';
+                                 resultadoFormateado = `: ${resultadoFormateado}`;
+                             } else {
+                                 resultadoFormateado = `: ${resultadoFormateado} en (${codigoMuestra})`;
+                             }
+                            consolidados[res.tipo_resultado].resultados.push({ analito: analitoFormateado, resultado: resultadoFormateado });
+                        }
+                    }
+                }
+            });
+        });
+        setExamenesConsolidados(Object.values(consolidados));
+    }, [resultadosPrevios, muestras]);
+
+    const generarConclusionSugerida = (resultados, nombreImplicado) => {
+        let positivos = [];
+        let dosaje = null;
+        let sarroResult = null;
+        if (!resultados) return '';
+    
+        resultados.forEach(res => {
+            if (res.tipo_resultado === 'Dosaje Etílico') {
+                const idMuestra = Object.keys(res.resultados)[0];
+                if (idMuestra && res.resultados[idMuestra]) {
+                   dosaje = res.resultados[idMuestra]['alcohol_etilico_en_sangre'];
+                }
+            } else if (res.tipo_resultado === 'Sarro Ungueal') {
+                 const idMuestra = Object.keys(res.resultados)[0];
+                 if (idMuestra && res.resultados[idMuestra]) {
+                    sarroResult = res.resultados[idMuestra]['resultado_sarro_ungueal'];
+                 }
+            } else {
+                for (const idMuestra in res.resultados) {
+                    for (const analito in res.resultados[idMuestra]) {
+                        if (res.resultados[idMuestra][analito] === 'POSITIVO') {
+                            positivos.push(analito.toUpperCase().replace(/_/g, ' '));
+                        }
+                    }
+                }
+            }
+        });
+        positivos = [...new Set(positivos)];
+    
+        let conclusion = `La muestra analizada de la persona: “${nombreImplicado}”, dieron resultado: `;
+        let partes = [];
+        if (positivos.length > 0) {
+            partes.push(`POSITIVO para las siguientes sustancias: ${positivos.join(', ')}`);
+        } else {
+            partes.push('NEGATIVO para las sustancias químicas toxicológicas investigadas');
+        }
+
+        if (sarroResult) {
+            partes.push(`y ${sarroResult} para adherencias de drogas en Sarro Ungueal`);
+        }
+    
+        if (dosaje) {
+            partes.push(`y en el Dosaje Etílico arrojó ${dosaje}`);
+        }
+    
+        return conclusion + partes.join(' ') + '.';
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.conclusiones) {
-            toast.error('Las conclusiones son obligatorias.');
+        if (!formData.objeto_pericia || !formData.conclusion_principal) {
+            toast.error('El Objeto de la Pericia y la Conclusión Principal son obligatorios.');
             return;
         }
 
-        if (!window.confirm('¿Está seguro de emitir el Dictamen Pericial? Esta acción cerrará el caso.')) {
+        if (!window.confirm('¿Está seguro de emitir el Informe Pericial Consolidado? Esta acción cerrará el caso y no se podrá revertir.')) {
             return;
         }
 
         setIsSubmitting(true);
         try {
             const payload = {
-                conclusiones: formData.conclusiones,
-                observaciones: formData.observaciones,
-                cerrar_caso: true
+                informe: { ...formData, examenes: examenesConsolidados }
             };
-
-            const res = await ProcedimientoService.registrarConsolidacion(id_oficio, payload);
-
+            const res = await DictamenService.generarDictamen(id_oficio, payload);
             if (res.success) {
-                toast.success('Dictamen emitido exitosamente. El caso ha sido cerrado.');
+                toast.success('Informe emitido exitosamente. El caso ha sido cerrado.');
                 navigate('/perito/dashboard');
-            } else {
-                throw new Error(res.message);
-            }
+            } else { throw new Error(res.message); }
         } catch (error) {
-            toast.error(`Error al consolidar: ${error.message}`);
+            toast.error(`Error al emitir el informe: ${error.message}`);
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    if (loading) return <div className="p-8 text-center">Cargando datos para consolidación...</div>;
+    const handlePreview = async () => {
+        setPreviewLoading(true);
+        try {
+            const payload = {
+                informe: { ...formData, examenes: examenesConsolidados }
+            };
+            const pdfBlob = await DictamenService.getInformePreview(id_oficio, payload);
+            const url = URL.createObjectURL(pdfBlob);
+            setPdfUrl(url);
+            setIsModalOpen(true);
+        } catch (error) {
+            toast.error(`Error al generar la vista previa: ${error.message}`);
+        } finally {
+            setPreviewLoading(false);
+        }
+    };
+
+    if (loading) return <div className="p-8 text-center">Cargando...</div>;
 
     return (
-        <>
-            <div className="max-w-7xl mx-auto space-y-6">
-                <div className="text-center">
-                    <h1 className="text-3xl font-bold text-gray-800 dark:text-dark-text-primary">
-                        Consolidación y Emisión de Dictamen Pericial
-                    </h1>
-                    <p className="text-lg text-gray-500 dark:text-dark-text-secondary mt-1">
-                        Oficio N°: <span className="font-semibold text-pnp-green-dark dark:text-dark-pnp-green">{oficio?.numero_oficio}</span>
-                    </p>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* COLUMNA IZQUIERDA: DATOS PARA CONSIDERAR */}
-                    <div className="lg:col-span-1 space-y-6">
-                        <div className="bg-white dark:bg-dark-surface p-5 rounded-xl shadow-sm border dark:border-dark-border">
-                            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-3 border-b pb-2">
-                                Datos para el Dictamen
-                            </h3>
-                            <div className="space-y-4 text-sm">
-                                <div>
-                                    <span className="block font-semibold text-gray-600 dark:text-gray-400">Objeto de la Pericia:</span>
-                                    <p className="text-gray-800 dark:text-gray-200">{metadata.objeto_pericia || 'No especificado'}</p>
-                                </div>
-                                <div>
-                                    <span className="block font-semibold text-gray-600 dark:text-gray-400">Método Utilizado:</span>
-                                    <p className="text-gray-800 dark:text-gray-200">{metadata.metodo_utilizado || 'No especificado'}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white dark:bg-dark-surface p-5 rounded-xl shadow-sm border dark:border-dark-border">
-                            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-3 border-b pb-2">
-                                Resultados Previos
-                            </h3>
-                            {resultadosPrevios.length === 0 ? (
-                                <p className="text-gray-500 italic text-sm">No hay resultados registrados.</p>
-                            ) : (
-                                <div className="space-y-3">
-                                    {resultadosPrevios.map((res, idx) => (
-                                        <div key={idx} className="p-3 bg-gray-50 dark:bg-dark-bg-tertiary rounded border dark:border-dark-border text-sm">
-                                            <div className="font-bold text-pnp-green-dark mb-1">{res.tipo_procedimiento}</div>
-                                            <div className="text-xs text-gray-500 mb-2">Por: {res.perito_nombre}</div>
-                                            <div className="grid grid-cols-1 gap-1">
-                                                                                                {res.resultados && Object.entries(res.resultados).map(([muestraId, detalles]) => (
-                                                                                                  <div key={muestraId} className="p-2 border-t dark:border-gray-600">
-                                                                                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Muestra: {oficio.muestras_registradas.find(m => m.id_muestra == muestraId)?.codigo_muestra || muestraId}</p>
-                                                                                                    {Object.entries(detalles).map(([key, val]) => {
-                                                                                                      if (key === 'no_aplicable' || key === 'descripcion_detallada') return null;
-                                                                                                      return (
-                                                                                                        <div key={key} className="flex justify-between text-xs">
-                                                                                                            <span className="capitalize text-gray-600 dark:text-gray-400">{key.replace(/_/g, ' ')}:</span>
-                                                                                                            <span className="font-semibold text-gray-800 dark:text-gray-200">{String(val)}</span>
-                                                                                                        </div>
-                                                                                                      );
-                                                                                                    })}
-                                                                                                  </div>
-                                                                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* COLUMNA DERECHA: FORMULARIO DE REDACCIÓN */}
-                    <div className="lg:col-span-2">
-                        <form onSubmit={handleSubmit} className="bg-white dark:bg-dark-surface p-6 rounded-xl shadow-md border dark:border-dark-border space-y-6">
-                            <div className="flex justify-between items-center border-b dark:border-dark-border pb-3">
-                                <h3 className="text-xl font-bold text-gray-800 dark:text-white">Redacción del Dictamen</h3>
-                                <button type="button" onClick={handlePreview} className="btn-secondary text-sm flex items-center gap-2">
-                                    <PreviewIcon />
-                                    <span>Vista Previa Completa</span>
-                                </button>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary">Cargo Destinatario</label>
-                                    <input type="text" name="destinatario_cargo" value={formData.destinatario_cargo} onChange={handleInputChange} className="mt-1 form-input w-full" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary">Nombre Destinatario (Opcional)</label>
-                                    <input type="text" name="destinatario_nombre" value={formData.destinatario_nombre} onChange={handleInputChange} className="mt-1 form-input w-full" placeholder="Ej: CAP. PNP JUAN PEREZ" />
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary">Asunto</label>
-                                    <input type="text" name="asunto" value={formData.asunto} onChange={handleInputChange} className="mt-1 form-input w-full" />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary mb-2">
-                                    Conclusiones Finales
-                                </label>
-                                <textarea
-                                    name="conclusiones"
-                                    value={formData.conclusiones}
-                                    onChange={handleInputChange}
-                                    rows="6"
-                                    className="form-input w-full font-mono text-sm"
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600 dark:text-dark-text-secondary mb-2">
-                                    Observaciones Finales
-                                </label>
-                                <textarea
-                                    name="observaciones"
-                                    value={formData.observaciones}
-                                    onChange={handleInputChange}
-                                    rows="3"
-                                    className="form-input w-full"
-                                />
-                            </div>
-
-                            <div className="flex justify-end gap-3 pt-4 border-t dark:border-dark-border">
-                                <button type="button" onClick={() => navigate('/perito/dashboard')} className="btn-secondary">
-                                    <CancelarIcon />
-                                    <span>Cancelar</span>
-                                </button>
-                                <button type="submit" disabled={isSubmitting} className="btn-primary bg-blue-600 hover:bg-blue-700 border-blue-600">
-                                    <GuardarIcon />
-                                    <span>{isSubmitting ? 'Procesando...' : 'Emitir Dictamen y Cerrar Caso'}</span>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+        <div className="max-w-7xl mx-auto space-y-6">
+            <div className="text-center">
+                <h1 className="text-3xl font-bold">Editor de Informe Pericial Consolidado</h1>
+                <p className="text-lg text-gray-500">Oficio N°: {oficio?.nro_oficio}</p>
             </div>
 
-            {isModalOpen && (
+            <form onSubmit={handleSubmit} className="bg-white dark:bg-dark-surface p-6 rounded-xl shadow-md border dark:border-dark-border">
+                <div className="flex justify-between items-center border-b pb-3 dark:border-dark-border">
+                    <h3 className="text-xl font-bold">Contenido del Informe</h3>
+                    <button type="button" onClick={handlePreview} disabled={previewLoading} className="btn-secondary border border-gray-300 dark:border-gray-600">
+                        <PreviewIcon />
+                        <span>{previewLoading ? 'Generando...' : 'Vista Previa'}</span>
+                    </button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mt-4">
+                    <h4 className="md:col-span-2 text-lg font-semibold border-b dark:border-dark-border">Datos Generales</h4>
+                    <EditableField label="A. Procedencia" name="unidad_solicitante" value={formData.unidad_solicitante} onChange={handleInputChange} />
+                    <EditableField label="B. Antecedente" name="documento_referencia" value={formData.documento_referencia} onChange={handleInputChange} />
+                    <EditableField type="date" label="Fecha de Antecedente" name="fecha_documento" value={formData.fecha_documento} onChange={handleInputChange} />
+                    <EditableField label="G. Conductor" name="conductor" value={formData.conductor} onChange={handleInputChange} />
+                    <EditableField label="H. Muestra Tomada A" name="examinado_incriminado" value={formData.examinado_incriminado} onChange={handleInputChange} />
+                    <EditableField label="Edad" name="edad_examinado" value={formData.edad_examinado} onChange={handleInputChange} />
+
+                    <h4 className="md:col-span-2 text-lg font-semibold border-b mt-4 dark:border-dark-border">Detalles del Incidente</h4>
+                    <EditableField type="time" label="E. Hora del Incidente" name="hora_incidente" value={formData.hora_incidente} onChange={handleInputChange} />
+                    <EditableField type="date" label="Fecha del Incidente" name="fecha_incidente" value={formData.fecha_incidente} onChange={handleInputChange} />
+                    <EditableField type="time" label="F. Hora Toma de Muestra" name="hora_toma_muestra" value={formData.hora_toma_muestra} onChange={handleInputChange} />
+                    <EditableField type="date" label="Fecha Toma de Muestra" name="fecha_toma_muestra" value={formData.fecha_toma_muestra} onChange={handleInputChange} />
+
+                    <h4 className="md:col-span-2 text-lg font-semibold border-b mt-4 dark:border-dark-border">Contenido de la Pericia</h4>
+                    <div className="md:col-span-2">
+                        <EditableField label="D. Objeto de la Pericia" name="objeto_pericia" value={formData.objeto_pericia} onChange={handleInputChange} isTextarea={true} rows={3} />
+                    </div>
+                    <div className="md:col-span-2">
+                        <h4 className="block text-sm font-medium mb-2">J. Examen (Resultados Consolidados) - Solo Lectura</h4>
+                        <div className="p-3 bg-gray-50 dark:bg-dark-bg-tertiary rounded border dark:border-dark-border space-y-2">
+                            {examenesConsolidados.length > 0 ? examenesConsolidados.map(examen => (
+                                <div key={examen.nombre}>
+                                    <p className="font-semibold text-pnp-green-dark underline">{examen.nombre}</p>
+                                    <div className="pl-4 text-sm">
+                                        {examen.resultados.map((r, i) => (
+                                            <div key={`${r.analito}-${i}`} className="flex justify-between">
+                                                <span>{r.analito}</span>
+                                                <span className="font-mono">{r.resultado}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )) : <p className="text-sm italic text-gray-500">No hay resultados para mostrar.</p>}
+                        </div>
+                    </div>
+                    <div className="md:col-span-2">
+                        <EditableField label="K. Conclusión Principal" name="conclusion_principal" value={formData.conclusion_principal} onChange={handleInputChange} isTextarea={true} rows={5} />
+                    </div>
+                     <div className="md:col-span-2">
+                        <EditableField label="L. Muestra Tomada Por (Recolector)" name="recolector_muestra" value={formData.recolector_muestra} onChange={handleInputChange} />
+                    </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t mt-6 dark:border-dark-border">
+                    <button type="button" onClick={() => navigate('/perito/dashboard')} className="btn-secondary"><CancelarIcon /><span>Cancelar</span></button>
+                    <button type="submit" disabled={isSubmitting} className="btn-primary"><GuardarIcon /><span>{isSubmitting ? 'Procesando...' : 'Emitir Informe y Cerrar Caso'}</span></button>
+                </div>
+            </form>
+
+            {isModalOpen && pdfUrl && (
                 <PDFPreviewModal pdfUrl={pdfUrl} onClose={() => setIsModalOpen(false)} />
             )}
-        </>
+        </div>
     );
 };
 
