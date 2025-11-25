@@ -15,6 +15,12 @@ import EnableIcon from "../../assets/icons/EnableIcon";
 import DisableIcon from "../../assets/icons/DisableIcon";
 import BarChartOficios from "./DashboardStats/BarChartOficios";
 import CountOficiosTable from "./DashboardStats/tables/CountOficiosTable";
+import PieChartGraphicOficios from "./DashboardStats/PieChartGraphicOficios";
+import EstadosOficiosTable from "./DashboardStats/tables/StatesOficios";
+import BarChartPeritosProductividad from "./DashboardStats/BarChartPeritosProductividad";
+import BarChartOficiosEspecialidad from "./DashboardStats/BarChartOficiosEspecialidad";
+import OficiosEspecialidad from "./DashboardStats/tables/OficiosEspeciadlidad";
+import PeritosProductividad from "./DashboardStats/tables/PeritosProductividad";
 
 const DashboardStats = () => {
   const navigate = useNavigate();
@@ -22,13 +28,19 @@ const DashboardStats = () => {
   const [showUsersTable, setShowUsersTable] = useState(false);
   const [showOficiosTable, setShowOficiosTable] = useState(false);
   const [showCantidadOficiosTable, setShowCantidadOficiosTable] = useState(false);
+  const [showOficiosStateTable, setShowOficiosStateTable] = useState(false);
+  const [showProductividadTable, setShowProductividadTable] = useState(false);
+  const [showOficiosEspecialidadTable, setShowOficiosEspecialidadTable] = useState(false);
   const [stats, setStats] = useState({
     totalPeritos: 0,
     usuariosActivos: [],
     usersEnable: [],
     usersDisable: [],
     prioridadOficios: [],
-    oficiosDeLaSemana: []
+    oficiosDeLaSemana: [],
+    estadosDeOficios: [],
+    productividadPorPerito: [],
+    oficiosPorEspecialidad: []
   });
   const [error, setError] = useState("");
 
@@ -57,6 +69,17 @@ const DashboardStats = () => {
   const toggleOficiosTable = () => {
     setShowOficiosTable(!showOficiosTable);
   };
+
+  const toggleOficiosStateTable = () =>{
+    setShowOficiosStateTable(!showOficiosStateTable)
+  }
+
+  const toggleProductividadTable = () =>{
+    setShowProductividadTable(!showProductividadTable)
+  }
+  const toggleOficiosEspecialidadTable = () =>{
+    setShowOficiosEspecialidadTable(!showOficiosEspecialidadTable)
+  }
 
   const handleNavigation = (path) => {
     navigate(`/admin/dashboard${path}`);
@@ -233,6 +256,51 @@ const DashboardStats = () => {
           className="w-full bg-amber-300 mt-4 cursor-pointer h-10 rounded-b-xl">{showOficiosTable ? "Ocultar historial" : "Ver historial"}</button>
         </div>
 
+        {/* Cantidad de oficios por estados (CREADO - PENDIENTE- COMPLETADO) */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-colors duration-300  flex flex-col items-center justify-between">
+          <h2 className="text-xl font-semibold text-green-800 p-6 dark:text-green-400 mb-4">
+            Cantidad de oficios por estados
+          </h2>
+          {(stats.estadosDeOficios.length > 0 ) ? <PieChartGraphicOficios
+            estadosDeOficios={stats.estadosDeOficios}
+            isAnimationActive={true}
+          /> : <div className="dark:text-white">No hay datos disponibles</div>}
+          
+          <button 
+          onClick={toggleOficiosStateTable}
+          className="w-full bg-amber-300 mt-4 cursor-pointer h-10 rounded-b-xl">{showOficiosStateTable ? "Ocultar historial" : "Ver historial"}</button>
+        </div>
+
+        {/* Productividad por perito */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-colors duration-300  flex flex-col items-center justify-between">
+          <h2 className="text-xl font-semibold text-green-800 p-6 dark:text-green-400 mb-4">
+            Productividad por perito
+          </h2>
+          {(stats.productividadPorPerito.length > 0 ) ? <BarChartPeritosProductividad
+            data={stats.productividadPorPerito}
+            isAnimationActive={true}
+          /> : <div className="dark:text-white">No hay datos disponibles</div>}
+          
+          <button 
+          onClick={toggleProductividadTable}
+          className="w-full bg-amber-300 mt-4 cursor-pointer h-10 rounded-b-xl">{showProductividadTable ? "Ocultar historial" : "Ver historial"}</button>
+        </div>
+
+        {/* Oficios por especialidad */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-colors duration-300  flex flex-col items-center justify-between">
+          <h2 className="text-xl font-semibold text-green-800 p-6 dark:text-green-400 mb-4">
+            Oficios por especialidad
+          </h2>
+          {(stats.oficiosPorEspecialidad.length > 0 ) ? <BarChartOficiosEspecialidad
+            data={stats.oficiosPorEspecialidad}
+            isAnimationActive={true}
+          /> : <div className="dark:text-white">No hay datos disponibles</div>}
+          
+          <button 
+          onClick={toggleOficiosEspecialidadTable}
+          className="w-full bg-amber-300 mt-4 cursor-pointer h-10 rounded-b-xl">{showOficiosEspecialidadTable ? "Ocultar historial" : "Ver historial"}</button>
+        </div>
+
       </div>
 
       {/* Tabla a mostrar segun click */}
@@ -244,6 +312,15 @@ const DashboardStats = () => {
       )}
       {showOficiosTable && (
         <PrioridadOficios prioridadOficios={stats.prioridadOficios} close={toggleOficiosTable} />
+      )}
+      {showOficiosStateTable && (
+        <EstadosOficiosTable estadosDeOficios={stats.estadosDeOficios} close={toggleOficiosStateTable} />
+      )}
+      {showOficiosEspecialidadTable && (
+        <OficiosEspecialidad oficiosPorEspecialidad={stats.oficiosPorEspecialidad} close={toggleOficiosEspecialidadTable} />
+      )}
+      {showProductividadTable && (
+        <PeritosProductividad productividadPorPerito={stats.productividadPorPerito} close={toggleProductividadTable} />
       )}
     </div>
   );

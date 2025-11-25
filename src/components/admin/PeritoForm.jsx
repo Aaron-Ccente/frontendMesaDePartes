@@ -819,7 +819,31 @@ const PeritoForm = () => {
               ))}
             </select>
           </div>
-
+              
+          {values.id_tipo_departamento === '6' && 
+          (<div>
+            <label
+              htmlFor="id_turno"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Sección
+            </label>
+            <select
+              id="id_seccion"
+              name="id_seccion"
+              value={values.id_seccion || ""}
+              onChange={(e) => handleChange("id_seccion", e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
+            >
+              <option value="">Seleccione una seccion</option>
+              {seccionesMomentaneas.map((seccion) => (
+                <option key={seccion.id_seccion} value={seccion.id_seccion}>
+                  {seccion.nombre_seccion}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
           <div>
             <label
               htmlFor="id_grado"
@@ -866,30 +890,6 @@ const PeritoForm = () => {
             </select>
           </div>
 
-          {values.id_tipo_departamento === '6' && 
-          (<div>
-            <label
-              htmlFor="id_turno"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Turno
-            </label>
-            <select
-              id="id_seccion"
-              name="id_seccion"
-              value={values.id_seccion || ""}
-              onChange={(e) => handleChange("id_seccion", e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
-            >
-              <option value="">Seleccione un turno</option>
-              {seccionesMomentaneas.map((seccion) => (
-                <option key={seccion.id_seccion} value={seccion.id_seccion}>
-                  {seccion.nombre_seccion}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
         </div>
 
         {/* Submit Button */}
