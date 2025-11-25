@@ -36,34 +36,36 @@ const ProcedimientoConsolidacion = () => {
     const loadData = useCallback(async () => {
         try {
             setLoading(true);
-            // 1. Obtener detalles del oficio
-            const resOficio = await OficiosService.getOficioDetalle(id_oficio);
-            if (!resOficio.data) throw new Error('No se encontró el oficio.');
-            setOficio(resOficio.data);
+            const res = await ProcedimientoService.getDatosConsolidacion(id_oficio);
+            if (!res.success) throw new Error(res.message);
 
-            // 2. Obtener TODOS los resultados registrados
-            const resResultados = await ProcedimientoService.obtenerResultadosCompletos(id_oficio);
-            if (resResultados.success) {
-                setResultadosPrevios(resResultados.data || []);
+            const { oficio: oficioData, resultados_previos: resultadosData, metadata: metadataData } = res.data;
 
-                // Extraer metadatos si existen en el primer resultado o buscar endpoint específico
-                // Por ahora simulamos que vienen en los resultados o del oficio
-                setMetadata({
-                    objeto_pericia: resOficio.data.objeto_pericia || 'Análisis Toxicológico',
-                    metodo_utilizado: 'Ver anexos respectivos.'
-                });
+            setOficio(oficioData);
+            setResultadosPrevios(resultadosData || []);
+            setMetadata(metadataData || {});
 
-                // Generar sugerencias
-                const sugerencia = generarConclusionSugerida(resResultados.data, resOficio.data.examinado_incriminado);
-                setFormData(prev => ({
-                    ...prev,
-                    asunto: `Informe Pericial de ${resOficio.data.asunto || 'Toxicología'}`,
-                    conclusiones: sugerencia
-                }));
-            }
+            // Generar sugerencias y datos para el formulario
+            const sugerencia = generarConclusionSugerida(resultadosData, oficioData.examinado_incriminado);
+            
+            // Unir métodos de la metadata con los tipos de examen del oficio
+            const metodos = oficioData.tipos_de_examen.map(ex => metadataData.metodo_utilizado || '').join('; ');
+
+            setFormData(prev => ({
+                ...prev,
+                asunto: `Informe Pericial de ${oficioData.asunto || 'Toxicología'}`,
+                conclusiones: sugerencia,
+            }));
+            
+            // Actualizar metadata para la UI
+            setMetadata(prev => ({
+                ...prev,
+                objeto_pericia: oficioData.tipos_de_examen.join(', '),
+                metodo_utilizado: metodos || 'Ver anexos respectivos.'
+            }));
 
         } catch (error) {
-            toast.error(`Error al cargar datos: ${error.message}`);
+            toast.error(`Error al cargar datos para consolidación: ${error.message}`);
         } finally {
             setLoading(false);
         }
@@ -248,12 +250,20 @@ const ProcedimientoConsolidacion = () => {
                                             <div className="font-bold text-pnp-green-dark mb-1">{res.tipo_procedimiento}</div>
                                             <div className="text-xs text-gray-500 mb-2">Por: {res.perito_nombre}</div>
                                             <div className="grid grid-cols-1 gap-1">
-                                                {res.resultados && Object.entries(res.resultados).map(([key, val]) => (
-                                                    <div key={key} className="flex justify-between">
-                                                        <span className="capitalize text-gray-600">{key.replace(/_/g, ' ')}:</span>
-                                                        <span className={`font-semibold ${val === 'POSITIVO' ? 'text-red-600' : 'text-green-600'}`}>{val}</span>
-                                                    </div>
-                                                ))}
+                                                                                                {res.resultados && Object.entries(res.resultados).map(([muestraId, detalles]) => (
+                                                                                                  <div key={muestraId} className="p-2 border-t dark:border-gray-600">
+                                                                                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Muestra: {oficio.muestras_registradas.find(m => m.id_muestra == muestraId)?.codigo_muestra || muestraId}</p>
+                                                                                                    {Object.entries(detalles).map(([key, val]) => {
+                                                                                                      if (key === 'no_aplicable' || key === 'descripcion_detallada') return null;
+                                                                                                      return (
+                                                                                                        <div key={key} className="flex justify-between text-xs">
+                                                                                                            <span className="capitalize text-gray-600 dark:text-gray-400">{key.replace(/_/g, ' ')}:</span>
+                                                                                                            <span className="font-semibold text-gray-800 dark:text-gray-200">{String(val)}</span>
+                                                                                                        </div>
+                                                                                                      );
+                                                                                                    })}
+                                                                                                  </div>
+                                                                                                ))}
                                             </div>
                                         </div>
                                     ))}

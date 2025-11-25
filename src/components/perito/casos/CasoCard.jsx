@@ -6,7 +6,7 @@ import { ProcedimientoService } from '../../../services/procedimientoService.js'
 
 import { VerDetalleIcon, IniciarProcedimientoIcon, DerivarIcon, GenerarReporteIcon } from '../../../assets/icons/Actions';
 
-const CasoCard = ({ caso, onDerivarClick, isDeriving, funcion }) => {
+const CasoCard = ({ caso, onDerivarClick, onFinalizarClick = null, isDeriving, funcion }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -17,11 +17,18 @@ const CasoCard = ({ caso, onDerivarClick, isDeriving, funcion }) => {
     const base = '/perito/dashboard/procedimiento';
     
     switch(tipo) {
-      case 'extraccion': path = `${base}/extraccion/${caso.id_oficio}`; break;
-      case 'analisis-tm': path = `${base}/analisis-tm/${caso.id_oficio}`; break;
-      case 'analisis-inst': path = `${base}/analisis-inst/${caso.id_oficio}`; break;
-      case 'analisis-lab': path = `${base}/analisis-lab/${caso.id_oficio}`; break;
-      case 'consolidacion-lab': path = `${base}/consolidacion-lab/${caso.id_oficio}`; break;
+      case 'extraccion':
+        path = `${base}/extraccion/${caso.id_oficio}`;
+        break;
+      case 'analisis-tm':
+      case 'analisis-inst':
+      case 'analisis-lab':
+        path = `${base}/analisis/${caso.id_oficio}`; // RUTA UNIFICADA
+        break;
+      case 'consolidacion-lab':
+      case 'consolidacion':
+        path = `${base}/consolidar/${caso.id_oficio}`; // RUTA UNIFICADA
+        break;
       default:
         toast.error(`Tipo de procedimiento '${tipo}' no reconocido.`);
         return;

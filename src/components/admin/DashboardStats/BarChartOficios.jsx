@@ -1,50 +1,66 @@
-import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const BarChartOficios = ({ data }) => {
-  const formattedData = data.map(d => ({
-    ...d,
-    cantidad_oficios: Number(d.cantidad_oficios)
+const BarChartOficios = ({ data = [] }) => {
+  // días de la semana en orden (1=domingo ... 7=sábado)
+  const week = [
+    { num: 1, name: 'Domingo' },
+    { num: 2, name: 'Lunes' },
+    { num: 3, name: 'Martes' },
+    { num: 4, name: 'Miércoles' },
+    { num: 5, name: 'Jueves' },
+    { num: 6, name: 'Viernes' },
+    { num: 7, name: 'Sábado' },
+  ];
+
+  const mapByNum = new Map();
+  (data || []).forEach(d => {
+    const num = Number(d.dia_semana_num);
+    if (!isNaN(num)) {
+      mapByNum.set(num, Number(d.cantidad_oficios) || 0);
+    }
+  });
+
+  // Rellenar todos los días
+  const formattedData = week.map(w => ({
+    dia_semana_num: w.num,
+    dia_semana_nombre: w.name,
+    cantidad_oficios: mapByNum.has(w.num) ? mapByNum.get(w.num) : 0
   }));
 
-  // Colores para cada día (domingo a sábado)
   const colors = [
-    "#ef4444", // domingo - rojo
-    "#f97316", // lunes - naranja
-    "#f59e0b", // martes - amarillo
-    "#10b981", // miércoles - verde
-    "#3b82f6", // jueves - azul
-    "#8b5cf6", // viernes - morado
-    "#ec4899", // sábado - rosado
+    "#ef4444", // domingo
+    "#f97316", // lunes
+    "#f59e0b", // martes
+    "#10b981", // miércoles
+    "#3b82f6", // jueves
+    "#8b5cf6", // viernes
+    "#ec4899", // sábado
   ];
 
   return (
-    <BarChart
-      style={{ width: '100%', maxWidth: '400px', maxHeight: '60vh', aspectRatio: 1 }}
-      width={400}
-      height={300}
-      data={formattedData}
-      margin={{
-        top: 5,
-        right: 0,
-        left: 0,
-        bottom: 5,
-      }}
-      responsive
-    >
-      <CartesianGrid strokeDasharray="3 3" />
-      <XAxis dataKey="dia_semana_nombre" />
-      <YAxis />
-      <Tooltip />
-      <Legend />
-
-      <Bar 
-        dataKey="cantidad_oficios" 
-      >
-        {formattedData.map((_, index) => (
-          <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-        ))}
-      </Bar>
-    </BarChart>
+    <div style={{ width: '100%', height: 300 }}>
+      <ResponsiveContainer>
+        <BarChart
+          data={formattedData}
+          margin={{
+            top: 5,
+            right: 10,
+            left: 0,
+            bottom: 40,
+          }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="dia_semana_nombre" tick={{ fontSize: 12 }} />
+          <YAxis allowDecimals={false} />
+          <Tooltip formatter={(value) => [`${value} oficios`, 'Cantidad']} />
+          <Bar dataKey="cantidad_oficios">
+            {formattedData.map((_, index) => (
+              <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 };
 
