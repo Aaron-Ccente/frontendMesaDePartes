@@ -171,6 +171,25 @@ export class PeritoService {
     }
   }
 
+  // Obtener estadísticas de un perito por CIP
+  static async getPeritoStatsByCIP(cip) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/peritos/stats/${cip}`, {
+        method: 'GET',
+        headers: getHeaders()
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { error: data.error || data.message || 'Error obteniendo estadísticas del perito' };
+      }
+      return data;
+    } catch (error) {
+      console.error('Error en getPeritoStatsByCIP:', error);
+      return { error: error.message || 'Error de red' };
+    }
+  }
+
   // Login de perito (para futuras implementaciones)
   static async loginPerito(username, password) {
     try {
