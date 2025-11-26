@@ -6,7 +6,7 @@ import { ProcedimientoService } from '../../../services/procedimientoService.js'
 
 import { VerDetalleIcon, IniciarProcedimientoIcon, DerivarIcon, GenerarReporteIcon } from '../../../assets/icons/Actions';
 
-const CasoCard = ({ caso, onDerivarClick, onFinalizarClick = null, isDeriving, funcion }) => {
+const CasoCard = ({ caso, onDerivarClick, isDeriving, funcion }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -128,6 +128,13 @@ const CasoCard = ({ caso, onDerivarClick, onFinalizarClick = null, isDeriving, f
     return actionButtons;
   };
 
+  const formDate = (dateString) => {
+    if (!dateString) return 'No especificada';
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-PE', options);
+  }
+
   return (
     <div className="bg-white dark:bg-dark-bg-secondary rounded-xl shadow-md border border-gray-200 dark:border-dark-border overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-pnp-green-light">
       <div className="p-4 border-b border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg-tertiary">
@@ -142,6 +149,7 @@ const CasoCard = ({ caso, onDerivarClick, onFinalizarClick = null, isDeriving, f
         <div className="flex justify-between"><span className="font-semibold text-gray-500 dark:text-dark-text-secondary">Delito:</span><span className="text-gray-800 dark:text-dark-text-primary text-right truncate">{caso.delito || 'No especificado'}</span></div>
         <div className="flex justify-between"><span className="font-semibold text-gray-500 dark:text-dark-text-secondary">Exámenes:</span><span className="text-gray-800 dark:text-dark-text-primary text-right truncate">{caso.tipos_de_examen || 'No especificados'}</span></div>
         <div className="flex justify-between"><span className="font-semibold text-gray-500 dark:text-dark-text-secondary">Prioridad:</span><span className="text-gray-800 dark:text-dark-text-primary text-right truncate">{caso.nombre_prioridad || 'No especificada'}</span></div>
+        <div className="flex justify-between"><span className="font-semibold text-gray-500 dark:text-dark-text-secondary">Fecha de Asignada:</span><span className="text-gray-800 dark:text-dark-text-primary text-right truncate">{formDate(caso.fecha_creacion) || 'No especificada'}</span></div>
       </div>
       {(onDerivarClick) && (
         <div className="p-4 bg-gray-50 dark:bg-dark-bg-tertiary border-t border-gray-200 dark:border-dark-border">

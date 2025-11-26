@@ -2,7 +2,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081
 
 class MesaDePartes {
   // Obtener headers con token de autenticación
-  static getHeaders() {
+  static getHeaders(isFormData = false) {
     const adminToken = localStorage.getItem('adminToken');
     const mesadepartesToken = localStorage.getItem('mesadepartesToken');
     const token = adminToken || mesadepartesToken;
@@ -11,10 +11,55 @@ class MesaDePartes {
       console.warn('No se encontró token de autenticación');
     }
     
-    return {
-      'Content-Type': 'application/json',
+    const headers = {
       'Authorization': `Bearer ${token}`
     };
+
+    if (!isFormData) {
+      headers['Content-Type'] = 'application/json';
+    }
+    
+    return headers;
+  }
+
+  static async generarCaratula(idOficio, caratulaData) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/generar-caratula`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(caratulaData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Error al generar la carátula');
+      }
+
+      // Devolvemos el blob para crear una URL
+      return response.blob();
+    } catch (error) {
+      console.error('Error en generarCaratula:', error);
+      throw error;
+    }
+  }
+
+    static async uploadDocumentosFinales(idOficio, formData) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/upload-documentos-finales`, {
+        method: 'POST',
+        headers: this.getHeaders(true), // Indica que es FormData
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        return { success: false, message: data.message || 'Error en la subida de archivos.' };
+      }
+      return { success: true, data };
+    } catch (error) {
+      console.error('Error en uploadDocumentosFinales:', error);
+      return { success: false, message: error.message };
+    }
   }
 
   // Crear nuevo perito
@@ -271,6 +316,23 @@ class MesaDePartes {
     }
   }
 
+  // Obtener casos listos para recojo
+  static async getCasosParaRecojo() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/mesadepartes-dashboard/casos-para-recojo`, {
+        method: 'GET',
+        headers: this.getHeaders()
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        return { error: data.error || data.message || 'Error obteniendo casos para recojo' };
+      }
+      return data;
+    } catch (error) {
+      console.error('Error en getCasosParaRecojo:', error);
+      return { error: error.message || 'Error de red' };
+    }
+  }
 }   
 
 export default MesaDePartes;

@@ -47,6 +47,7 @@ import SeguimientoCasos from './components/mesadepartes/SeguimientoCasos';
 import SeguimientoDetalle from './components/mesadepartes/SeguimientoDetalle';
 import MesaDePartesResumen from './components/mesadepartes/MesaDePartesResumen';
 import CasosCulminados from './components/mesadepartes/CasosCulminados';
+import CasosParaRecojo from './components/mesadepartes/CasosParaRecojo.jsx';
 import EspecialidadesManagement from './components/admin/SystemConfiguration/EspecialidadesManagement';
 import GradosManagement from './components/admin/SystemConfiguration/GradosManagement';
 import TurnosManagement from './components/admin/SystemConfiguration/TurnosManagement';
@@ -123,6 +124,7 @@ function App() {
               <Route path="crear/oficio" element={<CrearOficio />} />
               <Route path="seguimiento/casos" element={<SeguimientoCasos />} />
               <Route path="casos-culminados" element={<CasosCulminados />} />
+              <Route path="casos-para-recojo" element={<CasosParaRecojo />} />
               <Route path="seguimiento/casos/:id" element={<SeguimientoDetalle />} />
             </Route>
 
