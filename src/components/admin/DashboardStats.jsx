@@ -21,6 +21,7 @@ import BarChartPeritosProductividad from "./DashboardStats/BarChartPeritosProduc
 import BarChartOficiosEspecialidad from "./DashboardStats/BarChartOficiosEspecialidad";
 import OficiosEspecialidad from "./DashboardStats/tables/OficiosEspeciadlidad";
 import PeritosProductividad from "./DashboardStats/tables/PeritosProductividad";
+import Calendar from "../../assets/icons/Calendar";
 
 const DashboardStats = () => {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ const DashboardStats = () => {
   const [showOficiosStateTable, setShowOficiosStateTable] = useState(false);
   const [showProductividadTable, setShowProductividadTable] = useState(false);
   const [showOficiosEspecialidadTable, setShowOficiosEspecialidadTable] = useState(false);
+  const [productividadFiltro, setProductividadFiltro] = useState("dia");
   const [stats, setStats] = useState({
     totalPeritos: 0,
     usuariosActivos: [],
@@ -40,6 +42,8 @@ const DashboardStats = () => {
     oficiosDeLaSemana: [],
     estadosDeOficios: [],
     productividadPorPerito: [],
+    productividadPorPeritoMes: [],
+    productividadPorPeritoAnio: [],
     oficiosPorEspecialidad: []
   });
   const [error, setError] = useState("");
@@ -83,6 +87,32 @@ const DashboardStats = () => {
 
   const handleNavigation = (path) => {
     navigate(`/admin/dashboard${path}`);
+  };
+
+  // Función para obtener datos de productividad según el filtro
+  const getProductividadData = () => {
+    switch (productividadFiltro) {
+      case "mes":
+        return stats.productividadPorPeritoMes;
+      case "año":
+        return stats.productividadPorPeritoAnio;
+      case "dia":
+      default:
+        return stats.productividadPorPerito;
+    }
+  };
+
+  // Función para formatear etiqueta del filtro
+  const getProductividadLabel = () => {
+    switch (productividadFiltro) {
+      case "mes":
+        return "Productividad por Mes";
+      case "año":
+        return "Productividad por Año";
+      case "dia":
+      default:
+        return "Productividad por Día";
+    }
   };
 
   if (loading) {
@@ -274,16 +304,35 @@ const DashboardStats = () => {
         {/* Productividad por perito */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-colors duration-300  flex flex-col items-center justify-between">
           <h2 className="text-xl font-semibold text-green-800 p-6 dark:text-green-400 mb-4">
-            Productividad por perito
+            {getProductividadLabel()}
           </h2>
-          {(stats.productividadPorPerito.length > 0 ) ? <BarChartPeritosProductividad
-            data={stats.productividadPorPerito}
-            isAnimationActive={true}
-          /> : <div className="dark:text-white">No hay datos disponibles</div>}
+          <div className="flex justify-center items-center gap-2 text-green-800 dark:text-green-400">
+          <Calendar/>
+          <select 
+            value={productividadFiltro}
+            onChange={(e) => setProductividadFiltro(e.target.value)}
+            className="px-4 py-2 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white text-gray-800 font-medium hover:border-green-800 dark:hover:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-800 dark:focus:ring-green-400 transition-all duration-200"
+          >
+            <option value="dia">Por Día</option>
+            <option value="mes">Por Mes</option>
+            <option value="año">Por Año</option>
+          </select>
+          </div>
+          {(getProductividadData().length > 0) ? (
+            <BarChartPeritosProductividad
+              data={getProductividadData()}
+              isAnimationActive={true}
+            />
+          ) : (
+            <div className="dark:text-white">No hay datos disponibles</div>
+          )}
           
           <button 
-          onClick={toggleProductividadTable}
-          className="w-full bg-amber-300 mt-4 cursor-pointer h-10 rounded-b-xl">{showProductividadTable ? "Ocultar historial" : "Ver historial"}</button>
+            onClick={toggleProductividadTable}
+            className="w-full bg-amber-300 mt-4 cursor-pointer h-10 rounded-b-xl hover:bg-amber-400 transition-colors"
+          >
+            {showProductividadTable ? "Ocultar historial" : "Ver historial"}
+          </button>
         </div>
 
         {/* Oficios por especialidad */}
@@ -320,7 +369,11 @@ const DashboardStats = () => {
         <OficiosEspecialidad oficiosPorEspecialidad={stats.oficiosPorEspecialidad} close={toggleOficiosEspecialidadTable} />
       )}
       {showProductividadTable && (
-        <PeritosProductividad productividadPorPerito={stats.productividadPorPerito} close={toggleProductividadTable} />
+        <PeritosProductividad 
+          productividadPorPerito={getProductividadData()} 
+          close={toggleProductividadTable}
+          filtro={productividadFiltro}
+        />
       )}
     </div>
   );

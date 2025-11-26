@@ -151,7 +151,7 @@ const DocumentManagement = () => {
                     <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-200">{row.perito_asignado || "-"}</td>
                     <td className="px-6 py-4 text-sm">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                        {row.estado_actual || "-"}
+                        {row.estado_actual === "CREACION DEL OFICIO" ? "ENTRADA" : row.estado_actual}
                       </span>
                     </td>
                   </tr>
