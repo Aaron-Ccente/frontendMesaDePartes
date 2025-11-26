@@ -194,7 +194,7 @@ function CrearOficio() {
         const newCodigo = createResp.data.numero_oficio || `ID-${createResp.data.id_oficio}`;
         setFeedback(`¡Oficio creado! Código: ${newCodigo}`);
         setToastType('success');
-        handleClearForm();
+        // handleClearForm();
       } else {
         setFeedback(`Error del servidor: ${createResp.message}`);
         setToastType('error');
@@ -334,7 +334,7 @@ function CrearOficio() {
             </div>
             <div className="md:col-span-2">
                 <label className="text-sm font-medium text-gray-700 dark:text-dark-text-secondary">Asunto</label>
-                <textarea name="asunto" value={formData.asunto} onChange={handleChange} rows="3" className="w-full border p-2 rounded-lg bg-white dark:bg-dark-bg-tertiary dark:border-dark-border"></textarea>
+                <textarea name="asunto" value={formData.asunto} onChange={handleChange} rows="3" className="w-full border p-2 rounded-lg bg-white dark:text-white dark:bg-dark-bg-tertiary dark:border-dark-border"></textarea>
             </div>
           </FormSection>
 
