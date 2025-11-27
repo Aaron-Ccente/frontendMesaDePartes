@@ -67,7 +67,7 @@ const AdminVisorCasos = () => {
                 <td className="py-3 px-4 border-b dark:border-dark-border">{new Date(caso.fecha_creacion).toLocaleString('es-ES')}</td>
                 <td className="py-3 px-4 border-b dark:border-dark-border">
                     <span className="px-2 py-1 font-semibold leading-tight text-green-700 bg-green-100 rounded-full dark:bg-green-700 dark:text-green-100">
-                        {caso.ultimo_estado || 'CREADO'}
+                        {caso.ultimo_estado ==="CREACION DEL OFICIO"? "ENTRADA": caso.ultimo_estado}
                     </span>
                 </td>
                 <td className="py-3 px-4 border-b dark:border-dark-border">
