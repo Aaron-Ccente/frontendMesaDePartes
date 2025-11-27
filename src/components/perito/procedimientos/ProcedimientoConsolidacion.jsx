@@ -293,10 +293,10 @@ const ProcedimientoConsolidacion = () => {
 
     // --- RENDERIZADO DEL COMPONENTE ---
     return (
-        <div className="max-w-7xl mx-auto space-y-6">
+        <div className="max-w-7xl mx-auto space-y-6 dark:text-white">
             <div className="text-center">
                 <h1 className="text-3xl font-bold">Proceso de Consolidación Final</h1>
-                <p className="text-lg text-gray-500">Oficio N°: {oficio?.nro_oficio}</p>
+                <p className="text-lg text-gray-500">Oficio N°: {oficio?.numero_oficio}</p>
             </div>
 
             <Tabs selectedIndex={tabIndex} onSelect={index => setTabIndex(index)}>
@@ -401,8 +401,8 @@ const ProcedimientoConsolidacion = () => {
                         <p className="mb-6">Los documentos han sido generados. Descárguelos, firme el Informe Pericial y súbalo para completar el proceso.</p>
 
                         <div className="flex justify-center gap-4 mb-8">
-                            <a href={caratulaPdfUrl} download={`Caratula-${oficio?.nro_oficio}.pdf`} className="btn-secondary"><DownloadIcon /> Descargar Carátula</a>
-                            <a href={informePdfUrl} download={`Informe-Pericial-${oficio?.nro_oficio}.pdf`} className="btn-primary"><DownloadIcon /> Descargar Informe</a>
+                            <a href={caratulaPdfUrl} download={`Caratula-${oficio?.numero_oficio}.pdf`} className="flex bg-yellow-300 items-center px-4 py-2 rounded-lg text-black dark:bg-yellow-400"><DownloadIcon /> Descargar Carátula</a>
+                            <a href={informePdfUrl} download={`Informe-Pericial-${oficio?.numero_oficio}.pdf`} className="btn-primary"><DownloadIcon /> Descargar Informe</a>
                         </div>
 
                         <div className="max-w-md mx-auto border-t pt-6 dark:border-dark-border">
@@ -415,7 +415,7 @@ const ProcedimientoConsolidacion = () => {
 
                         <div className="flex justify-end gap-3 pt-6 mt-6 border-t dark:border-dark-border">
                             <button type="button" onClick={() => setTabIndex(1)} className="btn-secondary">Volver a Edición</button>
-                            <button type="button" onClick={handleFinalSubmit} disabled={!selectedFile || isSubmitting} className="btn-success">
+                            <button type="button" onClick={handleFinalSubmit} disabled={!selectedFile || isSubmitting} className="btn-primary">
                                 <SendIcon /><span>{isSubmitting ? 'Enviando...' : 'Enviar a Mesa de Partes'}</span>
                             </button>
                         </div>

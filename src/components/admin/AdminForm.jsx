@@ -124,12 +124,12 @@ const AdminForm = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl shadow-lg p-6 flex items-center justify-between">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#1a4d2e]">
+          <h1 className="text-2xl font-bold text-[#1a4d2e] dark:text-green-400">
             {isEditing ? "Editar Administrador" : "Crear Administrador"}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-300">
             {isEditing
               ? "Modifica los datos del administrador"
               : "Registra un nuevo administrador"}
@@ -137,7 +137,7 @@ const AdminForm = () => {
         </div>
         <button
           onClick={handleCancel}
-          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
+          className="bg-gray-500 dark:bg-gray-600 hover:bg-gray-600 dark:hover:bg-gray-500 text-white px-4 py-2 rounded-lg"
         >
           Cancelar
         </button>
@@ -148,11 +148,11 @@ const AdminForm = () => {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-xl shadow-lg p-6"
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               CIP *
             </label>
             <input
@@ -161,8 +161,8 @@ const AdminForm = () => {
               onChange={(e) => handleChange("CIP", e.target.value)}
               disabled={isEditing}
               className={`w-full px-4 py-2 border rounded-lg ${
-                errors.CIP ? "border-red-500" : "border-gray-300"
-              } ${isEditing ? "bg-gray-100" : ""}`}
+                errors.CIP ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+              } ${isEditing ? "bg-gray-100 dark:bg-gray-700" : "bg-white dark:bg-gray-700"} dark:text-white`}
               placeholder="Ingrese CIP"
             />
             {errors.CIP && (
@@ -171,7 +171,7 @@ const AdminForm = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               Nombre Completo *
             </label>
             <input
@@ -179,8 +179,8 @@ const AdminForm = () => {
               value={values.nombre_completo}
               onChange={(e) => handleChange("nombre_completo", e.target.value)}
               className={`w-full px-4 py-2 border rounded-lg ${
-                errors.nombre_completo ? "border-red-500" : "border-gray-300"
-              }`}
+                errors.nombre_completo ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+              } bg-white dark:bg-gray-700 dark:text-white`}
               placeholder="Nombre completo"
             />
             {errors.nombre_completo && (
@@ -191,7 +191,7 @@ const AdminForm = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               Nombre de Usuario *
             </label>
             <input
@@ -199,8 +199,8 @@ const AdminForm = () => {
               value={values.nombre_usuario}
               onChange={(e) => handleChange("nombre_usuario", e.target.value)}
               className={`w-full px-4 py-2 border rounded-lg ${
-                errors.nombre_usuario ? "border-red-500" : "border-gray-300"
-              }`}
+                errors.nombre_usuario ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+              } bg-white dark:bg-gray-700 dark:text-white`}
               placeholder="usuario"
             />
             {errors.nombre_usuario && (
@@ -213,7 +213,7 @@ const AdminForm = () => {
           {!isEditing && (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                   Contraseña *
                 </label>
                 <input
@@ -223,8 +223,8 @@ const AdminForm = () => {
                     handleChange("password_hash", e.target.value)
                   }
                   className={`w-full px-4 py-2 border rounded-lg ${
-                    errors.password_hash ? "border-red-500" : "border-gray-300"
-                  }`}
+                    errors.password_hash ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+                  } bg-white dark:bg-gray-700 dark:text-white`}
                   placeholder="Ingrese contraseña"
                 />
                 {errors.password_hash && (
@@ -235,7 +235,7 @@ const AdminForm = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                   Confirmar Contraseña *
                 </label>
                 <input
@@ -245,10 +245,8 @@ const AdminForm = () => {
                     handleChange("confirmar_password", e.target.value)
                   }
                   className={`w-full px-4 py-2 border rounded-lg ${
-                    errors.confirmar_password
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  }`}
+                    errors.confirmar_password ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+                  } bg-white dark:bg-gray-700 dark:text-white`}
                   placeholder="Confirme contraseña"
                 />
                 {errors.confirmar_password && (
@@ -265,14 +263,14 @@ const AdminForm = () => {
           <button
             type="button"
             onClick={handleCancel}
-            className="px-6 py-2 border rounded-lg"
+            className="px-6 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={isSubmitting || loading}
-            className="bg-[#1a4d2e] text-white px-6 py-2 rounded-lg disabled:opacity-50"
+            className="bg-[#1a4d2e] hover:bg-[#143821] text-white px-6 py-2 rounded-lg disabled:opacity-50"
           >
             {isSubmitting || loading
               ? isEditing

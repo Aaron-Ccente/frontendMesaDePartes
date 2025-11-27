@@ -244,7 +244,7 @@ const SeguimientoDetalle = () => {
                 <button
                   onClick={handleCaratulaDownload}
                   disabled={isCaratulaLoading}
-                  className="btn-secondary inline-flex items-center gap-2"
+                  className="flex bg-yellow-300 items-center px-4 py-2 rounded-lg text-black dark:bg-yellow-400"
                 >
                   <DownloadIcon />
                   {isCaratulaLoading ? 'Generando...' : 'Descargar Carátula'}
@@ -281,7 +281,7 @@ const SeguimientoDetalle = () => {
               <button
                 onClick={handleArchiveSubmit}
                 disabled={isArchiving || finalFiles.length === 0}
-                className="btn-success inline-flex items-center gap-2"
+                className="btn-primary inline-flex items-center gap-2"
               >
                 <SendIcon />
                 {isArchiving ? 'Archivando...' : 'Archivar Caso'}

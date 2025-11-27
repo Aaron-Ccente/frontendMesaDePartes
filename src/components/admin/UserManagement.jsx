@@ -8,6 +8,8 @@ import DeleteIcon from "../../assets/icons/DeleteIcon";
 import DisableIcon from "../../assets/icons/DisableIcon";
 import EnableIcon from "../../assets/icons/EnableIcon";
 import EnableAndDesableUser from "../ui/EnableAndDesableUser";
+import BarCharPeritosProductividadIndividual from "./DashboardStats/BarCharPeritosProductividadIndividual";
+import Estadistica from "../../assets/icons/Estadistica";
 
 const UserManagement = () => {
   const navigate = useNavigate();
@@ -21,6 +23,13 @@ const UserManagement = () => {
   const [totalPeritos, setTotalPeritos] = useState(0);
   const [error, setError] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(null);
+  const [productivityModal, setProductivityModal] = useState({
+    open: false,
+    cip: null,
+    loading: false,
+    data: null,
+    filtro: 'dia'
+  });
 
   const isMountedRef = useRef(false);
   const searchTimeoutRef = useRef(null);
@@ -115,6 +124,23 @@ const UserManagement = () => {
   };
 
   const handleRefresh = () => loadPeritos(currentPage, searchTerm);
+
+  // Abrir modal y cargar datos de productividad por CIP
+  const handleOpenProductivity = async (cip) => {
+    setProductivityModal({ open: true, cip, loading: true, data: null, filtro: 'dia' });
+    try {
+      const resp = await PeritoService.getPeritoStatsByCIP(cip);
+      const payload = resp?.data ?? resp;
+      setProductivityModal(prev => ({ ...prev, loading: false, data: payload || null }));
+    } catch (err) {
+      console.error('Error obteniendo productividad:', err);
+      setProductivityModal(prev => ({ ...prev, loading: false, data: null }));
+    }
+  };
+
+  const handleCloseProductivity = () => {
+    setProductivityModal({ open: false, cip: null, loading: false, data: null, filtro: 'dia' });
+  };
 
   if (loading) {
     return (
@@ -315,6 +341,18 @@ const UserManagement = () => {
                             </>
                           )}
                         </button>
+
+                        {/* Nuevo: Ver Productividad */}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenProductivity(perito.CIP)}
+                          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 bg-[#29ab85] hover:scale-101 cursor-pointer dark:bg-[#29ab80] text-white"
+                        >
+                          <>
+                          <Estadistica/>
+                          Ver Productividad
+                          </>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -387,6 +425,40 @@ const UserManagement = () => {
                 Siguiente
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Productividad */}
+      {productivityModal.open && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => { if (e.target === e.currentTarget) handleCloseProductivity(); }}
+        >
+          <div className="w-full max-w-3xl bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={handleCloseProductivity}
+              aria-label="Cerrar"
+              className="absolute top-4 right-4 text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+            >
+              ×
+            </button>
+
+            <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
+              Productividad del Perito {productivityModal.cip}
+            </h3>
+
+            {productivityModal.loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#1a4d2e]"></div>
+              </div>
+            ) : (
+              <div>
+                <BarCharPeritosProductividadIndividual data={productivityModal.data} />
+              </div>
+            )}
           </div>
         </div>
       )}
