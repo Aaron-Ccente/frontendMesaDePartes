@@ -19,6 +19,8 @@ import DocumentManagement from './components/admin/DocumentManagement';
 import SystemConfiguration from './components/admin/SystemConfiguration';
 import PeritoForm from './components/admin/PeritoForm';
 import AdminForm from './components/admin/AdminForm';
+import AdminVisorCasos from './components/admin/AdminVisorCasos';
+import AdminVisorCasoDetail from './components/admin/AdminVisorCasoDetail';
 
 // Perito Components
 import PeritoDashboard from './components/perito/PeritoDashboard';
@@ -85,6 +87,8 @@ function App() {
               <Route path="mesadepartes/crear" element={<MesaDePartesForm />} />
               <Route path="mesadepartes/editar/:cip" element={<MesaDePartesForm />} />
               <Route path="documentos" element={<DocumentManagement />} />
+              <Route path="visor-casos" element={<AdminVisorCasos />} />
+              <Route path="visor-casos/:id" element={<AdminVisorCasoDetail />} />
               <Route path="configuracion" element={<SystemConfiguration />} />
               <Route path="configuracion/especialidades" element={<EspecialidadesManagement />} />
               <Route path="configuracion/grados" element={<GradosManagement />} />
