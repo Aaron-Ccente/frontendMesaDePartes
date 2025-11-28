@@ -115,6 +115,7 @@ const handleLogout = async () => {
                   isActiveRoute("/admin/dashboard") &&
                   !isActiveRoute("/usuarios") &&
                   !isActiveRoute("/documentos") &&
+                  !isActiveRoute("/visor-casos") &&
                   !isActiveRoute("/configuracion") &&
                   !isActiveRoute("/administradores") &&
                   !isActiveRoute("/mesadepartes")
@@ -195,6 +196,23 @@ const handleLogout = async () => {
                     <Documentos size={6} />
                   </span>
                   <span>Documentos</span>
+                </div>
+              </button>
+
+              {/* Visor de Casos */}
+              <button
+                onClick={() => handleNavigation("/visor-casos")}
+                className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
+                  isActiveRoute("/visor-casos")
+                    ? "bg-[#1a4d2e] text-white shadow-md"
+                    : "text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary"
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <span>
+                    <Documentos size={6} />
+                  </span>
+                  <span>Visor de Casos</span>
                 </div>
               </button>
 
