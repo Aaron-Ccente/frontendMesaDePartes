@@ -9,6 +9,7 @@ import DepartmentIcon from "../../assets/icons/DepartmentIcon";
 
 const initialFormData = {
   numeroOficio: "",
+  numeroDeRegistro: "",
   fechaHora: "",
   fiscalia: "", // Unidad Solicitante
   regionSolicitante: "",
@@ -244,6 +245,7 @@ function CrearOficio() {
         <form onSubmit={handleSubmit}>
           <FormSection title="1. Información del Registro">
             <FormInput label="Número de Oficio" name="numeroOficio" value={formData.numeroOficio} onChange={handleChange} required/>
+            <FormInput label="Número de Registro" name="numeroDeRegistro" value={formData.numeroDeRegistro} onChange={handleChange}/>
             <FormInput label="Número de Folios" name="folios" type="number" value={formData.folios} onChange={handleChange} min="1" max="99" />
             <FormInput label="Referencia (Opcional)" name="referencia" value={formData.referencia} onChange={handleChange} />
             <FormInput label="Unidad Solicitante" name="fiscalia" value={formData.fiscalia} onChange={handleChange} required />
