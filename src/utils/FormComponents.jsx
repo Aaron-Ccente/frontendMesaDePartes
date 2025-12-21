@@ -1,5 +1,3 @@
-import React from "react";
-
 export const FlowSelectorCard = ({ title, subtitle, onClick, selected, icon }) => (
   <div
     onClick={onClick}
