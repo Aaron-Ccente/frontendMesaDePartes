@@ -7,13 +7,15 @@ import { ProcedimientoService } from '../../../services/procedimientoService';
 import { DocumentService } from '../../../services/documentService';
 import PDFPreviewModal from '../../documentos/PDFPreviewModal';
 import DeleteIcon from '../../../assets/icons/DeleteIcon';
-import { LimpiarIcon, PreviewIcon, GuardarIcon, CancelarIcon } from '../../../assets/icons/Actions';
+import { LimpiarIcon, PreviewIcon, GuardarIcon, CancelarIcon, UploadIcon, DownloadIcon } from '../../../assets/icons/Actions';
 import DetallesCasoHeader from '../common/DetallesCasoHeader';
 import SelectField from '../../ui/forms/SelectField';
 import InputField from '../../ui/forms/InputField';
 import TextareaField from '../../ui/forms/TextareaField';
 import { TIPOS_DE_MUESTRA, EXAMEN_A_TIPO_MUESTRA, MUESTRA_DEFAULTS } from '../../../utils/constants';
 import ConfirmationModal from '../../ui/ConfirmationModal';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
 
 const ProcedimientoExtraccion = () => {
   const { id: id_oficio } = useParams();
@@ -34,6 +36,10 @@ const ProcedimientoExtraccion = () => {
   const [observaciones, setObservaciones] = useState('');
   const [muestras, setMuestras] = useState([]);
 
+  // Estado para manejo de extracción fallida previa
+  const [isExtractionFailed, setIsExtractionFailed] = useState(false);
+  const [signedFile, setSignedFile] = useState(null);
+
   // Estados de modales
   const [pdfUrl, setPdfUrl] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -49,12 +55,19 @@ const ProcedimientoExtraccion = () => {
       // 1. Intentar obtener datos de una extracción previa PRIMERO.
       const procRes = await ProcedimientoService.getDatosExtraccion(id_oficio);
       
-      // 2. Si hay datos, estamos en MODO EDICIÓN.
+      // 2. Si hay datos, estamos en MODO EDICIÓN o FINALIZACIÓN DE FALLO.
       if (procRes.success && procRes.data) {
-        toast.info('Modo edición: se han cargado los datos guardados anteriormente.');
+        
+        // Verificar si es una extracción fallida
+        if (procRes.data.fue_exitosa === false) {
+           setIsExtractionFailed(true);
+           toast.warning('Este caso tiene una extracción fallida registrada. Proceda a subir el informe firmado.');
+        } else {
+           toast.info('Modo edición: se han cargado los datos guardados anteriormente.');
+        }
         
         // Cargar los datos del procedimiento guardado
-        setMuestras(procRes.data.muestras.map(m => ({ ...m, id: m.id_muestra, errors: {} })) || []);
+        setMuestras(procRes.data.muestras?.map(m => ({ ...m, id: m.id_muestra, errors: {} })) || []);
         setObservaciones(procRes.data.observaciones || '');
         setFueExitosa(procRes.data.fue_exitosa);
 
@@ -230,8 +243,14 @@ const ProcedimientoExtraccion = () => {
       }
 
       if (res.success) {
-        toast.success(res.message || 'Procedimiento guardado exitosamente.');
-        navigate('/perito/dashboard');
+        // Si se guardó como fallida, recargar la página para mostrar la UI de subida de archivos
+        if (!fueExitosa) {
+            toast.warning('Extracción marcada como fallida. Ahora debe subir el informe firmado para cerrar el caso.');
+            loadData(); // Recargar datos para activar isExtractionFailed
+        } else {
+            toast.success(res.message || 'Procedimiento guardado exitosamente.');
+            navigate('/perito/dashboard');
+        }
       } else {
         throw new Error(res.message || 'Ocurrió un error desconocido al guardar.');
       }
@@ -242,12 +261,161 @@ const ProcedimientoExtraccion = () => {
     }
   };
 
+  // --- Manejadores para Extracción Fallida ---
+
+  const handleDownloadFailedReport = () => {
+    // Usamos window.open para descargar directamente desde el endpoint
+    const token = localStorage.getItem('peritoToken');
+    // Construir URL con el token si es necesario o usar fetch con blob (mejor para auth)
+    // Usamos fetch blob para pasar el header de autorización
+    toast.info('Descargando informe...');
+    fetch(`${API_BASE_URL}/api/procedimientos/${id_oficio}/generar-informe-no-extraccion`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(async response => {
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || 'Error al descargar el informe');
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `informe_no_extraccion_${id_oficio}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    })
+    .catch(error => toast.error('Error: ' + error.message));
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setSignedFile(e.target.files[0]);
+    }
+  };
+
+  const handleUploadSignedReport = async () => {
+    if (!signedFile) {
+        toast.error('Debe seleccionar el archivo firmado.');
+        return;
+    }
+
+    setIsSubmitting(true);
+    toast.info('Subiendo informe y cerrando caso...');
+
+    const formData = new FormData();
+    formData.append('informe_firmado', signedFile);
+
+    try {
+        const res = await ProcedimientoService.uploadInformeFirmado(id_oficio, formData);
+        if (res.success) {
+            toast.success('Caso cerrado exitosamente. Enviado a Mesa de Partes.');
+            navigate('/perito/dashboard');
+        } else {
+            throw new Error(res.message);
+        }
+    } catch (error) {
+        toast.error('Error al subir informe: ' + error.message);
+    } finally {
+        setIsSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-96">
         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-pnp-green-dark"></div>
       </div>
     );
+  }
+
+  // --- VISTA PARA EXTRACCIÓN FALLIDA ---
+  if (isExtractionFailed) {
+      return (
+        <div className="max-w-4xl mx-auto space-y-8">
+            <div className="text-center">
+                <h1 className="text-3xl font-bold text-red-600 dark:text-red-500">
+                    Extracción de Muestra Fallida
+                </h1>
+                <p className="text-lg text-gray-500 mt-2">
+                    Este caso ha sido marcado como no viable para extracción.
+                </p>
+            </div>
+
+            <DetallesCasoHeader oficio={oficio} />
+
+            <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-md border dark:border-dark-border space-y-6">
+                <div className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg">
+                    <h3 className="text-lg font-bold text-red-700 dark:text-red-400 mb-2">Motivo Registrado:</h3>
+                    <p className="text-gray-800 dark:text-gray-200 italic">"{observaciones}"</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                    {/* Paso 1: Descargar */}
+                    <div className="border p-6 rounded-xl flex flex-col items-center text-center space-y-4 hover:shadow-lg transition-shadow bg-gray-50 dark:bg-dark-bg-tertiary dark:border-dark-border">
+                        <div className="p-4 bg-white dark:bg-dark-surface rounded-full shadow-sm">
+                            <DownloadIcon className="w-8 h-8 text-pnp-green-dark" />
+                        </div>
+                        <h4 className="font-bold text-lg text-gray-800 dark:text-white">1. Descargar Informe</h4>
+                        <p className="text-sm text-gray-500">Descargue el informe generado automáticamente con el motivo de la falla.</p>
+                        <button 
+                            onClick={handleDownloadFailedReport}
+                            className="btn-secondary w-full"
+                        >
+                            Descargar PDF
+                        </button>
+                    </div>
+
+                    {/* Paso 2: Subir y Cerrar */}
+                    <div className="border p-6 rounded-xl flex flex-col items-center text-center space-y-4 hover:shadow-lg transition-shadow bg-gray-50 dark:bg-dark-bg-tertiary dark:border-dark-border">
+                        <div className="p-4 bg-white dark:bg-dark-surface rounded-full shadow-sm">
+                            <UploadIcon className="w-8 h-8 text-blue-600" />
+                        </div>
+                        <h4 className="font-bold text-lg text-gray-800 dark:text-white">2. Subir Informe Firmado</h4>
+                        <p className="text-sm text-gray-500">Suba el documento firmado digitalmente para cerrar el caso.</p>
+                        
+                        <div className="w-full space-y-2">
+                             <div className="flex items-center justify-center bg-white dark:bg-dark-surface p-4 rounded-lg border-2 border-dashed dark:border-dark-border">
+                                <input 
+                                    type="file" 
+                                    accept=".pdf" 
+                                    onChange={handleFileChange} 
+                                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pnp-green-light file:text-pnp-green-dark hover:file:bg-pnp-green-light/80" 
+                                />
+                             </div>
+                             {signedFile && <p className="text-xs text-pnp-green-dark font-medium">Archivo: {signedFile.name}</p>}
+                             {!signedFile && isSubmitting && <p className="text-xs text-red-500">El archivo es obligatorio.</p>}
+                        </div>
+
+                        <button 
+                            onClick={handleUploadSignedReport}
+                            disabled={isSubmitting || !signedFile}
+                            className="btn-primary w-full bg-blue-600 hover:bg-blue-700"
+                        >
+                            {isSubmitting ? 'Procesando...' : 'Finalizar y Cerrar Caso'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div className="flex justify-center">
+                 <button 
+                    type="button" 
+                    onClick={() => navigate('/perito/dashboard')} 
+                    className="flex items-center gap-2 px-6 py-2 rounded-lg font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300 transition-colors"
+                >
+                    <CancelarIcon />
+                    <span>Volver al Dashboard</span>
+                </button>
+            </div>
+        </div>
+      );
   }
 
   return (
