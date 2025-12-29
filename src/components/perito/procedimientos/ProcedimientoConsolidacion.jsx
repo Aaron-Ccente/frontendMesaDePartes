@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../../../hooks/useAuth';
@@ -6,10 +6,11 @@ import { ProcedimientoService } from '../../../services/procedimientoService';
 import { DictamenService } from '../../../services/dictamenService.js';
 import { GuardarIcon, CancelarIcon, UploadIcon, DownloadIcon, SendIcon } from '../../../assets/icons/Actions';
 import { EditableField } from '../../ui/InformeConsolidadoComponents';
-import CaratulaPreview from '../../ui/CaratulaPreview';
 import InformePreview from '../../ui/InformePreview';
+import { Accordion } from '../../ui/Accordion';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
+import debounce from 'lodash/debounce';
 
 const ProcedimientoConsolidacion = () => {
     const { id: id_oficio } = useParams();
@@ -37,6 +38,7 @@ const ProcedimientoConsolidacion = () => {
         fecha_toma_muestra: '',
         conductor: '',
         examinado_incriminado: '',
+        dni_examinado: '', // NUEVO CAMPO
         edad_examinado: '',
         recolector_muestra: '',
         conclusion_principal: '',
@@ -48,7 +50,8 @@ const ProcedimientoConsolidacion = () => {
         cip: '',
         dni_perito: '',
         cqfp: '',
-        titulo_profesional: 'Perito Químico Farmacéutico'
+        titulo_profesional: 'Perito Químico Farmacéutico',
+        cargo_actual: 'PERITO QUIMICO FORENSE'
     });
     
     // --- NUEVOS ESTADOS MEJORADOS ---
@@ -77,7 +80,8 @@ const ProcedimientoConsolidacion = () => {
         cuerpoP1_5: ', de conformidad al documento de la referencia. Se adjunta acta de deslacrado y lacrado de muestras para análisis pericial de ingeniería forense.',
         regNum: '',
         regIniciales: '',
-        firmanteQS: '',
+        // Datos del Firmante en Carátula (pueden ser distintos o iguales al del informe)
+        firmanteQS: '', // Grado + CIP
         firmanteNombre: '',
         firmanteCargo: '',
         firmanteDependencia: '',
@@ -87,6 +91,53 @@ const ProcedimientoConsolidacion = () => {
     const [caratulaPdfUrl, setCaratulaPdfUrl] = useState(null);
     const [informePdfUrl, setInformePdfUrl] = useState(null);
     const [tabIndex, setTabIndex] = useState(0);
+
+    // --- ESTADOS PARA PREVIEW HTML ---
+    const [previewHtml, setPreviewHtml] = useState('');
+    const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+
+    // Efecto para disparar el preview cuando cambian los datos relevantes con Debounce nativo
+    useEffect(() => {
+        if (loading || tabIndex > 1) return; // Solo tabs 0 y 1 tienen preview
+
+        const timer = setTimeout(async () => {
+            setIsPreviewLoading(true);
+            try {
+                let payload = {};
+                
+                if (tabIndex === 0) {
+                    // Payload Carátula
+                    payload = {
+                        template: 'caratula',
+                        caratula: caratulaFormData
+                    };
+                } else if (tabIndex === 1) {
+                    // Payload Informe
+                    payload = {
+                        template: 'reporte', 
+                        informe: { 
+                            ...informeFormData, 
+                            metodos: metodos,
+                            muestras: muestrasEditables,
+                            conclusiones_secundarias: conclusionesSecundarias,
+                            sufijo_numero_oficio: sufijoNumeroOficio
+                        },
+                        perito: peritoFormData 
+                    };
+                }
+
+                const html = await ProcedimientoService.getPreviewConsolidacion(id_oficio, payload);
+                setPreviewHtml(html);
+            } catch (error) {
+                console.error("Error fetching preview:", error);
+            } finally {
+                setIsPreviewLoading(false);
+            }
+        }, 800); // 800ms de debounce
+
+        return () => clearTimeout(timer); // Limpiar el timer si el usuario sigue escribiendo
+    }, [informeFormData, metodos, muestrasEditables, conclusionesSecundarias, sufijoNumeroOficio, peritoFormData, caratulaFormData, loading, tabIndex, id_oficio]);
+
 
     // --- MANEJADORES DE INPUTS ---
     const handleInformeInputChange = (e) => {
@@ -153,23 +204,25 @@ const ProcedimientoConsolidacion = () => {
                     fecha_toma_muestra: formatDateForInput(oficio.fecha_toma_muestra),
                     conductor: oficio.conductor || '',
                     examinado_incriminado: oficio.examinado_incriminado || '',
+                    dni_examinado: oficio.dni_examinado_incriminado || '', // Mapeo de DNI
                     edad_examinado: oficio.edad_examinado || '',
                     recolector_muestra: recolector_muestra || '',
                     conclusion_principal: generarConclusionSugerida()
                 });
 
-                // Pre-llenar formulario de PERITO
+                // Pre-llenar formulario de PERITO (Firmante Informe)
                 setPeritoFormData({
                     grado: oficio.grado_perito || '',
                     nombre_completo: oficio.nombre_perito_actual || oficio.perito_asignado || '',
                     cip: oficio.cip_perito || '',
                     dni_perito: oficio.dni_perito || '',
                     cqfp: oficio.cqfp || '',
-                    titulo_profesional: 'Perito Químico Farmacéutico' // Default, debería venir de BD idealmente
+                    titulo_profesional: 'Perito Químico Farmacéutico',
+                    cargo_actual: 'PERITO QUIMICO FORENSE'
                 });
 
-                // Pre-llenar formulario de CARÁTULA
-                const peritoAsignado = oficio.perito_asignado; 
+                // Pre-llenar formulario de CARÁTULA (Firmante Carátula)
+                const firmanteIniciales = `${user.nombre_completo.split(' ').map(n => n[0]).join('')}/lgp.`;
                 setCaratulaFormData({
                     lugarFecha: `Huancayo, ${new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}`,
                     numOficio: oficio.numero_oficio.split('/').slice(0, -1).join('/') + '/ING.', 
@@ -188,10 +241,10 @@ const ProcedimientoConsolidacion = () => {
                     cuerpoP1_4: muestras.map((m, i) => `M${i + 1}: (${m.descripcion})`).join(', '),
                     cuerpoP1_5: ', de conformidad al documento de la referencia. Se adjunta acta de deslacrado y lacrado de muestras para análisis pericial de ingeniería forense.',
                     regNum: '', 
-                    regIniciales: `${user.nombre_completo.split(' ').map(n => n[0]).join('')}/lgp.`,
-                    firmanteQS: oficio.cip_perito || '',
+                    regIniciales: firmanteIniciales,
+                    firmanteQS: oficio.grado_perito && oficio.cip_perito ? `${oficio.grado_perito} ${oficio.cip_perito}` : '',
                     firmanteNombre: oficio.nombre_perito_actual || user.nombre_completo,
-                    firmanteCargo: oficio.grado_perito || 'PERITO OFICRI',
+                    firmanteCargo: 'PERITO OFICRI',
                     firmanteDependencia: 'OFICRI PNP HUANCAYO',
                 });
 
@@ -380,41 +433,57 @@ const ProcedimientoConsolidacion = () => {
                 {/* --- PESTAÑA 1: CARÁTULA --- */}
                 <TabPanel>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[calc(100vh-250px)]">
-                        {/* COLUMNA IZQUIERDA: FORMULARIO */}
+                        {/* COLUMNA IZQUIERDA: FORMULARIO CON ACORDEONES */}
                         <div className="bg-white dark:bg-dark-surface p-6 rounded-xl shadow-md border dark:border-dark-border overflow-y-auto">
                             <h3 className="text-xl font-bold border-b pb-3 mb-4 dark:border-dark-border">Datos de la Carátula</h3>
-                            <div className="grid grid-cols-1 gap-4">
-                                <EditableField label="Lugar y Fecha" name="lugarFecha" value={caratulaFormData.lugarFecha} onChange={handleCaratulaInputChange} />
-                                <EditableField label="Número de Oficio" name="numOficio" value={caratulaFormData.numOficio} onChange={handleCaratulaInputChange} />
-                                <EditableField label="Referencia" name="referencia" value={caratulaFormData.referencia} onChange={handleCaratulaInputChange} />
-                                
-                                <h4 className="text-lg font-semibold border-b mt-4 dark:border-dark-border text-pnp-green-dark">Destinatario</h4>
-                                <EditableField label="Cargo" name="destCargo" value={caratulaFormData.destCargo} onChange={handleCaratulaInputChange} />
-                                <EditableField label="Nombre" name="destNombre" value={caratulaFormData.destNombre} onChange={handleCaratulaInputChange} />
-                                
-                                <h4 className="text-lg font-semibold border-b mt-4 dark:border-dark-border text-pnp-green-dark">Cuerpo del Oficio</h4>
-                                <div className="col-span-1">
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary mb-1">Párrafo Introductorio</label>
-                                    <textarea 
-                                        name="cuerpoP1_1" 
-                                        value={caratulaFormData.cuerpoP1_1} 
-                                        onChange={handleCaratulaInputChange}
-                                        rows={3}
-                                        className="w-full rounded-md border-gray-300 dark:bg-dark-bg-tertiary dark:border-dark-border shadow-sm focus:border-pnp-green-light focus:ring-pnp-green-light sm:text-sm"
-                                    />
+                            
+                            <Accordion title="1. Datos Generales y Referencia" defaultOpen={true}>
+                                <div className="grid grid-cols-1 gap-4">
+                                    <EditableField label="Lugar y Fecha" name="lugarFecha" value={caratulaFormData.lugarFecha} onChange={handleCaratulaInputChange} />
+                                    <EditableField label="Número de Oficio" name="numOficio" value={caratulaFormData.numOficio} onChange={handleCaratulaInputChange} />
+                                    <EditableField label="Referencia" name="referencia" value={caratulaFormData.referencia} onChange={handleCaratulaInputChange} />
                                 </div>
-                                
-                                <h4 className="text-lg font-semibold border-b mt-4 dark:border-dark-border text-pnp-green-dark">Firmante</h4>
-                                <EditableField label="Nombre" name="firmanteNombre" value={caratulaFormData.firmanteNombre} onChange={handleCaratulaInputChange} />
-                                <EditableField label="Cargo" name="firmanteCargo" value={caratulaFormData.firmanteCargo} onChange={handleCaratulaInputChange} />
-                            </div>
+                            </Accordion>
+
+                            <Accordion title="2. Destinatario">
+                                <div className="grid grid-cols-1 gap-4">
+                                    <EditableField label="Cargo" name="destCargo" value={caratulaFormData.destCargo} onChange={handleCaratulaInputChange} />
+                                    <EditableField label="Nombre" name="destNombre" value={caratulaFormData.destNombre} onChange={handleCaratulaInputChange} />
+                                </div>
+                            </Accordion>
+
+                            <Accordion title="3. Cuerpo del Oficio">
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary mb-1">Párrafo Introductorio</label>
+                                        <textarea 
+                                            name="cuerpoP1_1" 
+                                            value={caratulaFormData.cuerpoP1_1} 
+                                            onChange={handleCaratulaInputChange}
+                                            rows={4}
+                                            className="w-full rounded-md border-gray-300 dark:bg-dark-bg-tertiary dark:border-dark-border shadow-sm focus:border-pnp-green-light focus:ring-pnp-green-light sm:text-sm"
+                                        />
+                                    </div>
+                                    <EditableField label="Asunto" name="asuntoBase" value={caratulaFormData.asuntoBase} onChange={handleCaratulaInputChange} />
+                                </div>
+                            </Accordion>
+
+                            <Accordion title="4. Datos del Firmante">
+                                <div className="grid grid-cols-1 gap-4">
+                                    <EditableField label="Nombre Completo" name="firmanteNombre" value={caratulaFormData.firmanteNombre} onChange={handleCaratulaInputChange} />
+                                    <EditableField label="Grado y CIP (QS)" name="firmanteQS" value={caratulaFormData.firmanteQS} onChange={handleCaratulaInputChange} />
+                                    <EditableField label="Cargo" name="firmanteCargo" value={caratulaFormData.firmanteCargo} onChange={handleCaratulaInputChange} />
+                                    <EditableField label="Dependencia" name="firmanteDependencia" value={caratulaFormData.firmanteDependencia} onChange={handleCaratulaInputChange} />
+                                    <EditableField label="Iniciales Registro" name="regIniciales" value={caratulaFormData.regIniciales} onChange={handleCaratulaInputChange} />
+                                </div>
+                            </Accordion>
                         </div>
 
                         {/* COLUMNA DERECHA: VISTA PREVIA EN VIVO */}
                         <div className="hidden lg:block h-full">
                             <div className="sticky top-4 h-full">
                                 <h3 className="text-center text-sm text-gray-500 mb-2 font-medium uppercase tracking-wide">Vista Previa en Tiempo Real</h3>
-                                <CaratulaPreview data={caratulaFormData} />
+                                <InformePreview htmlContent={previewHtml} isLoading={isPreviewLoading} />
                             </div>
                         </div>
                     </div>
@@ -423,27 +492,47 @@ const ProcedimientoConsolidacion = () => {
                 {/* --- PESTAÑA 2: INFORME PERICIAL --- */}
                 <TabPanel>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[calc(100vh-250px)]">
-                        {/* COLUMNA IZQUIERDA: FORMULARIO */}
+                        {/* COLUMNA IZQUIERDA: FORMULARIO CON ACORDEONES */}
                         <div className="bg-white dark:bg-dark-surface p-6 rounded-xl shadow-md border dark:border-dark-border overflow-y-auto">
                             <h3 className="text-xl font-bold border-b pb-3 mb-4 dark:border-dark-border">Contenido del Informe</h3>
                             
-                            <div className="grid grid-cols-1 gap-4">
-                                <h4 className="text-lg font-semibold border-b mt-2 dark:border-dark-border text-pnp-green-dark">I. Información General</h4>
-                                <EditableField label="Sufijo N° Oficio" value={sufijoNumeroOficio} onChange={(e) => setSufijoNumeroOficio(e.target.value)} />
-                                <EditableField label="A. Procedencia" name="unidad_solicitante" value={informeFormData.unidad_solicitante} onChange={handleInformeInputChange} />
-                                <EditableField label="B. Documento Referencia" name="documento_referencia" value={informeFormData.documento_referencia} onChange={handleInformeInputChange} />
-                                <EditableField label="Fecha Doc." name="fecha_documento" type="date" value={informeFormData.fecha_documento} onChange={handleInformeInputChange} />
+                            <Accordion title="1. Cabecera e Información General" defaultOpen={true}>
+                                <div className="grid grid-cols-1 gap-4">
+                                    <EditableField label="Sufijo N° Oficio" value={sufijoNumeroOficio} onChange={(e) => setSufijoNumeroOficio(e.target.value)} />
+                                    <EditableField label="Procedencia (A)" name="unidad_solicitante" value={informeFormData.unidad_solicitante} onChange={handleInformeInputChange} />
+                                    <EditableField label="Antecedente/Doc (B)" name="documento_referencia" value={informeFormData.documento_referencia} onChange={handleInformeInputChange} />
+                                    <EditableField label="Fecha del Doc." name="fecha_documento" type="date" value={informeFormData.fecha_documento} onChange={handleInformeInputChange} />
+                                </div>
+                            </Accordion>
 
-                                <h4 className="text-lg font-semibold border-b mt-4 dark:border-dark-border text-pnp-green-dark">II. Objeto de la Pericia</h4>
-                                <EditableField label="Descripción del Objeto" name="objeto_pericia" value={informeFormData.objeto_pericia} onChange={handleInformeInputChange} isTextarea={true} rows={4} />
+                            <Accordion title="2. Cronología y Personas (E, F, G, H)">
+                                <p className="text-xs text-amber-600 dark:text-amber-400 mb-3 italic">
+                                    * Asegúrese de que las fechas sigan el formato: Mes/Día/Año
+                                </p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <EditableField label="Hora Incidente" name="hora_incidente" value={informeFormData.hora_incidente} onChange={handleInformeInputChange} />
+                                    <EditableField label="Fecha Incidente" name="fecha_incidente" type="date" value={informeFormData.fecha_incidente} onChange={handleInformeInputChange} />
+                                    <EditableField label="Hora Toma" name="hora_toma_muestra" value={informeFormData.hora_toma_muestra} onChange={handleInformeInputChange} />
+                                    <EditableField label="Fecha Toma" name="fecha_toma_muestra" type="date" value={informeFormData.fecha_toma_muestra} onChange={handleInformeInputChange} />
+                                </div>
+                                <div className="grid grid-cols-1 gap-4 mt-4">
+                                    <EditableField label="Conductor (G)" name="conductor" value={informeFormData.conductor} onChange={handleInformeInputChange} />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <EditableField label="Examinado (H)" name="examinado_incriminado" value={informeFormData.examinado_incriminado} onChange={handleInformeInputChange} />
+                                        <EditableField label="DNI Examinado" name="dni_examinado" value={informeFormData.dni_examinado} onChange={handleInformeInputChange} />
+                                    </div>
+                                    <EditableField label="Edad Examinado" name="edad_examinado" value={informeFormData.edad_examinado} onChange={handleInformeInputChange} />
+                                    <EditableField label="Recolector Muestra (L)" name="recolector_muestra" value={informeFormData.recolector_muestra} onChange={handleInformeInputChange} />
+                                </div>
+                            </Accordion>
 
-                                <h4 className="text-lg font-semibold border-b mt-4 dark:border-dark-border text-pnp-green-dark">Muestras y Métodos</h4>
+                            <Accordion title="3. Datos Técnicos (Objeto, Muestras, Métodos)">
+                                <EditableField label="Objeto de la Pericia (D)" name="objeto_pericia" value={informeFormData.objeto_pericia} onChange={handleInformeInputChange} isTextarea={true} rows={3} />
                                 
-                                {/* EDITOR DE MUESTRAS */}
-                                <div className="space-y-3">
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Descripciones de Muestras</label>
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descripciones de Muestras (I)</label>
                                     {muestrasEditables.map((m, idx) => (
-                                        <div key={m.id_muestra} className="flex gap-2 items-center">
+                                        <div key={m.id_muestra} className="flex gap-2 items-center mb-2">
                                             <span className="font-bold text-sm w-10">M{idx+1}:</span>
                                             <input 
                                                 type="text" 
@@ -455,11 +544,10 @@ const ProcedimientoConsolidacion = () => {
                                     ))}
                                 </div>
 
-                                {/* EDITOR DE MÉTODOS */}
-                                <div className="space-y-3 mt-4">
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Métodos Utilizados</label>
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Métodos Utilizados (M)</label>
                                     {metodos.map((m, idx) => (
-                                        <div key={idx} className="flex flex-col gap-1 border p-2 rounded bg-gray-50 dark:bg-dark-bg-tertiary">
+                                        <div key={idx} className="flex flex-col gap-1 border p-2 rounded bg-gray-50 dark:bg-dark-bg-tertiary mb-2">
                                             <span className="font-bold text-xs uppercase text-gray-500">{m.examen}</span>
                                             <textarea 
                                                 className="w-full rounded-md border-gray-300 dark:bg-dark-surface shadow-sm text-sm"
@@ -470,21 +558,10 @@ const ProcedimientoConsolidacion = () => {
                                         </div>
                                     ))}
                                 </div>
+                            </Accordion>
 
-                                <h4 className="text-lg font-semibold border-b mt-4 dark:border-dark-border text-pnp-green-dark">Datos del Perito (Firmante)</h4>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <EditableField label="Grado" name="grado" value={peritoFormData.grado} onChange={handlePeritoInputChange} />
-                                    <EditableField label="Nombre Completo" name="nombre_completo" value={peritoFormData.nombre_completo} onChange={handlePeritoInputChange} />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <EditableField label="CIP" name="cip" value={peritoFormData.cip} onChange={handlePeritoInputChange} />
-                                    <EditableField label="DNI" name="dni_perito" value={peritoFormData.dni_perito} onChange={handlePeritoInputChange} />
-                                    <EditableField label="CQFP" name="cqfp" value={peritoFormData.cqfp} onChange={handlePeritoInputChange} />
-                                    <EditableField label="Título Profesional" name="titulo_profesional" value={peritoFormData.titulo_profesional} onChange={handlePeritoInputChange} />
-                                </div>
-
-                                <h4 className="text-lg font-semibold border-b mt-4 dark:border-dark-border text-pnp-green-dark">IV. Conclusiones</h4>
-                                <EditableField label="Conclusión Principal" name="conclusion_principal" value={informeFormData.conclusion_principal} onChange={handleInformeInputChange} isTextarea={true} rows={6} />
+                            <Accordion title="4. Conclusiones (K)">
+                                <EditableField label="Conclusión Principal (1)" name="conclusion_principal" value={informeFormData.conclusion_principal} onChange={handleInformeInputChange} isTextarea={true} rows={5} />
                                 
                                 <div className="mt-4">
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Conclusiones Secundarias</label>
@@ -502,11 +579,22 @@ const ProcedimientoConsolidacion = () => {
                                     ))}
                                     <button type="button" onClick={addConclusionSecundaria} className="text-sm text-pnp-green-dark hover:underline">+ Agregar conclusión secundaria</button>
                                 </div>
+                            </Accordion>
 
-                                <div className="flex justify-end gap-3 pt-6 mt-6 border-t dark:border-dark-border">
-                                    <button type="button" onClick={() => navigate('/perito/dashboard')} className="btn-secondary"><CancelarIcon /><span>Cancelar</span></button>
-                                    <button type="button" onClick={handleGuardarYContinuar} disabled={isSubmitting} className="btn-primary"><GuardarIcon /><span>{isSubmitting ? 'Procesando...' : 'Guardar y Continuar a Firma'}</span></button>
+                            <Accordion title="5. Datos del Firmante (C)">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <EditableField label="Grado" name="grado" value={peritoFormData.grado} onChange={handlePeritoInputChange} />
+                                    <EditableField label="Nombre Completo" name="nombre_completo" value={peritoFormData.nombre_completo} onChange={handlePeritoInputChange} />
+                                    <EditableField label="CIP" name="cip" value={peritoFormData.cip} onChange={handlePeritoInputChange} />
+                                    <EditableField label="DNI" name="dni_perito" value={peritoFormData.dni_perito} onChange={handlePeritoInputChange} />
+                                    <EditableField label="CQFP" name="cqfp" value={peritoFormData.cqfp} onChange={handlePeritoInputChange} />
+                                    <EditableField label="Título" name="titulo_profesional" value={peritoFormData.titulo_profesional} onChange={handlePeritoInputChange} />
                                 </div>
+                            </Accordion>
+
+                            <div className="flex justify-end gap-3 pt-6 mt-6 border-t dark:border-dark-border">
+                                <button type="button" onClick={() => navigate('/perito/dashboard')} className="btn-secondary"><CancelarIcon /><span>Cancelar</span></button>
+                                <button type="button" onClick={handleGuardarYContinuar} disabled={isSubmitting} className="btn-primary"><GuardarIcon /><span>{isSubmitting ? 'Procesando...' : 'Guardar y Continuar a Firma'}</span></button>
                             </div>
                         </div>
 
@@ -514,7 +602,7 @@ const ProcedimientoConsolidacion = () => {
                         <div className="hidden lg:block h-full">
                             <div className="sticky top-4 h-full">
                                 <h3 className="text-center text-sm text-gray-500 mb-2 font-medium uppercase tracking-wide">Vista Previa en Tiempo Real</h3>
-                                <InformePreview data={informeFormData} examenesConsolidados={examenesConsolidados} />
+                                <InformePreview htmlContent={previewHtml} isLoading={isPreviewLoading} />
                             </div>
                         </div>
                     </div>
