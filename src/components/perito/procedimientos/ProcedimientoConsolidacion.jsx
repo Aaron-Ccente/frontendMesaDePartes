@@ -4,9 +4,10 @@ import { toast } from 'sonner';
 import { useAuth } from '../../../hooks/useAuth';
 import { ProcedimientoService } from '../../../services/procedimientoService';
 import { DictamenService } from '../../../services/dictamenService.js';
-import { GuardarIcon, CancelarIcon, PreviewIcon, UploadIcon, DownloadIcon, SendIcon } from '../../../assets/icons/Actions';
+import { GuardarIcon, CancelarIcon, UploadIcon, DownloadIcon, SendIcon } from '../../../assets/icons/Actions';
 import { EditableField } from '../../ui/InformeConsolidadoComponents';
-import PDFPreviewModal from '../../documentos/PDFPreviewModal';
+import CaratulaPreview from '../../ui/CaratulaPreview';
+import InformePreview from '../../ui/InformePreview';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
 
@@ -23,15 +24,38 @@ const ProcedimientoConsolidacion = () => {
     const [examenesConsolidados, setExamenesConsolidados] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [previewLoading, setPreviewLoading] = useState(false);
 
     // Estado unificado para el formulario del INFORME
     const [informeFormData, setInformeFormData] = useState({
-        // ... campos del informe
+        unidad_solicitante: '',
+        documento_referencia: '',
+        fecha_documento: '',
         objeto_pericia: '',
+        hora_incidente: '',
+        fecha_incidente: '',
+        hora_toma_muestra: '',
+        fecha_toma_muestra: '',
+        conductor: '',
+        examinado_incriminado: '',
+        edad_examinado: '',
+        recolector_muestra: '',
         conclusion_principal: '',
-        // ... otros campos
     });
+
+    const [peritoFormData, setPeritoFormData] = useState({
+        grado: '',
+        nombre_completo: '',
+        cip: '',
+        dni_perito: '',
+        cqfp: '',
+        titulo_profesional: 'Perito Químico Farmacéutico'
+    });
+    
+    // --- NUEVOS ESTADOS MEJORADOS ---
+    const [conclusionesSecundarias, setConclusionesSecundarias] = useState(['Muestras agotadas en los análisis.']);
+    const [metodos, setMetodos] = useState([]);
+    const [muestrasEditables, setMuestrasEditables] = useState([]);
+    const [sufijoNumeroOficio, setSufijoNumeroOficio] = useState('IV-MACREPOL-JUN-DIVINCRI/OFICRI.');
 
     // --- NUEVOS ESTADOS PARA CARÁTULA Y FLUJO DE FIRMA ---
     const [caratulaFormData, setCaratulaFormData] = useState({
@@ -61,9 +85,7 @@ const ProcedimientoConsolidacion = () => {
     const [informeEmitido, setInformeEmitido] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const [caratulaPdfUrl, setCaratulaPdfUrl] = useState(null);
-    const [isCaratulaModalOpen, setIsCaratulaModalOpen] = useState(false);
     const [informePdfUrl, setInformePdfUrl] = useState(null);
-    const [isInformeModalOpen, setIsInformeModalOpen] = useState(false);
     const [tabIndex, setTabIndex] = useState(0);
 
     // --- MANEJADORES DE INPUTS ---
@@ -71,6 +93,12 @@ const ProcedimientoConsolidacion = () => {
         const { name, value } = e.target;
         setInformeFormData(prev => ({ ...prev, [name]: value }));
     };
+
+    const handlePeritoInputChange = (e) => {
+        const { name, value } = e.target;
+        setPeritoFormData(prev => ({ ...prev, [name]: value }));
+    };
+
     const handleCaratulaInputChange = (e) => {
         const { name, value } = e.target;
         setCaratulaFormData(prev => ({ ...prev, [name]: value }));
@@ -89,6 +117,29 @@ const ProcedimientoConsolidacion = () => {
                 setOficio(oficio);
                 setResultadosPrevios(resultados_previos || []);
                 setMuestras(muestras || []);
+                
+                // Inicializar muestras editables
+                setMuestrasEditables(muestras.map(m => ({
+                    id_muestra: m.id_muestra,
+                    descripcion: m.descripcion || ''
+                })));
+
+                // Inicializar métodos (lógica simple basada en resultados previos)
+                const examenMetodoMapDefault = {
+                    'Sarro Ungueal': { nombre: 'Análisis de Sarro Ungueal', metodo: 'Químico - colorimétrico' },
+                    'Toxicológico': { nombre: 'Análisis Toxicológico', metodo: 'Cromatografía en capa fina, Inmunoensayo' },
+                    'Dosaje Etílico': { nombre: 'Análisis de Dosaje Etílico', metodo: 'Espectrofotometría – UV VIS' }
+                };
+                
+                const metodosInit = [];
+                resultados_previos?.forEach(res => {
+                    const info = examenMetodoMapDefault[res.tipo_resultado] || { nombre: res.tipo_resultado, metodo: 'No especificado' };
+                    if (!metodosInit.find(m => m.examen === res.tipo_resultado)) {
+                        metodosInit.push({ examen: res.tipo_resultado, metodo: info.metodo });
+                    }
+                });
+                setMetodos(metodosInit);
+
 
                 // Pre-llenar formulario de INFORME
                 setInformeFormData({
@@ -107,18 +158,28 @@ const ProcedimientoConsolidacion = () => {
                     conclusion_principal: generarConclusionSugerida()
                 });
 
+                // Pre-llenar formulario de PERITO
+                setPeritoFormData({
+                    grado: oficio.grado_perito || '',
+                    nombre_completo: oficio.nombre_perito_actual || oficio.perito_asignado || '',
+                    cip: oficio.cip_perito || '',
+                    dni_perito: oficio.dni_perito || '',
+                    cqfp: oficio.cqfp || '',
+                    titulo_profesional: 'Perito Químico Farmacéutico' // Default, debería venir de BD idealmente
+                });
+
                 // Pre-llenar formulario de CARÁTULA
-                const peritoAsignado = oficio.perito_asignado;
+                const peritoAsignado = oficio.perito_asignado; 
                 setCaratulaFormData({
                     lugarFecha: `Huancayo, ${new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}`,
-                    numOficio: oficio.numero_oficio.split('/').slice(0, -1).join('/') + '/ING.', // Adaptar según sea necesario
+                    numOficio: oficio.numero_oficio.split('/').slice(0, -1).join('/') + '/ING.', 
                     membreteComando: "Comando de Operaciones Policiales",
                     membreteDireccion: "Dirección Nacional de Orden y Seguridad",
                     membreteRegion: "Región Policial Junín",
-                    destCargo: 'JEFE DE LA OFICRI PNP - HYO', // Dato quemado, ajustar si es dinámico
-                    destNombre: 'Nombre del Jefe', // Dato quemado, ajustar si es dinámico
+                    destCargo: 'JEFE DE LA OFICRI PNP - HYO', 
+                    destNombre: 'Nombre del Jefe', 
                     destPuesto: '',
-                    asuntoBase: `Informe Pericial ... por motivo que se indica.`, // Ajustar
+                    asuntoBase: `Informe Pericial ... por motivo que se indica.`, 
                     asuntoRemite: 'REMITE',
                     referencia: oficio.documento_referencia,
                     cuerpoP1_1: 'Me dirijo a Usted, con la finalidad de remitir adjunto al presente el informe Pericial de Ingeniería Forense – ',
@@ -126,11 +187,11 @@ const ProcedimientoConsolidacion = () => {
                     cuerpoP1_3: ', practicado en las muestras remitidas ',
                     cuerpoP1_4: muestras.map((m, i) => `M${i + 1}: (${m.descripcion})`).join(', '),
                     cuerpoP1_5: ', de conformidad al documento de la referencia. Se adjunta acta de deslacrado y lacrado de muestras para análisis pericial de ingeniería forense.',
-                    regNum: '', // Completar si se tiene
+                    regNum: '', 
                     regIniciales: `${user.nombre_completo.split(' ').map(n => n[0]).join('')}/lgp.`,
-                    firmanteQS: peritoAsignado?.cip || '',
-                    firmanteNombre: peritoAsignado?.nombre_completo || '',
-                    firmanteCargo: peritoAsignado?.grado || 'PERITO OFICRI',
+                    firmanteQS: oficio.cip_perito || '',
+                    firmanteNombre: oficio.nombre_perito_actual || user.nombre_completo,
+                    firmanteCargo: oficio.grado_perito || 'PERITO OFICRI',
                     firmanteDependencia: 'OFICRI PNP HUANCAYO',
                 });
 
@@ -196,36 +257,6 @@ const ProcedimientoConsolidacion = () => {
 
     // --- MANEJADORES DE ACCIONES ---
 
-    const handleCaratulaPreview = async () => {
-        setPreviewLoading(true);
-        try {
-            const pdfBlob = await ProcedimientoService.generarCaratula(id_oficio, caratulaFormData);
-            console.log('DEBUG: PDF Blob received', { size: pdfBlob.size, type: pdfBlob.type });
-            const url = URL.createObjectURL(pdfBlob);
-            setCaratulaPdfUrl(url);
-            setIsCaratulaModalOpen(true);
-        } catch (error) {
-            toast.error(`Error al generar vista previa de carátula: ${error.message}`);
-        } finally {
-            setPreviewLoading(false);
-        }
-    };
-
-    const handleInformePreview = async () => {
-        setPreviewLoading(true);
-        try {
-            const payload = { informe: { ...informeFormData, examenes: examenesConsolidados } };
-            const pdfBlob = await DictamenService.getInformePreview(id_oficio, payload);
-            const url = URL.createObjectURL(pdfBlob);
-            setInformePdfUrl(url);
-            setIsInformeModalOpen(true);
-        } catch (error) {
-            toast.error(`Error al generar vista previa de informe: ${error.message}`);
-        } finally {
-            setPreviewLoading(false);
-        }
-    };
-
     const handleGuardarYContinuar = async () => {
         if (!informeFormData.objeto_pericia || !informeFormData.conclusion_principal) {
             toast.error('El Objeto de la Pericia y la Conclusión Principal son obligatorios.');
@@ -233,8 +264,19 @@ const ProcedimientoConsolidacion = () => {
         }
         setIsSubmitting(true);
         try {
-            // Generamos ambos documentos para que el usuario los descargue
-            const payload = { informe: { ...informeFormData, examenes: examenesConsolidados } };
+            // Payload mejorado con todos los nuevos campos
+            const payload = { 
+                informe: { 
+                    ...informeFormData, 
+                    examenes: examenesConsolidados,
+                    metodos: metodos,
+                    muestras: muestrasEditables,
+                    conclusiones_secundarias: conclusionesSecundarias,
+                    sufijo_numero_oficio: sufijoNumeroOficio
+                },
+                perito: peritoFormData 
+            };
+            
             const informeBlob = await DictamenService.getInformePreview(id_oficio, payload);
             const caratulaBlob = await ProcedimientoService.generarCaratula(id_oficio, caratulaFormData);
 
@@ -249,6 +291,35 @@ const ProcedimientoConsolidacion = () => {
         } finally {
             setIsSubmitting(false);
         }
+    };
+    
+    // --- MANEJADORES PARA LISTAS EDITABLES ---
+    const updateMetodo = (index, newValue) => {
+        const newMetodos = [...metodos];
+        newMetodos[index].metodo = newValue;
+        setMetodos(newMetodos);
+    };
+
+    const updateMuestraDescripcion = (index, newValue) => {
+        const newMuestras = [...muestrasEditables];
+        newMuestras[index].descripcion = newValue;
+        setMuestrasEditables(newMuestras);
+    };
+
+    const addConclusionSecundaria = () => {
+        setConclusionesSecundarias([...conclusionesSecundarias, '']);
+    };
+    
+    const removeConclusionSecundaria = (index) => {
+        const newConc = [...conclusionesSecundarias];
+        newConc.splice(index, 1);
+        setConclusionesSecundarias(newConc);
+    };
+
+    const updateConclusionSecundaria = (index, value) => {
+        const newConc = [...conclusionesSecundarias];
+        newConc[index] = value;
+        setConclusionesSecundarias(newConc);
     };
 
     const handleFileChange = (e) => {
@@ -293,7 +364,7 @@ const ProcedimientoConsolidacion = () => {
 
     // --- RENDERIZADO DEL COMPONENTE ---
     return (
-        <div className="max-w-7xl mx-auto space-y-6 dark:text-white">
+        <div className="max-w-[1600px] mx-auto space-y-6 dark:text-white px-4">
             <div className="text-center">
                 <h1 className="text-3xl font-bold">Proceso de Consolidación Final</h1>
                 <p className="text-lg text-gray-500">Oficio N°: {oficio?.numero_oficio}</p>
@@ -308,109 +379,164 @@ const ProcedimientoConsolidacion = () => {
 
                 {/* --- PESTAÑA 1: CARÁTULA --- */}
                 <TabPanel>
-                    <div className="bg-white dark:bg-dark-surface p-6 rounded-xl shadow-md border dark:border-dark-border">
-                        <div className="flex justify-between items-center border-b pb-3 dark:border-dark-border">
-                            <h3 className="text-xl font-bold">Datos de la Carátula</h3>
-                            <button type="button" onClick={handleCaratulaPreview} disabled={previewLoading} className="btn-secondary">
-                                <PreviewIcon /><span>{previewLoading ? 'Generando...' : 'Vista Previa Carátula'}</span>
-                            </button>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[calc(100vh-250px)]">
+                        {/* COLUMNA IZQUIERDA: FORMULARIO */}
+                        <div className="bg-white dark:bg-dark-surface p-6 rounded-xl shadow-md border dark:border-dark-border overflow-y-auto">
+                            <h3 className="text-xl font-bold border-b pb-3 mb-4 dark:border-dark-border">Datos de la Carátula</h3>
+                            <div className="grid grid-cols-1 gap-4">
+                                <EditableField label="Lugar y Fecha" name="lugarFecha" value={caratulaFormData.lugarFecha} onChange={handleCaratulaInputChange} />
+                                <EditableField label="Número de Oficio" name="numOficio" value={caratulaFormData.numOficio} onChange={handleCaratulaInputChange} />
+                                <EditableField label="Referencia" name="referencia" value={caratulaFormData.referencia} onChange={handleCaratulaInputChange} />
+                                
+                                <h4 className="text-lg font-semibold border-b mt-4 dark:border-dark-border text-pnp-green-dark">Destinatario</h4>
+                                <EditableField label="Cargo" name="destCargo" value={caratulaFormData.destCargo} onChange={handleCaratulaInputChange} />
+                                <EditableField label="Nombre" name="destNombre" value={caratulaFormData.destNombre} onChange={handleCaratulaInputChange} />
+                                
+                                <h4 className="text-lg font-semibold border-b mt-4 dark:border-dark-border text-pnp-green-dark">Cuerpo del Oficio</h4>
+                                <div className="col-span-1">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary mb-1">Párrafo Introductorio</label>
+                                    <textarea 
+                                        name="cuerpoP1_1" 
+                                        value={caratulaFormData.cuerpoP1_1} 
+                                        onChange={handleCaratulaInputChange}
+                                        rows={3}
+                                        className="w-full rounded-md border-gray-300 dark:bg-dark-bg-tertiary dark:border-dark-border shadow-sm focus:border-pnp-green-light focus:ring-pnp-green-light sm:text-sm"
+                                    />
+                                </div>
+                                
+                                <h4 className="text-lg font-semibold border-b mt-4 dark:border-dark-border text-pnp-green-dark">Firmante</h4>
+                                <EditableField label="Nombre" name="firmanteNombre" value={caratulaFormData.firmanteNombre} onChange={handleCaratulaInputChange} />
+                                <EditableField label="Cargo" name="firmanteCargo" value={caratulaFormData.firmanteCargo} onChange={handleCaratulaInputChange} />
+                            </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mt-4">
-                            <EditableField label="Lugar y Fecha" name="lugarFecha" value={caratulaFormData.lugarFecha} onChange={handleCaratulaInputChange} />
-                            <EditableField label="Número de Oficio" name="numOficio" value={caratulaFormData.numOficio} onChange={handleCaratulaInputChange} />
-                            <EditableField label="Referencia" name="referencia" value={caratulaFormData.referencia} onChange={handleCaratulaInputChange} />
-                            <h4 className="md:col-span-2 text-lg font-semibold border-b mt-4 dark:border-dark-border">Destinatario</h4>
-                            <EditableField label="Cargo Destinatario" name="destCargo" value={caratulaFormData.destCargo} onChange={handleCaratulaInputChange} />
-                            <EditableField label="Nombre Destinatario" name="destNombre" value={caratulaFormData.destNombre} onChange={handleCaratulaInputChange} />
-                            <h4 className="md:col-span-2 text-lg font-semibold border-b mt-4 dark:border-dark-border">Firmante</h4>
-                            <EditableField label="Nombre Firmante" name="firmanteNombre" value={caratulaFormData.firmanteNombre} onChange={handleCaratulaInputChange} />
-                            <EditableField label="Cargo Firmante" name="firmanteCargo" value={caratulaFormData.firmanteCargo} onChange={handleCaratulaInputChange} />
+
+                        {/* COLUMNA DERECHA: VISTA PREVIA EN VIVO */}
+                        <div className="hidden lg:block h-full">
+                            <div className="sticky top-4 h-full">
+                                <h3 className="text-center text-sm text-gray-500 mb-2 font-medium uppercase tracking-wide">Vista Previa en Tiempo Real</h3>
+                                <CaratulaPreview data={caratulaFormData} />
+                            </div>
                         </div>
                     </div>
                 </TabPanel>
 
                 {/* --- PESTAÑA 2: INFORME PERICIAL --- */}
                 <TabPanel>
-                    <div className="bg-white dark:bg-dark-surface p-6 rounded-xl shadow-md border dark:border-dark-border">
-                        <div className="flex justify-between items-center border-b pb-3 dark:border-dark-border">
-                            <h3 className="text-xl font-bold">Contenido del Informe</h3>
-                            <button type="button" onClick={handleInformePreview} disabled={previewLoading} className="btn-secondary">
-                                <PreviewIcon /><span>{previewLoading ? 'Generando...' : 'Vista Previa Informe'}</span>
-                            </button>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mt-4">
-                            <h4 className="md:col-span-2 text-lg font-semibold border-b mt-2 dark:border-dark-border">A. Procedencia y B. Antecedente</h4>
-                            <EditableField label="A. Procedencia" name="unidad_solicitante" value={informeFormData.unidad_solicitante} onChange={handleInformeInputChange} />
-                            <EditableField label="B. Documento de Referencia" name="documento_referencia" value={informeFormData.documento_referencia} onChange={handleInformeInputChange} />
-                            <EditableField label="Fecha del Documento" name="fecha_documento" type="date" value={informeFormData.fecha_documento} onChange={handleInformeInputChange} />
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[calc(100vh-250px)]">
+                        {/* COLUMNA IZQUIERDA: FORMULARIO */}
+                        <div className="bg-white dark:bg-dark-surface p-6 rounded-xl shadow-md border dark:border-dark-border overflow-y-auto">
+                            <h3 className="text-xl font-bold border-b pb-3 mb-4 dark:border-dark-border">Contenido del Informe</h3>
+                            
+                            <div className="grid grid-cols-1 gap-4">
+                                <h4 className="text-lg font-semibold border-b mt-2 dark:border-dark-border text-pnp-green-dark">I. Información General</h4>
+                                <EditableField label="Sufijo N° Oficio" value={sufijoNumeroOficio} onChange={(e) => setSufijoNumeroOficio(e.target.value)} />
+                                <EditableField label="A. Procedencia" name="unidad_solicitante" value={informeFormData.unidad_solicitante} onChange={handleInformeInputChange} />
+                                <EditableField label="B. Documento Referencia" name="documento_referencia" value={informeFormData.documento_referencia} onChange={handleInformeInputChange} />
+                                <EditableField label="Fecha Doc." name="fecha_documento" type="date" value={informeFormData.fecha_documento} onChange={handleInformeInputChange} />
 
-                            <h4 className="md:col-span-2 text-lg font-semibold border-b mt-4 dark:border-dark-border">D. Objeto de la Pericia</h4>
-                            <div className="md:col-span-2">
-                                <EditableField label="D. Objeto de la Pericia" name="objeto_pericia" value={informeFormData.objeto_pericia} onChange={handleInformeInputChange} isTextarea={true} rows={3} />
-                            </div>
+                                <h4 className="text-lg font-semibold border-b mt-4 dark:border-dark-border text-pnp-green-dark">II. Objeto de la Pericia</h4>
+                                <EditableField label="Descripción del Objeto" name="objeto_pericia" value={informeFormData.objeto_pericia} onChange={handleInformeInputChange} isTextarea={true} rows={4} />
 
-                            <h4 className="md:col-span-2 text-lg font-semibold border-b mt-4 dark:border-dark-border">E. Incidente y F. Toma de Muestra</h4>
-                            <EditableField label="E. Hora del Incidente" name="hora_incidente" type="time" value={informeFormData.hora_incidente} onChange={handleInformeInputChange} />
-                            <EditableField label="E. Fecha del Incidente" name="fecha_incidente" type="date" value={informeFormData.fecha_incidente} onChange={handleInformeInputChange} />
-                            <EditableField label="F. Hora de Toma de Muestra" name="hora_toma_muestra" type="time" value={informeFormData.hora_toma_muestra} onChange={handleInformeInputChange} />
-                            <EditableField label="F. Fecha de Toma de Muestra" name="fecha_toma_muestra" type="date" value={informeFormData.fecha_toma_muestra} onChange={handleInformeInputChange} />
-
-                            <h4 className="md:col-span-2 text-lg font-semibold border-b mt-4 dark:border-dark-border">G. Conductor y H. Examinado</h4>
-                            <EditableField label="G. Conductor" name="conductor" value={informeFormData.conductor} onChange={handleInformeInputChange} />
-                            <EditableField label="H. Examinado / Incriminado" name="examinado_incriminado" value={informeFormData.examinado_incriminado} onChange={handleInformeInputChange} />
-                            <EditableField label="Edad del Examinado" name="edad_examinado" type="number" value={informeFormData.edad_examinado} onChange={handleInformeInputChange} />
-
-                            <h4 className="md:col-span-2 text-lg font-semibold border-b mt-4 dark:border-dark-border">J. Examen (Solo Lectura)</h4>
-                            <div className="md:col-span-2 space-y-4 p-4 bg-gray-50 dark:bg-dark-bg-secondary rounded-lg border dark:border-dark-border">
-                                {examenesConsolidados.length > 0 ? (
-                                    examenesConsolidados.map((examen, index) => (
-                                        <div key={index}>
-                                            <h5 className="font-bold underline">{examen.nombre}</h5>
-                                            <ul className="list-disc list-inside pl-4">
-                                                {examen.resultados.map((res, i) => (
-                                                    <li key={i}>{res.analito}{res.resultado}</li>
-                                                ))}
-                                            </ul>
+                                <h4 className="text-lg font-semibold border-b mt-4 dark:border-dark-border text-pnp-green-dark">Muestras y Métodos</h4>
+                                
+                                {/* EDITOR DE MUESTRAS */}
+                                <div className="space-y-3">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Descripciones de Muestras</label>
+                                    {muestrasEditables.map((m, idx) => (
+                                        <div key={m.id_muestra} className="flex gap-2 items-center">
+                                            <span className="font-bold text-sm w-10">M{idx+1}:</span>
+                                            <input 
+                                                type="text" 
+                                                className="flex-1 rounded-md border-gray-300 dark:bg-dark-bg-tertiary dark:border-dark-border shadow-sm text-sm"
+                                                value={m.descripcion}
+                                                onChange={(e) => updateMuestraDescripcion(idx, e.target.value)}
+                                            />
                                         </div>
-                                    ))
-                                ) : (
-                                    <p className="text-gray-500">No hay resultados de exámenes para mostrar.</p>
-                                )}
-                            </div>
+                                    ))}
+                                </div>
 
-                            <h4 className="md:col-span-2 text-lg font-semibold border-b mt-4 dark:border-dark-border">K. Conclusión y L. Recolector</h4>
-                            <div className="md:col-span-2">
-                                <EditableField label="K. Conclusión Principal" name="conclusion_principal" value={informeFormData.conclusion_principal} onChange={handleInformeInputChange} isTextarea={true} rows={5} />
-                            </div>
-                            <div className="md:col-span-2">
-                                <EditableField label="L. Muestra Tomada Por" name="recolector_muestra" value={informeFormData.recolector_muestra} onChange={handleInformeInputChange} />
+                                {/* EDITOR DE MÉTODOS */}
+                                <div className="space-y-3 mt-4">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Métodos Utilizados</label>
+                                    {metodos.map((m, idx) => (
+                                        <div key={idx} className="flex flex-col gap-1 border p-2 rounded bg-gray-50 dark:bg-dark-bg-tertiary">
+                                            <span className="font-bold text-xs uppercase text-gray-500">{m.examen}</span>
+                                            <textarea 
+                                                className="w-full rounded-md border-gray-300 dark:bg-dark-surface shadow-sm text-sm"
+                                                rows={2}
+                                                value={m.metodo}
+                                                onChange={(e) => updateMetodo(idx, e.target.value)}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <h4 className="text-lg font-semibold border-b mt-4 dark:border-dark-border text-pnp-green-dark">Datos del Perito (Firmante)</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <EditableField label="Grado" name="grado" value={peritoFormData.grado} onChange={handlePeritoInputChange} />
+                                    <EditableField label="Nombre Completo" name="nombre_completo" value={peritoFormData.nombre_completo} onChange={handlePeritoInputChange} />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <EditableField label="CIP" name="cip" value={peritoFormData.cip} onChange={handlePeritoInputChange} />
+                                    <EditableField label="DNI" name="dni_perito" value={peritoFormData.dni_perito} onChange={handlePeritoInputChange} />
+                                    <EditableField label="CQFP" name="cqfp" value={peritoFormData.cqfp} onChange={handlePeritoInputChange} />
+                                    <EditableField label="Título Profesional" name="titulo_profesional" value={peritoFormData.titulo_profesional} onChange={handlePeritoInputChange} />
+                                </div>
+
+                                <h4 className="text-lg font-semibold border-b mt-4 dark:border-dark-border text-pnp-green-dark">IV. Conclusiones</h4>
+                                <EditableField label="Conclusión Principal" name="conclusion_principal" value={informeFormData.conclusion_principal} onChange={handleInformeInputChange} isTextarea={true} rows={6} />
+                                
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Conclusiones Secundarias</label>
+                                    {conclusionesSecundarias.map((conc, idx) => (
+                                        <div key={idx} className="flex gap-2 mb-2">
+                                            <span className="pt-2 text-sm font-bold">{idx + 2}.</span>
+                                            <textarea 
+                                                className="flex-1 rounded-md border-gray-300 dark:bg-dark-bg-tertiary shadow-sm text-sm"
+                                                rows={2}
+                                                value={conc}
+                                                onChange={(e) => updateConclusionSecundaria(idx, e.target.value)}
+                                            />
+                                            <button type="button" onClick={() => removeConclusionSecundaria(idx)} className="text-red-500 hover:text-red-700 px-2">✕</button>
+                                        </div>
+                                    ))}
+                                    <button type="button" onClick={addConclusionSecundaria} className="text-sm text-pnp-green-dark hover:underline">+ Agregar conclusión secundaria</button>
+                                </div>
+
+                                <div className="flex justify-end gap-3 pt-6 mt-6 border-t dark:border-dark-border">
+                                    <button type="button" onClick={() => navigate('/perito/dashboard')} className="btn-secondary"><CancelarIcon /><span>Cancelar</span></button>
+                                    <button type="button" onClick={handleGuardarYContinuar} disabled={isSubmitting} className="btn-primary"><GuardarIcon /><span>{isSubmitting ? 'Procesando...' : 'Guardar y Continuar a Firma'}</span></button>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="flex justify-end gap-3 pt-4 border-t mt-6 dark:border-dark-border">
-                            <button type="button" onClick={() => navigate('/perito/dashboard')} className="btn-secondary"><CancelarIcon /><span>Cancelar</span></button>
-                            <button type="button" onClick={handleGuardarYContinuar} disabled={isSubmitting} className="btn-primary"><GuardarIcon /><span>{isSubmitting ? 'Procesando...' : 'Guardar y Continuar a Firma'}</span></button>
+                        {/* COLUMNA DERECHA: VISTA PREVIA EN VIVO */}
+                        <div className="hidden lg:block h-full">
+                            <div className="sticky top-4 h-full">
+                                <h3 className="text-center text-sm text-gray-500 mb-2 font-medium uppercase tracking-wide">Vista Previa en Tiempo Real</h3>
+                                <InformePreview data={informeFormData} examenesConsolidados={examenesConsolidados} />
+                            </div>
                         </div>
                     </div>
                 </TabPanel>
 
                 {/* --- PESTAÑA 3: FIRMA Y ENVÍO --- */}
                 <TabPanel>
-                    <div className="bg-white dark:bg-dark-surface p-6 rounded-xl shadow-md border dark:border-dark-border text-center">
+                    <div className="max-w-4xl mx-auto bg-white dark:bg-dark-surface p-6 rounded-xl shadow-md border dark:border-dark-border text-center">
                         <h3 className="text-xl font-bold mb-4">Paso Final: Firma y Envío</h3>
                         <p className="mb-6">Los documentos han sido generados. Descárguelos, firme el Informe Pericial y súbalo para completar el proceso.</p>
 
                         <div className="flex justify-center gap-4 mb-8">
-                            <a href={caratulaPdfUrl} download={`Caratula-${oficio?.numero_oficio}.pdf`} className="flex bg-yellow-300 items-center px-4 py-2 rounded-lg text-black dark:bg-yellow-400"><DownloadIcon /> Descargar Carátula</a>
-                            <a href={informePdfUrl} download={`Informe-Pericial-${oficio?.numero_oficio}.pdf`} className="btn-primary"><DownloadIcon /> Descargar Informe</a>
+                            <a href={caratulaPdfUrl} download={`Caratula-${oficio?.numero_oficio}.pdf`} className="flex bg-yellow-300 items-center px-4 py-2 rounded-lg text-black dark:bg-yellow-400 font-medium hover:bg-yellow-400 transition-colors"><DownloadIcon className="mr-2" /> Descargar Carátula</a>
+                            <a href={informePdfUrl} download={`Informe-Pericial-${oficio?.numero_oficio}.pdf`} className="btn-primary"><DownloadIcon className="mr-2" /> Descargar Informe</a>
                         </div>
 
                         <div className="max-w-md mx-auto border-t pt-6 dark:border-dark-border">
                             <label htmlFor="informe-firmado-upload" className="block text-sm font-medium mb-2">Subir Informe Pericial Firmado (PDF)</label>
-                            <div className="flex items-center justify-center bg-gray-50 dark:bg-dark-bg-tertiary p-4 rounded-lg border-2 border-dashed dark:border-dark-border">
-                                <input id="informe-firmado-upload" type="file" accept="application/pdf" onChange={handleFileChange} className="w-full text-sm" />
+                            <div className="flex items-center justify-center bg-gray-50 dark:bg-dark-bg-tertiary p-4 rounded-lg border-2 border-dashed dark:border-dark-border hover:border-pnp-green-dark transition-colors">
+                                <input id="informe-firmado-upload" type="file" accept="application/pdf" onChange={handleFileChange} className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pnp-green-light file:text-pnp-green-dark hover:file:bg-pnp-green-light/80 cursor-pointer" />
                             </div>
-                            {selectedFile && <p className="text-sm mt-2 text-green-600">Archivo seleccionado: {selectedFile.name}</p>}
+                            {selectedFile && <p className="text-sm mt-2 text-green-600 font-medium">Archivo seleccionado: {selectedFile.name}</p>}
                         </div>
 
                         <div className="flex justify-end gap-3 pt-6 mt-6 border-t dark:border-dark-border">
@@ -422,9 +548,6 @@ const ProcedimientoConsolidacion = () => {
                     </div>
                 </TabPanel>
             </Tabs>
-
-            {isCaratulaModalOpen && caratulaPdfUrl && <PDFPreviewModal pdfUrl={caratulaPdfUrl} onClose={() => setIsCaratulaModalOpen(false)} />}
-            {isInformeModalOpen && informePdfUrl && <PDFPreviewModal pdfUrl={informePdfUrl} onClose={() => setIsInformeModalOpen(false)} />}
         </div>
     );
 };
