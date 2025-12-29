@@ -296,6 +296,18 @@ const handleLogout = async () => {
                     >
                       Prioridades
                     </button>
+                    <button
+                      onClick={() =>
+                        handleNavigation("/configuracion/global")
+                      }
+                      className={`w-full text-left px-4 py-2 rounded-lg transition-all duration-200 ${
+                        isActiveRoute("/configuracion/global")
+                          ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
+                          : "text-gray-600 dark:text-dark-text-secondary hover:bg-gray-50 dark:hover:bg-dark-bg-tertiary"
+                      }`}
+                    >
+                      Documentos Globales
+                    </button>
                   </div>
                 )}
               </div>

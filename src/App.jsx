@@ -56,6 +56,7 @@ import TurnosManagement from './components/admin/SystemConfiguration/TurnosManag
 
 import TiposExamenManagement from './components/admin/SystemConfiguration/TiposExamenManagement.jsx';
 import TiposDePrioridadManagement from './components/admin/SystemConfiguration/TiposDePrioridadManagement.jsx';
+import AdminConfiguracion from './components/admin/SystemConfiguration/AdminConfiguracion.jsx';
 
 function App() {
   return (
@@ -95,6 +96,7 @@ function App() {
               <Route path="configuracion/turnos" element={<TurnosManagement />} />
               <Route path="configuracion/tipos-examen" element={<TiposExamenManagement />} />
               <Route path="configuracion/prioridades" element={<TiposDePrioridadManagement />} />
+              <Route path="configuracion/global" element={<AdminConfiguracion />} />
             </Route>
 
             {/* Perito Dashboard Routes */}
