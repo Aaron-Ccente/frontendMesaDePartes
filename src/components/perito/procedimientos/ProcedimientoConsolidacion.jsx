@@ -155,6 +155,56 @@ const ProcedimientoConsolidacion = () => {
         setCaratulaFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleDownloadCaratulaPreview = async () => {
+        try {
+            toast.info('Generando vista previa de Carátula...');
+            const blob = await ProcedimientoService.generarCaratula(id_oficio, caratulaFormData);
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Preview_Caratula_${oficio?.numero_oficio || 'Draft'}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+            toast.success('Carátula descargada para revisión.');
+        } catch (error) {
+            console.error(error);
+            toast.error('Error al generar la carátula: ' + error.message);
+        }
+    };
+
+    const handleDownloadInformePreview = async () => {
+        if (!informeFormData.objeto_pericia) {
+             toast.warning('Recomendación: Llene el Objeto de Pericia para una mejor visualización.');
+        }
+        try {
+            toast.info('Generando vista previa del Informe...');
+            const payload = { 
+                informe: { 
+                    ...informeFormData, 
+                    examenes: examenesConsolidados,
+                    metodos: metodos,
+                    muestras: muestrasEditables,
+                    conclusiones_secundarias: conclusionesSecundarias,
+                    sufijo_numero_oficio: sufijoNumeroOficio
+                },
+                perito: peritoFormData 
+            };
+            const blob = await DictamenService.getInformePreview(id_oficio, payload);
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Preview_Informe_${oficio?.numero_oficio || 'Draft'}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+            toast.success('Informe descargado para revisión.');
+        } catch (error) {
+            console.error(error);
+            toast.error('Error al generar el informe: ' + error.message);
+        }
+    };
+
     // --- LÓGICA DE CARGA DE DATOS ---
     useEffect(() => {
         const loadData = async () => {
@@ -477,6 +527,18 @@ const ProcedimientoConsolidacion = () => {
                                     <EditableField label="Iniciales Registro" name="regIniciales" value={caratulaFormData.regIniciales} onChange={handleCaratulaInputChange} />
                                 </div>
                             </Accordion>
+
+                            <div className="flex justify-end gap-3 pt-6 mt-6 border-t dark:border-dark-border">
+                                <button 
+                                    type="button" 
+                                    onClick={handleDownloadCaratulaPreview} 
+                                    className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                                    title="Descargar PDF para revisar diseño final"
+                                >
+                                    <DownloadIcon className="w-4 h-4 mr-2" />
+                                    <span>Descargar Vista Previa (PDF)</span>
+                                </button>
+                            </div>
                         </div>
 
                         {/* COLUMNA DERECHA: VISTA PREVIA EN VIVO */}
@@ -593,6 +655,16 @@ const ProcedimientoConsolidacion = () => {
                             </Accordion>
 
                             <div className="flex justify-end gap-3 pt-6 mt-6 border-t dark:border-dark-border">
+                                <button 
+                                    type="button" 
+                                    onClick={handleDownloadInformePreview} 
+                                    className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors mr-auto"
+                                    title="Descargar PDF para revisar diseño final"
+                                >
+                                    <DownloadIcon className="w-4 h-4 mr-2" />
+                                    <span>Descargar Vista Previa (PDF)</span>
+                                </button>
+
                                 <button type="button" onClick={() => navigate('/perito/dashboard')} className="btn-secondary"><CancelarIcon /><span>Cancelar</span></button>
                                 <button type="button" onClick={handleGuardarYContinuar} disabled={isSubmitting} className="btn-primary"><GuardarIcon /><span>{isSubmitting ? 'Procesando...' : 'Guardar y Continuar a Firma'}</span></button>
                             </div>
