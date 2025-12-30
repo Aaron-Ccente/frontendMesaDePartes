@@ -175,6 +175,23 @@ export class ProcedimientoService {
     }
   }
 
+  static async getPreviewConsolidacion(idOficio, data) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/preview-consolidacion`, {
+        method: 'POST',
+        headers: this.#getJsonHeaders(),
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        throw new Error('Error al generar la vista previa.');
+      }
+      return await response.text();
+    } catch (error) {
+      console.error('Error en getPreviewConsolidacion:', error);
+      throw error;
+    }
+  }
+
   static async generarCaratula(idOficio, data) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/procedimientos/${idOficio}/generar-caratula`, {

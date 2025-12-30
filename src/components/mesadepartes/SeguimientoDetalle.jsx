@@ -35,9 +35,9 @@ const SeguimientoDetalle = () => {
         setCaratulaFormData({
           lugarFecha: `Huancayo, ${new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}`,
           numOficio: oficio.numero_oficio.split('/').slice(0, -1).join('/') + '/ING.', // Adaptar según sea necesario
-          membreteComando: "Comando de Operaciones Policiales",
-          membreteDireccion: "Dirección Nacional de Orden y Seguridad",
-          membreteRegion: "Región Policial Junín",
+          membreteComando: "",
+          membreteDireccion: "",
+          membreteRegion: "",
           destCargo: 'JEFE DE LA OFICRI PNP - HYO', // Dato quemado, ajustar si es dinámico
           destNombre: 'Nombre del Jefe', // Dato quemado, ajustar si es dinámico
           destPuesto: '',

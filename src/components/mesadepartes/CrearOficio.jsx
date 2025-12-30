@@ -194,6 +194,7 @@ function CrearOficio() {
       if (createResp.success) {
         const newCodigo = createResp.data.numero_oficio || `ID-${createResp.data.id_oficio}`;
         setFeedback(`¡Oficio creado! Código: ${newCodigo}`);
+        setFormData(initialFormData);
         setToastType('success');
         // handleClearForm();
       } else {

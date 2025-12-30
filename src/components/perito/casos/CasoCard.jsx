@@ -74,6 +74,8 @@ const CasoCard = ({ caso, onDerivarClick, isDeriving, funcion }) => {
           } else if (estadoCaso === 'PENDIENTE_ANALISIS_TM') {
             primaryButton = <button key="continuar-analisis" onClick={() => handleIniciarProcedimiento('analisis-tm')} className="btn-primary"><IniciarProcedimientoIcon /><span>Iniciar Análisis</span></button>;
             actionButtons.push(<button key="editar-extraccion" onClick={() => handleIniciarProcedimiento('extraccion')} className={editButtonClasses}><IniciarProcedimientoIcon /><span>Editar Extracción</span></button>);
+          } else if (estadoCaso === 'EXTRACCION_FALLIDA') {
+             primaryButton = <button key="finalizar-fallo" onClick={() => handleIniciarProcedimiento('extraccion')} className="btn-primary bg-red-600 hover:bg-red-700 text-white"><IniciarProcedimientoIcon /><span>Finalizar Cierre</span></button>;
           }
         }
         if (funcion === 'analisis_tm') {
