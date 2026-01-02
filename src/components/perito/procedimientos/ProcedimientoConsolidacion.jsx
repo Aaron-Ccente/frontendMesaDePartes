@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../../../hooks/useAuth';
@@ -10,7 +10,7 @@ import InformePreview from '../../ui/InformePreview';
 import { Accordion } from '../../ui/Accordion';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
-import debounce from 'lodash/debounce';
+
 
 const ProcedimientoConsolidacion = () => {
     const { id: id_oficio } = useParams();
